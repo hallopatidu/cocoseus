@@ -16,23 +16,10 @@ export function getHierarchyMethod(constructor:any, methodName:string):Function{
 
 export function hasModifierImplement(constructor:Constructor, modifierName:string):boolean{
     if(!constructor) return false;    
-    return ((constructor[ModifierName] ??= []) as string[]).findIndex((modName:string)=> modName == modifierName) == -1 ? hasModifierImplement(js.getSuper(constructor), modifierName) : true;
-}
-
-export function implementModifier(constructor:Constructor):Constructor{
-    if(!constructor) return null;
-    const modifierName:string = constructor.name;
-    if(!hasModifierImplement(constructor, modifierName)){
-        (constructor[ModifierName] ??= []).push(modifierName)
-    }
+    return constructor.name == modifierName ? true : hasModifierImplement(js.getSuper(constructor), modifierName);
 }
 
 
-// export function Classify(constructor:Constructor, modifier:ModifierType, ...mixins:Constructor[]):ModifierType{
-//     if(!constructor) return null;
-//     // this.hasModifierImplement(constructor)
-    
-// }
 
 export function enumifyProperty (targetObj:any, propName:string , newEnum:unknown):any {
     let defaultEnum = Object.assign( Enum({}) , newEnum);
@@ -67,15 +54,17 @@ export function mixinClass(base:Constructor, invokerCtor:Constructor):Constructo
 }
 
 
-export function Classify<TModifier, TBase=Component>(
-    modifier: (constructor: Constructor<TBase>, arg?: any) => Constructor<TBase&TModifier>
-): typeof modifier {
-    return function(base:Constructor<TBase>, arg?:any):Constructor<TBase&TModifier>{
-        const modifierName:string = base.name;
-        if(!hasModifierImplement(base, modifierName)){
-            (base[ModifierName] ??= []).push(modifierName);
-            return modifier(base, arg)
-        }
-        return base as unknown as Constructor<TBase&TModifier>;
-    } as typeof modifier;
-}
+
+
+// export function Classify<TModifier>(
+//     modifier: (base: Constructor<unknown>, arg?: any) => Constructor<typeof base&TModifier>
+// ): typeof modifier {
+//     return function<TModifier>(base:Constructor<TBase>, arg?:any):Constructor<TBase&TModifier>{
+//         const modifierName:string = base.name;
+//         if(!hasModifierImplement(base, modifierName)){
+//             (base[ModifierName] ??= []).push(modifierName);
+//             return modifier(base, arg)
+//         }
+//         return base as unknown as Constructor<TBase&TModifier>;
+//     } as typeof modifier;
+// }
