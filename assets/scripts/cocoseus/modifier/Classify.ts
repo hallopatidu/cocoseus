@@ -7,8 +7,6 @@ import { DEV } from "cc/env";
 
 export type ModifierType = <TArg>(constructor: Constructor<TArg>, arg?: any) => Constructor<TArg>
 
-const ModifierName = Symbol();
-
 export function getHierarchyMethod(constructor:any, methodName:string):Function{
     if(!constructor) return null;
     return constructor?.prototype[methodName] || getHierarchyMethod(js.getSuper(constructor), methodName)
@@ -18,8 +16,6 @@ export function hasModifierImplement(constructor:Constructor, modifierName:strin
     if(!constructor) return false;    
     return constructor.name == modifierName ? true : hasModifierImplement(js.getSuper(constructor), modifierName);
 }
-
-
 
 export function enumifyProperty (targetObj:any, propName:string , newEnum:unknown):any {
     let defaultEnum = Object.assign( Enum({}) , newEnum);
@@ -53,18 +49,6 @@ export function mixinClass(base:Constructor, invokerCtor:Constructor):Constructo
     return base
 }
 
-
-
-
-// export function Classify<TModifier>(
-//     modifier: (base: Constructor<unknown>, arg?: any) => Constructor<typeof base&TModifier>
-// ): typeof modifier {
-//     return function<TModifier>(base:Constructor<TBase>, arg?:any):Constructor<TBase&TModifier>{
-//         const modifierName:string = base.name;
-//         if(!hasModifierImplement(base, modifierName)){
-//             (base[ModifierName] ??= []).push(modifierName);
-//             return modifier(base, arg)
-//         }
-//         return base as unknown as Constructor<TBase&TModifier>;
-//     } as typeof modifier;
-// }
+export function Classify(base:Constructor, modifierClass:Constructor){
+    
+}

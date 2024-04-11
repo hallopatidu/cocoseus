@@ -8,7 +8,7 @@ export const ModifierName:string = 'AsyncProcessified';
  * @param base 
  * @returns 
  */
-export default function AsyncProcessify(base:any):Constructor<typeof base & IAsyncProcessified>{
+export default function AsyncProcessify(base:Constructor):Constructor<typeof base & IAsyncProcessified>{
     // 
     if(hasModifierImplement(base, ModifierName)){
         return base as unknown as any

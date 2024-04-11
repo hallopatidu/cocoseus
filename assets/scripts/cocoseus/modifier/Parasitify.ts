@@ -4,23 +4,17 @@ import { hasModifierImplement } from "./Classify";
 import { IParasitified } from "../types/ModifierType";
 const { property } = _decorator;
 
-export const ModifierName:string = 'Parasitified'
+export const ModifierName:string = 'Parasitified';
 export const OverrideMethodNameMap = Symbol();
 
-
-
-
 /**
- * Can add override method for this method.
+ * *Decorator*
+ * Using with @override like @property without option, but this decorator just use for method function to inherit the Component Instance's method.
  * @param target 
  * @param propertyKey 
  * @param descriptor 
  */
 export function override(target: Component, propertyKey: string, descriptor: PropertyDescriptor){
-    // if(propertyKey === '__preload') {
-    //     error('Do not support overriding ' + propertyKey + ' method');
-    //     return;
-    // }     
     if(DEV){
         if(!hasModifierImplement(target.constructor as Constructor, ModifierName)){
             error('You need add the Parasitify Modifier for this class to use @override');
