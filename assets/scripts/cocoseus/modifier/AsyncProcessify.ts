@@ -1,6 +1,6 @@
 import { _decorator, Component, Constructor, Node } from 'cc';
 import { IAsyncProcessified } from '../types/ModifierType';
-import { hasModifierImplement } from './Classify';
+import { hasModifierImplement } from './Inheritancify';
 const { ccclass, property } = _decorator;
 export const ModifierName:string = 'AsyncProcessified';
 /**
@@ -8,7 +8,7 @@ export const ModifierName:string = 'AsyncProcessified';
  * @param base 
  * @returns 
  */
-export default function AsyncProcessify(base:Constructor):Constructor<typeof base & IAsyncProcessified>{
+export default function AsyncProcessify<TBase>(base:Constructor<TBase>):Constructor<TBase & IAsyncProcessified>{
     // 
     if(hasModifierImplement(base, ModifierName)){
         return base as unknown as any
@@ -39,6 +39,6 @@ export default function AsyncProcessify(base:Constructor):Constructor<typeof bas
             }
         }
 
-        return AsyncProcessified as unknown as Constructor<typeof base & IAsyncProcessified>;
+        return AsyncProcessified as unknown as Constructor<TBase & IAsyncProcessified>;
     }
 }

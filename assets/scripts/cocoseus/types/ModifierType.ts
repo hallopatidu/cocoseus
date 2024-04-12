@@ -1,5 +1,7 @@
 // export type Constructor<T> = new (...args: any[]) => T;
 
+import { __private } from "cc"
+
 
 export interface IParasitified<TSuper> {
     get super():TSuper
@@ -29,3 +31,9 @@ export type Action = {
     // shares?: ActionObject | ActionType
 }
 
+
+export type Initializer = () => unknown;
+export type IPropertyOptions = __private._cocos_core_data_decorators_property__IPropertyOptions;
+export type PropertyType = __private._cocos_core_data_decorators_property__PropertyType;
+export type LegacyPropertyDecorator = __private._cocos_core_data_decorators_utils__LegacyPropertyDecorator;
+export type BabelPropertyDecoratorDescriptor = PropertyDescriptor & { initializer?: Initializer };

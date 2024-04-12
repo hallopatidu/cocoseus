@@ -5,7 +5,7 @@ import { Enum } from "cc";
 import { Constructor } from "cc";
 import { DEV } from "cc/env";
 
-export type ModifierType = <TArg>(constructor: Constructor<TArg>, arg?: any) => Constructor<TArg>
+// export type ModifierType = <TArg>(constructor: Constructor<TArg>, arg?: any) => Constructor<TArg>
 
 export function getHierarchyMethod(constructor:any, methodName:string):Function{
     if(!constructor) return null;
@@ -39,7 +39,8 @@ export function mixinClass(base:Constructor, invokerCtor:Constructor):Constructo
     );
     for (let iPropertyKey = 0; iPropertyKey < propertyKeys.length; ++iPropertyKey) {
         const propertyKey = propertyKeys[iPropertyKey];
-        if (!(propertyKey in base.prototype)) {
+        const basePrototype = base.prototype && Object.getPrototypeOf(base.prototype)
+        if (!(propertyKey in basePrototype)) {
             const propertyDescriptor = Object.getOwnPropertyDescriptor(callbacksInvokerPrototype, propertyKey);
             if (propertyDescriptor) {
                 Object.defineProperty(base.prototype, propertyKey, propertyDescriptor);
@@ -49,6 +50,62 @@ export function mixinClass(base:Constructor, invokerCtor:Constructor):Constructo
     return base
 }
 
-export function Classify(base:Constructor, modifierClass:Constructor){
+/**
+ * 
+ * @param base 
+ * @param newSegmentConstructor 
+ * @returns 
+ */
+
+/**
+ * Cutting a segment of class inheritance, add more a new segment to this point.
+ * 
+ * @param base 
+ * @param newSegmentConstructor 
+ * @param cuttingFromConstructor 
+ * @returns 
+ */
+export function remakeClassInheritance<TBase, TSuper>(base:Constructor<TBase>, newSegmentConstructor:Constructor<TSuper>, cuttingFromConstructor:Constructor = Component):Constructor<TBase&TSuper|TBase|TSuper>{
+    const superBase:Constructor = getSuperBase(base, cuttingFromConstructor);
+    if(superBase){
+        Object.setPrototypeOf(superBase, newSegmentConstructor);
+        return base;
+    }else{
+        return newSegmentConstructor;
+    }
+}
+
+/**
+ * 
+ * @param base 
+ * @param modifierClass 
+ * @returns 
+ */
+export function interleaveClassInheritance<TBase, TModifier>(base:Constructor<TBase>, modifierClass:Constructor<TModifier>):Constructor<TBase&TModifier>{
     
+    return
+}
+
+/**
+ * 
+ * @param constructor 
+ * @param lastSuper 
+ * @returns 
+ */
+export function getSuperBase(constructor:Constructor, lastSuper:Constructor = Component){
+    if(constructor == lastSuper) return null
+    const superCtor = js.getSuper(constructor)
+    return superCtor == lastSuper ? constructor : getSuperBase(superCtor)
+}
+// <TFunction extends Function>()
+
+/**
+ * 
+ * @param constructor 
+ * @param additionalConstructor 
+ * @returns 
+ */
+export function Inheritancify<TBase, TSuper>(constructor:Constructor<TBase>, additionalConstructor:Constructor<TSuper>):Constructor<TBase&TSuper>{
+    
+    return
 }

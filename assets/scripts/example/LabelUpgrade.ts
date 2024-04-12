@@ -4,9 +4,9 @@ const { ccclass, property, executeInEditMode } = _decorator;
 
 @ccclass('LabelUpgrade')
 @executeInEditMode(true)
-export class LabelUpgrade extends Parasitify<Label>(Component) {
+export class LabelUpgrade extends Parasitify(Component, Label) {
     protected start(): void {
-        this.super.string
+        
     }
 
     @override

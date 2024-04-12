@@ -1,6 +1,6 @@
 import { Component, Constructor, error, js, warn, _decorator } from "cc";
 import { DEV, EDITOR } from "cc/env";
-import { hasModifierImplement } from "./Classify";
+import { hasModifierImplement } from "./Inheritancify";
 import { IParasitified } from "../types/ModifierType";
 const { property } = _decorator;
 
@@ -36,7 +36,7 @@ export function override(target: Component, propertyKey: string, descriptor: Pro
  * @param base 
  * @returns 
  */
-export default function Parasitify<TSuper,TBase = Component>(base:Constructor<TBase>):Constructor<TBase & IParasitified<TSuper>>{
+export default function Parasitify<TBase,TSuper>(base:Constructor<TBase>, superConstructor?:Constructor<TSuper>):Constructor<TBase & IParasitified<TSuper>>{
     if(hasModifierImplement(base, ModifierName)){
         return base as unknown as any
     }else{
