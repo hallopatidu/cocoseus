@@ -99,6 +99,9 @@ export function getSuperBase(constructor:Constructor, lastSuper:Constructor = Co
 }
 // <TFunction extends Function>()
 
+
+
+
 /**
  * 
  * @param constructor 

@@ -1,16 +1,19 @@
-import { _decorator, Component, Node } from 'cc';
-import OneFlowify, { action, OneFlowComponent, reference } from '../cocoseus/modifier/OneFlowify';
+import { _decorator, Component, Label, Node, Sprite } from 'cc';
+import OneFlowify, { action, reference } from '../cocoseus/modifier/OneFlowify';
 import { Action } from '../cocoseus/types/ModifierType';
 const { ccclass, property } = _decorator;
 
 @ccclass('TestFlow')
 export class TestFlow extends OneFlowify(Component) {
-    @reference({type:OneFlowComponent})
-    comp1:OneFlowComponent = null;
+    @reference
+    comp1:Component = null;
+
+    @property({type:Sprite})
+    label:Sprite = null
 
     start() {
         OneFlowify.REFERENCE.GLOBAL
-        
+        this.testAction();
     }
 
     update(deltaTime: number) {
@@ -18,7 +21,7 @@ export class TestFlow extends OneFlowify(Component) {
     }
 
     @action('DEFAULT')
-    public testAction(action:Action){
+    public testAction(action?:Action){
 
     }
 

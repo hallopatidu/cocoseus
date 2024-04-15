@@ -1,6 +1,6 @@
 // export type Constructor<T> = new (...args: any[]) => T;
 
-import { __private } from "cc"
+import { Component, __private } from "cc"
 
 
 export interface IParasitified<TSuper> {
@@ -13,8 +13,15 @@ export interface IAsyncProcessified {
     ready(data?:any):void
 }
 
-export interface IOneFlowified {
+export interface IOneFlowified extends Component{
     dispatch(action:Action, ...receiver:string[]):void
+}
+
+
+export type IOneFlowInfo = {
+    node?:string,
+    comp:string,
+    method:string
 }
 
 export type ActionObject = {

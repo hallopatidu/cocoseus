@@ -1,21 +1,34 @@
 import { DEV } from "cc/env";
 import { hasModifierImplement, remakeClassInheritance, mixinClass } from "./Inheritancify";
-import { Component, Constructor, Enum, _decorator, error } from "cc";
-import { Action, BabelPropertyDecoratorDescriptor, IOneFlowified, IPropertyOptions, LegacyPropertyDecorator, PropertyType } from "../types/ModifierType";
+import { Component, Constructor, Enum, _decorator, error, js, log, warn } from "cc";
+import { Action, BabelPropertyDecoratorDescriptor, IOneFlowInfo, IOneFlowified, IPropertyOptions, LegacyPropertyDecorator, PropertyType } from "../types/ModifierType";
+import { Support } from "../utils/Support";
 const { ccclass, property } = _decorator;
 
-export const ModifierName:string = 'OneFlowComponent';
+export const ModifierName:string = 'OneFlowified';
 
-@ccclass('OneFlowComponent')
-export class OneFlowComponent extends Component implements IOneFlowified{
-    dispatch(action:Action, ...receiver:string[]):void {
+const MethodMapper:Map<number, Function> = new Map<number, Function>();
+
+// const ComponentsOnFlow = Symbol()
+
+// @ccclass('OneFlowComponent')
+// export class OneFlowComponent extends Component implements IOneFlowified{
+//     dispatch(action:Action, ...receiver:string[]):void {
         
-    }
+//     }
 
-    wait(){
+//     wait(){
 
-    }
-}
+//     }
+// }
+
+// const modifiedDest:PropertyDescriptor = js.getPropertyDescriptor(js, 'isChildClassOf')
+// modifiedDest.value = ((oldMethod:Function)=>{
+//     return function(subclass: unknown, superclass: unknown):boolean{
+//         return oldMethod.call(this, subclass, superclass) //|| hasModifierImplement()
+//     }
+// })(modifiedDest.value)
+
 
 /**
  * <TSuper,TBase = Component>
@@ -23,7 +36,38 @@ export class OneFlowComponent extends Component implements IOneFlowified{
  * @returns 
  */
 export default function OneFlowify<TBase>(base:Constructor<TBase>):Constructor<TBase & IOneFlowified>{   
-    return (hasModifierImplement(base, ModifierName) ? base : remakeClassInheritance(base, OneFlowComponent, Component)) as unknown as Constructor<TBase & IOneFlowified>
+    if(hasModifierImplement(base, ModifierName)){
+        return base as unknown as any
+    }else{        
+        class OneFlowified extends (base as unknown as Constructor<Component>) implements IOneFlowified {
+            
+            @property({visible:false})
+            token:number = null
+            /**
+             * 
+             */
+            public get internalOnLoad (): (() => void) | undefined {
+                const hierachyPath:string = this.node.getPathInHierarchy();
+                log('Token name:: ' + this.token)
+                return super['internalOnLoad']
+            }
+
+            /**
+             * 
+             * @param action 
+             * @param receiver 
+             */
+            dispatch(action:Action, ...receiver:string[]):void {
+                
+            }
+
+            wait(oneFlowComponent:Component|string, actionType?:string){
+
+            }
+        }
+        return OneFlowified as unknown as Constructor<TBase & IOneFlowified>
+    }
+    // return (hasModifierImplement(base, ModifierName) ? base : remakeClassInheritance(base, OneFlowComponent, Component)) as unknown as Constructor<TBase & IOneFlowified>
 }
 
 OneFlowify.REFERENCE = Enum({
@@ -31,6 +75,14 @@ OneFlowify.REFERENCE = Enum({
     SCEEN:1
 })
 
+
+
+// --------------------------------------
+function generateOneFlowKey(actionType:string, className:string, methodName:string):string{
+    // if(!this.node) return error('Can not load component.')
+    // const hierachyPath:string = this.node.getPathInHierarchy();
+    return "["+actionType + "]" + className + '.' + methodName;
+}
 
 // ------------ Decorator ---------------
 
@@ -52,7 +104,8 @@ export function reference(
     function normalized (target: Parameters<LegacyPropertyDecorator>[0],
         propertyKey: Parameters<LegacyPropertyDecorator>[1],
         descriptorOrInitializer:  BabelPropertyDecoratorDescriptor)
-    {
+    {        
+        ((options ??= {}) as IPropertyOptions).type = Component;
         const propertyNormalized:LegacyPropertyDecorator = property(options);
         propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyKey, descriptorOrInitializer);
     }
@@ -78,17 +131,39 @@ export function reference(
  * @param stateName 
  * @returns 
  */
-export function action(type:string){
+export function action(type:string, priority?:number){
     const actionType:string = type;
-    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        const constructor:Constructor = target.constructor;
+    return function (that: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        const constructor:Constructor = that.constructor;
         if(DEV){
             if(!hasModifierImplement(constructor as Constructor, ModifierName)){
                 error('You need add the OneFlowified Modifier for this class to use @action');
             }
         }
         // 
+        const key:string = generateOneFlowKey(type, constructor.name, propertyKey);
+        const token:number = Support.hashString(key);
+        const callback:Function = async function () {
+            const returnValue:any = descriptor.value.apply(this, Array.from(arguments));
+            return (typeof returnValue === 'object' && typeof returnValue.then === 'function') ? returnValue : await returnValue;
+        }
+        if(!MethodMapper.has(token)){
+            MethodMapper.set(token, callback);
+            that.token = token;
+        }else{
+            error('[OneFlowify] Duplicate method key ' + key)
+        }
         
+        // if(!OneFlowMapper.has(actionType)){
+        //     OneFlowMapper.set(actionType, []);
+        // }
+        // let oneFlowInfos:IOneFlowInfo[] = OneFlowMapper.get(actionType);
+        // const oneFlowInfo:IOneFlowInfo = Object.create(null)
+        // const className:string = this.constructor.name;
+        
+        // if(!oneFlowInfos){
+            
+        // }
         // descriptor.configurable = value;
         // const originMethod:Function = descriptor.value;
         // const constructor: any = target.constructor;
@@ -106,5 +181,6 @@ export function action(type:string){
         //     const returnValue:any = originMethod.apply(this, Array.from(arguments));
         //     return (typeof returnValue === 'object' && typeof returnValue.then === 'function') ? returnValue : Promise.resolve(returnValue);
         // }
+        return descriptor;
     };
 }
