@@ -77,13 +77,22 @@ export function remakeClassInheritance<TBase, TSuper>(base:Constructor<TBase>, n
 
 /**
  * 
- * @param base 
- * @param modifierClass 
+ * @param constructor 
+ * @param tag 
  * @returns 
  */
-export function interleaveClassInheritance<TBase, TModifier>(base:Constructor<TBase>, modifierClass:Constructor<TModifier>):Constructor<TBase&TModifier>{
-    
-    return
+export function getClassTokenSet(constructor:Constructor|Function, tag:any):Set<number>{
+    return constructor[tag] || ((constructor[tag])=new Set<number>());
+}
+
+/**
+ * 
+ * @param constructor 
+ * @param tag 
+ * @returns 
+ */
+export function getInstanceTokenSet(that:Component, tag:any):Set<number>{
+    return that[tag] || ((that[tag])=new Set<number>());
 }
 
 /**

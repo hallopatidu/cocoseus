@@ -16,12 +16,15 @@ export interface IAsyncProcessified {
 export interface IOneFlowified extends Component{
     dispatch(action:Action, ...receiver:string[]):void
 }
+export interface IReferencified extends Component{
+    
+}
 
 
-export type IOneFlowInfo = {
+export type IReferenceInfo = {
     node?:string,
     comp:string,
-    method:string
+    id:number,    
 }
 
 export type ActionObject = {

@@ -28,7 +28,7 @@ export class Support extends Component {
      * @param value 
      * @returns 
      */
-    static hashString(value:string) {
+    static hashString(value:string):number {        
         let hash:number = 5381,i:number=value.length;      
         while(i) {
           hash = (hash * 33) ^ value.charCodeAt(--i);
@@ -39,6 +39,26 @@ export class Support extends Component {
          * signed int to an unsigned by doing an unsigned bitshift. */
         return hash >>> 0;
     }
+
+    /**
+     * 
+     * @param values 
+     * @returns 
+     */
+    static tokenize(...values:string[]):number{
+        const combineString:string = Array.from(values).join('.');
+        return Support.hashString(combineString);
+    }
+
+    /**
+     * 
+     * @param str 
+     * @returns 
+     */
+    static upperFirstCharacter(str:string):string{
+        return str.replace(/\b\w/g, c => c.toUpperCase()).replace(/(?=[A-Z])/g,' ').toString();
+    }
+
 }
 
 

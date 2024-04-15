@@ -1,16 +1,17 @@
 import { DEV } from "cc/env";
-import { hasModifierImplement, remakeClassInheritance, mixinClass } from "./Inheritancify";
-import { Component, Constructor, Enum, _decorator, error, js, log, warn } from "cc";
-import { Action, BabelPropertyDecoratorDescriptor, IOneFlowInfo, IOneFlowified, IPropertyOptions, LegacyPropertyDecorator, PropertyType } from "../types/ModifierType";
+import { hasModifierImplement, remakeClassInheritance, mixinClass, getClassTokenSet } from "./Inheritancify";
+import { Component, Constructor, Enum, Vec3, _decorator, error, js, log, warn } from "cc";
+import { Action, BabelPropertyDecoratorDescriptor, IReferenceInfo, IOneFlowified, IPropertyOptions, LegacyPropertyDecorator, PropertyType } from "../types/ModifierType";
 import { Support } from "../utils/Support";
 const { ccclass, property } = _decorator;
 
 export const ModifierName:string = 'OneFlowified';
 
-const MethodMapper:Map<number, Function> = new Map<number, Function>();
-
-// const ComponentsOnFlow = Symbol()
-
+const FunctionStorage:Map<number, Function> = new Map<number, Function>();
+// const PriorityMapper:Map<number, number> = new Map<number, number>()
+const ActionToken = Symbol();
+const ReferenceStorage:Map<number, IReferenceInfo> = new Map<number, IReferenceInfo>();
+const ActionStorage:Map<number, Vec3> = new Map<number, Vec3>();
 // @ccclass('OneFlowComponent')
 // export class OneFlowComponent extends Component implements IOneFlowified{
 //     dispatch(action:Action, ...receiver:string[]):void {
@@ -41,14 +42,13 @@ export default function OneFlowify<TBase>(base:Constructor<TBase>):Constructor<T
     }else{        
         class OneFlowified extends (base as unknown as Constructor<Component>) implements IOneFlowified {
             
-            @property({visible:false})
-            token:number = null
+            // @property({visible:false})
+            // token:number = null
             /**
              * 
              */
             public get internalOnLoad (): (() => void) | undefined {
-                const hierachyPath:string = this.node.getPathInHierarchy();
-                log('Token name:: ' + this.token)
+                oneFlowRegister(this)
                 return super['internalOnLoad']
             }
 
@@ -75,13 +75,52 @@ OneFlowify.REFERENCE = Enum({
     SCEEN:1
 })
 
-
-
 // --------------------------------------
-function generateOneFlowKey(actionType:string, className:string, methodName:string):string{
-    // if(!this.node) return error('Can not load component.')
-    // const hierachyPath:string = this.node.getPathInHierarchy();
-    return "["+actionType + "]" + className + '.' + methodName;
+
+/**
+ * 
+ * @param comp 
+ * @returns token of record
+ */
+function referenceRegister(comp:Component):number{
+    const constructor:any = comp.constructor;
+    if(comp.node){
+        const hierachyPath:string = comp.node.getPathInHierarchy();
+        const compName:string = constructor.name;
+        const orderIndex:number = comp.node.getComponents(constructor).findIndex((_comp:Component)=>_comp === comp)||0;
+        // 
+        const token:number = Support.tokenize(hierachyPath, compName, orderIndex.toString());
+        if(!ReferenceStorage.has(token)){
+            const refInfo:IReferenceInfo = {
+                node:hierachyPath,
+                comp:compName,
+                id:orderIndex
+            } as IReferenceInfo
+            ReferenceStorage.set(token, refInfo);
+        }else{
+            warn('Reference is declared')            
+        }
+        return token
+    }
+    return -1;
+}
+
+function oneFlowRegister(comp:IOneFlowified&Component){
+    const refToken:number = referenceRegister(comp)
+    const constructor:any = comp.constructor;
+    if(!!constructor[ActionToken] || (constructor[ActionToken] as Set<number>).size){
+        const actionSet:Set<number> = constructor[ActionToken];
+        const iteratorVec3:IterableIterator<number> = actionSet.values();
+        let actionVec:Vec3 = ActionStorage.get(iteratorVec3.next().value);
+        while(actionVec){
+            actionVec.x = refToken;             
+            actionVec = ActionStorage.get(iteratorVec3.next().value);
+        }        
+        
+    }else{
+        DEV && warn('The component has OneFlow Modifier but there is no @action decorate which is used !');
+    }
+    
 }
 
 // ------------ Decorator ---------------
@@ -131,7 +170,7 @@ export function reference(
  * @param stateName 
  * @returns 
  */
-export function action(type:string, priority?:number){
+export function action(type:string, priority:number = 0){
     const actionType:string = type;
     return function (that: any, propertyKey: string, descriptor: PropertyDescriptor) {
         const constructor:Constructor = that.constructor;
@@ -141,19 +180,27 @@ export function action(type:string, priority?:number){
             }
         }
         // 
-        const key:string = generateOneFlowKey(type, constructor.name, propertyKey);
-        const token:number = Support.hashString(key);
-        const callback:Function = async function () {
-            const returnValue:any = descriptor.value.apply(this, Array.from(arguments));
-            return (typeof returnValue === 'object' && typeof returnValue.then === 'function') ? returnValue : await returnValue;
-        }
-        if(!MethodMapper.has(token)){
-            MethodMapper.set(token, callback);
-            that.token = token;
+        const functionToken:number = Support.tokenize(type||'Default', constructor.name, propertyKey.toString());
+        if(!FunctionStorage.has(functionToken)){
+            // Luu callback funtion tuong ung token
+            const callback:Function = async function () {
+                const returnValue:any = descriptor.value.apply(this, Array.from(arguments));
+                return (typeof returnValue === 'object' && typeof returnValue.then === 'function') ? returnValue : await returnValue;
+            }
+            FunctionStorage.set(functionToken, callback); 
+            getClassTokenSet(constructor, ActionToken).add(functionToken);
         }else{
-            error('[OneFlowify] Duplicate method key ' + key)
+            error('[OneFlowify] Duplicate method token ' + functionToken)
         }
-        
+
+        const actionToken:number = Support.tokenize(actionType);
+        if(!ActionStorage.has(actionToken)){
+            ActionStorage.set(actionToken, new Vec3(-1,functionToken, priority));
+            getClassTokenSet(constructor, ActionToken).add(actionToken);
+        }
+        // Save prioryty
+        // PriorityMapper.set(token, priority);
+           
         // if(!OneFlowMapper.has(actionType)){
         //     OneFlowMapper.set(actionType, []);
         // }
