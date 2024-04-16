@@ -13,12 +13,25 @@ export interface IAsyncProcessified {
     ready(data?:any):void
 }
 
-export interface IOneFlowified extends Component{
+export interface IModified extends Component {
+    getInstanceTokens?:(modifierToken:number)=>number[],
+    getClassTokens?:(modifierToken:number)=>number[],
+    recordTokenData?:<TData>(modifierToken:number, token:number, data:TData)=>boolean
+}
+
+export interface IDecoratified extends IModified {
+
+}
+
+export interface IOneFlowified extends IModified{
     dispatch(action:Action, ...receiver:string[]):void
 }
-export interface IReferencified extends Component{
-    
+
+export interface IReferencified extends IModified{
+    test():void
 }
+
+
 
 
 export type IReferenceInfo = {

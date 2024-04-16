@@ -5,25 +5,25 @@ const { ccclass, property } = _decorator;
 
 @ccclass('TestFlow')
 export class TestFlow extends OneFlowify(Component) {
-    @reference
-    comp1:Component = null;
+    // @reference
+    // comp1:Component = null;
 
     @property({type:Sprite})
     label:Sprite = null
 
-    start() {
-        OneFlowify.REFERENCE.GLOBAL
-        this.testAction();
-    }
+    // start() {
+    //     OneFlowify.REFERENCE.GLOBAL
+    //     this.testAction();
+    // }
 
     update(deltaTime: number) {
         
     }
 
-    @action('DEFAULT')
-    public testAction(action?:Action){
+    // @action('DEFAULT')
+    // public testAction(action?:Action){
 
-    }
+    // }
 
 }
 

@@ -1,6 +1,6 @@
 import { Component, Constructor, error, js, warn, _decorator } from "cc";
 import { DEV, EDITOR } from "cc/env";
-import { hasModifierImplement } from "./Inheritancify";
+import { hasModifierImplement } from "./Modifierify";
 import { IParasitified } from "../types/ModifierType";
 const { property } = _decorator;
 
