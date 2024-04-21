@@ -152,7 +152,7 @@ export class ModifierStorage<TData> {
      * @param modifier 
      * @returns 
      */
-    get<TData>(modifier:Function):Map<number, TData>{
+    private get<TData>(modifier:Function):Map<number, TData>{
         const modifierToken:number = Support.tokenize(modifier.name);
         if(!ModifierStorage.Storage.has(modifierToken)){
             ModifierStorage.Storage.set(modifierToken, new Map<number, TData>);

@@ -16,6 +16,25 @@ export default Modifierify<IDecoratified, string>(function Decoratify<TBase>(bas
             return this._storage;
         }
 
+        record(propertyKey:string){
+            let data:string[] = this.storage.select(propertyKey)
+            if(!data) {
+                data = []
+                this.storage.record(propertyKey, data)
+            }
+            data.push(propertyKey);
+        }
+
+        *token():Generator<string>{
+            const decorateKey:string[] = this.storage.select(this.constructor.name);
+            if(decorateKey && decorateKey.length){
+                for (let index = 0; index < decorateKey.length; index++) {
+                    const key:string = decorateKey[index];
+                    yield key;
+                }
+            }
+        }
+
         public get internalOnLoad (): (() => void) | undefined {
             if(EDITOR){
                 // enumifyProperty(this,)

@@ -78,10 +78,11 @@ export function reference(
         propertyKey: Parameters<LegacyPropertyDecorator>[1],
         descriptorOrInitializer:  BabelPropertyDecoratorDescriptor)
     {      
-        const className:string = target.name;
+        // const className:string = target.name;
         // storage(Decoratify).record()
-        const storage:ModifierStorage<string> = target.storage as ModifierStorage<string>;
-        storage.record<string>(className, propertyKey.toString());
+        // const storage:ModifierStorage<string> = target.storage as ModifierStorage<string>;
+        // storage.record<string>(className, propertyKey.toString());
+        target.record(propertyKey.toString());
         // 
         if(!options){
             options = {};
