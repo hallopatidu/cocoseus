@@ -3,8 +3,8 @@ import { CCClass } from "cc";
 import { js } from "cc";
 import { Enum } from "cc";
 import { Constructor } from "cc";
-import { ModifierName } from "./AsyncProcessify";
 import { Support } from "../utils/Support";
+import { ModifierMethod } from "../types/ModifierType";
 
 export function getHierarchyMethod(constructor:any, methodName:string):Function{
     if(!constructor) return null;
@@ -100,17 +100,84 @@ const StorageHub:Map<number, Map<number, any>> = new Map<number, Map<number, any
  * @param modifierKey 
  * @returns 
  */
-export function getModifierStorage<TStorage>(modifierKey:string|number):Map<number, TStorage>{
+export function getModifierStorage<TStorage>(modifierKey:string|number):Map<number, TStorage>{    
     const modifierToken:number = js.isNumber(modifierKey) ? modifierKey as number : Support.tokenize(modifierKey as string);
     if(!StorageHub.has(modifierToken)){
-        StorageHub.set(modifierToken, new Map<number, TStorage>)
+        StorageHub.set(modifierToken, new Map<number, TStorage>);
     }
     return StorageHub.get(modifierToken);
 }
 
-function updateModifierMethod(constructor:Constructor, methodName:string, value:Function){
-    if(!getHierarchyMethod(constructor, methodName)){
-        constructor.prototype[methodName] = value;
+/**
+ * 
+ * @param modifier 
+ * @param classToken 
+ * @param data 
+ */
+export function recordClassToken<TData>(modifier:Function, classToken:string|number, data:TData){
+    const customToken:number = js.isNumber(classToken) ? classToken as number : Support.tokenize(classToken as string);
+    const storage:Map<number, TData> = getModifierStorage<TData>(modifier.name);
+    storage.set(customToken, data)
+}
+
+/**
+ * 
+ * @param modifier 
+ * @returns 
+ */
+// export function storage<TData>(modifier:Function):ModifierMethod<TData>{
+//     const storage:Map<number, TData> = getModifierStorage<TData>(modifier.name);
+//     return {
+//         record:(token:number, data:TData)=>{
+//             storage.set(token, data)
+//         },
+//         select:(token:number):TData=>{
+//             return storage.get(token)
+//         }
+//     }
+// }
+
+
+export class ModifierStorage<TData> {
+    static Storage:Map<number, Map<number, any>> = new Map<number, Map<number, any>> ();
+
+    private modifierToken:number
+
+    constructor(modifier:Function){
+        this.modifierToken = Support.tokenize(modifier.name);
+    }
+
+    /**
+     * 
+     * @param modifier 
+     * @returns 
+     */
+    get<TData>(modifier:Function):Map<number, TData>{
+        const modifierToken:number = Support.tokenize(modifier.name);
+        if(!ModifierStorage.Storage.has(modifierToken)){
+            ModifierStorage.Storage.set(modifierToken, new Map<number, TData>);
+        }
+        return ModifierStorage.Storage.get(modifierToken);
+    }
+
+    /**
+     * 
+     * @param token 
+     * @param data 
+     */
+    record<TData>(token:string|number, data:TData){
+        const customToken:number = js.isNumber(token) ? token as number : Support.tokenize(token as string);
+        ModifierStorage.Storage.get(this.modifierToken).set(customToken, data);
+    }
+
+    /**
+     * 
+     * @param token 
+     * @returns 
+     */
+    select<TData>(token:string|number):TData{
+        const customToken:number = js.isNumber(token) ? token as number : Support.tokenize(token as string);
+        return ModifierStorage.Storage.get(this.modifierToken).get(customToken);
     }
 }
 
@@ -120,13 +187,14 @@ function updateModifierMethod(constructor:Constructor, methodName:string, value:
  * @param additionalConstructor 
  * @returns 
  */
-export function Modifierify<TModifier, TData>(modifier:Function){
+export function Modifierify<TModifier, TData>(modifier:Function):(<TBase>(base: Constructor<TBase>) => Constructor<TBase & TModifier>){
     // Lay storge chua dang ky cua cac modifier. modifierifyStorage chua ten map voi class cua cac Modifier.
     const ModifierifyToken:number = Support.tokenize(modifier.name)
-    const modifierNamedStorage:Map<number, string> = getModifierStorage<string>(Modifierify.name);
+    // modifierListingStorage Map token cua modifier.name voi ten class template
+    const modifierListingStorage:Map<number, string> = getModifierStorage<string>(Modifierify.name);
     // 
     
-    let modifierTemplateClassName:string = modifierNamedStorage.get(ModifierifyToken);
+    let modifierTemplateClassName:string = modifierListingStorage.get(ModifierifyToken);
     // 
     return function<TBase>(base:Constructor<TBase>):Constructor<TBase&TModifier>{
         // Kiem tra lan 1, trong truong hop da ton tai Modifier.
@@ -136,29 +204,32 @@ export function Modifierify<TModifier, TData>(modifier:Function){
         // Neu modifierTemplateClassName chua duoc khoi tao. Map tuong ung ten cua Modifier voi ten cua Modifier Template Class.
         if(!modifierTemplateClassName) { 
             modifierTemplateClassName = superClass.name;
-            modifierNamedStorage.set(ModifierifyToken, modifierTemplateClassName)
+            modifierListingStorage.set(ModifierifyToken, modifierTemplateClassName);
         };        
         // Kiem tra lan 2 trong truong hop modifierTemplateClassName chua duoc khai bao lan nao.
         if(!modifierTemplateClassName && hasModifierImplement(base, modifierTemplateClassName)) return base as unknown as Constructor<TBase&TModifier>;        
-
+        // 
+        // superClass['storage'] = new ModifierStorage(ModifierifyToken)
         // Note: Chua xu ly van de nhieu modifier ghi de funtion doan nay
         // Khai bao cac func dac thu cua mot Modifier. 
-        updateModifierMethod(superClass, 'getClassTokens', function(modifierToken:number):number[]{
-            const tokenSet:Set<number> = getTokenSet(this.constructor, modifierToken);
-            return [...tokenSet.values()]
-        })
+        // updateModifierMethod(superClass, 'getClassTokens', function(modifierToken:number):number[]{
+        //     const tokenSet:Set<number> = getTokenSet(this.constructor, modifierToken);
+        //     return [...tokenSet.values()]
+        // })
 
-        updateModifierMethod(superClass, 'getInstanceTokens', function(modifierToken:number):number[]{
-            const tokenSet:Set<number> = getTokenSet(this, modifierToken);
-            return [...tokenSet.values()]
-        })
-
-        updateModifierMethod(superClass, 'recordTokenData', function(modifierToken:number, customToken:number, data:TData):boolean{
-            const customStorage = getModifierStorage<typeof data>(modifierToken)
-            const tokenSet:Set<number> = getTokenSet(this, modifierToken);                
-            return !customStorage.has(customToken) && !!customStorage.set(customToken, data) && !!tokenSet.add(customToken);
-        })
+        // updateModifierMethod(superClass, 'getInstanceTokens', function(modifierToken:number):number[]{
+        //     const tokenSet:Set<number> = getTokenSet(this, modifierToken);
+        //     return [...tokenSet.values()]
+        // })
+        // const customStorage = getModifierStorage<TData>(ModifierifyToken);
+        // updateModifierMethod(superClass, 'recordTokenData', function(modifierToken:number, customToken:number, data:TData):boolean{           
+        //     const tokenSet:Set<number> = getTokenSet(this, modifierToken);
+        //     return !customStorage.has(customToken) && !!customStorage.set(customToken, data) && !!tokenSet.add(customToken);
+        // })
         // 
         return superClass as unknown as Constructor<TBase&TModifier>;
-    } as <TBase>(base:Constructor<TBase>)=>Constructor<TBase&TModifier>
+    } as <TBase>(base:Constructor<TBase>)=>Constructor<TBase&TModifier>;
+
 }
+
+

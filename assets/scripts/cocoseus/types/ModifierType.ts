@@ -31,10 +31,13 @@ export interface IReferencified extends IModified{
     test():void
 }
 
+// -------------
 
-
-
-export type IReferenceInfo = {
+export type ModifierMethod<TData> = {
+    record:(token:number, data:any)=>void;
+    select:(token:number)=>TData
+}
+export type ReferenceInfo = {
     node?:string,
     comp:string,
     id:number,    

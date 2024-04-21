@@ -1,7 +1,7 @@
 import { DEV } from "cc/env";
 import { getTokenSet, hasModifierImplement} from "./Modifierify";
 import { Component, Constructor, Enum, Vec3, _decorator, error, js, log, warn } from "cc";
-import { Action, BabelPropertyDecoratorDescriptor, IReferenceInfo, IOneFlowified, IPropertyOptions, LegacyPropertyDecorator, PropertyType } from "../types/ModifierType";
+import { Action, BabelPropertyDecoratorDescriptor, ReferenceInfo, IOneFlowified, IPropertyOptions, LegacyPropertyDecorator, PropertyType } from "../types/ModifierType";
 import { Support } from "../utils/Support";
 // import Referencify from "./Referencify";
 const { ccclass, property } = _decorator;
@@ -12,7 +12,7 @@ const FunctionStorage:Map<number, Function> = new Map<number, Function>();
 // const PriorityMapper:Map<number, number> = new Map<number, number>()
 const FunctionToken = Symbol();
 const ActionToken = Symbol();
-const ReferenceStorage:Map<number, IReferenceInfo> = new Map<number, IReferenceInfo>();
+const ReferenceStorage:Map<number, ReferenceInfo> = new Map<number, ReferenceInfo>();
 const ActionStorage:Map<number, Vec3[]> = new Map<number, Vec3[]>();
 
 // @ccclass('OneFlowComponent')
