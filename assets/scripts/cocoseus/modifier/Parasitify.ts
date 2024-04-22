@@ -1,6 +1,6 @@
 import { Component, Constructor, error, js, warn, _decorator } from "cc";
 import { DEV, EDITOR } from "cc/env";
-import { hasModifierImplement } from "./Modifierify";
+import { hasImplement } from "./Modifierify";
 import { IParasitified } from "../types/ModifierType";
 const { property } = _decorator;
 
@@ -16,7 +16,7 @@ export const OverrideMethodNameMap = Symbol();
  */
 export function override(target: Component, propertyKey: string, descriptor: PropertyDescriptor){
     if(DEV){
-        if(!hasModifierImplement(target.constructor as Constructor, ModifierName)){
+        if(!hasImplement(target.constructor as Constructor, ModifierName)){
             error('You need add the Parasitify Modifier for this class to use @override');
         }
     }
@@ -37,7 +37,7 @@ export function override(target: Component, propertyKey: string, descriptor: Pro
  * @returns 
  */
 export default function Parasitify<TBase,TSuper>(base:Constructor<TBase>, superConstructor?:Constructor<TSuper>):Constructor<TBase & IParasitified<TSuper>>{
-    if(hasModifierImplement(base, ModifierName)){
+    if(hasImplement(base, ModifierName)){
         return base as unknown as any
     }else{
         class Parasitified extends (base as unknown as Constructor<Component>) implements IParasitified<TSuper>{
@@ -104,7 +104,7 @@ function excuteHierarchyOverridding(thisComp:Component){
         let investigateComp:Component = null;
         if(eligibleForInheritance){
             // const componentIsParasite:boolean = js.isChildClassOf(component.constructor, parasiteClass); 
-            const componentIsParasite:boolean = hasModifierImplement(component.constructor as Constructor, ModifierName);            
+            const componentIsParasite:boolean = hasImplement(component.constructor as Constructor, ModifierName);            
             hostComp = componentIsParasite ? hostComp : component;                
             let enabledIndex:number = index;
             // Search enabled nextComp

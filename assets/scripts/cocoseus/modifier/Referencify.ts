@@ -1,38 +1,58 @@
 // Referencify
 
 import { _decorator, Component, Constructor, Enum, js, warn } from "cc";
-import { convertToEnum, getModifierStorage, getTokenSet, Modifierify, ModifierStorage } from "./Modifierify"
+import { convertToEnum, DefaultModifierState, getTokenSet, Modifierify } from "./Modifierify"
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, ModifierMethod } from "../types/ModifierType";
 import { Support } from "../utils/Support";
 import { EDITOR } from "cc/env";
-import Decoratify from "./Decoratify";
-const { property } = _decorator;
+const { ccclass,property } = _decorator;
 
+
+@ccclass
+export class ReferenceState extends DefaultModifierState {
+    
+    // get ENUM():any{
+    //     if(EDITOR){
+    //         const storage:Map<number, ReferenceInfo> = getModifierStorage<ReferenceInfo>(Referencify.name);
+    //         const arrayList:string[] = [...storage.values()].reduce((refList:string[], info:ReferenceInfo, index:number)=>{
+    //             if(info){
+    //                 refList[index] = info.comp + '<' + info.node + '>' + (!!info.id ? '(' + info.id+ ')' : '');
+    //             }
+    //             return refList
+    //         },[])
+    //         return convertToEnum(arrayList);
+    //     }
+    //     return Enum({default:-1})
+    // }
+    private keys:Set<string> = new Set<string>()
+    record(propertyKey:string){
+        !this.keys.has(propertyKey) && this.keys.add(propertyKey);
+    }
+
+}
 
 /**
  * 
  * @param base 
  * @returns 
  */
-export default Modifierify<IReferencified, ReferenceInfo>(function Referencify <TBase>(base:Constructor<TBase>):Constructor<TBase & IReferencified>{             
+export default Modifierify<IReferencified>(function Referencify <TBase>(base:Constructor<TBase>):Constructor<TBase & IReferencified>{             
     class Referencified extends (base as unknown as Constructor<Component>) implements IReferencified {
         static _ENUM:any
-        static get ENUM():any{
-            if(EDITOR){
-                const storage:Map<number, ReferenceInfo> = getModifierStorage<ReferenceInfo>(Referencify.name);
-                const arrayList:string[] = [...storage.values()].reduce((refList:string[], info:ReferenceInfo, index:number)=>{
-                    if(info){
-                        refList[index] = info.comp + '<' + info.node + '>' + (!!info.id ? '(' + info.id+ ')' : '');
-                    }
-                    return refList
-                },[])
-                return convertToEnum(arrayList);
-            }
-            return Enum({default:-1})
-        }
-
+        // static get ENUM():any{
+        //     if(EDITOR){
+        //         const storage:Map<number, ReferenceInfo> = getModifierStorage<ReferenceInfo>(Referencify.name);
+        //         const arrayList:string[] = [...storage.values()].reduce((refList:string[], info:ReferenceInfo, index:number)=>{
+        //             if(info){
+        //                 refList[index] = info.comp + '<' + info.node + '>' + (!!info.id ? '(' + info.id+ ')' : '');
+        //             }
+        //             return refList
+        //         },[])
+        //         return convertToEnum(arrayList);
+        //     }
+        //     return Enum({default:-1})
+        // }
         
-
         public get internalOnLoad (): (() => void) | undefined {
             // 
             if(this.node){
@@ -56,12 +76,18 @@ export default Modifierify<IReferencified, ReferenceInfo>(function Referencify <
             
         }
     }
+    return Referencified as unknown as Constructor<TBase & IReferencified>;
+
+}, ReferenceState) 
 
 
-    return Referencified as unknown as Constructor<TBase & IReferencified>
-    // return Referencified as unknown as Constructor<TBase & IReferencified>
-}) 
+function record(){
 
+}
+
+function update(){
+
+}
 
 // ----------- Decorator ------------
 
@@ -77,12 +103,9 @@ export function reference(
     function normalized (target: Parameters<LegacyPropertyDecorator>[0],
         propertyKey: Parameters<LegacyPropertyDecorator>[1],
         descriptorOrInitializer:  BabelPropertyDecoratorDescriptor)
-    {      
-        // const className:string = target.name;
-        // storage(Decoratify).record()
-        // const storage:ModifierStorage<string> = target.storage as ModifierStorage<string>;
-        // storage.record<string>(className, propertyKey.toString());
-        target.record(propertyKey.toString());
+    {     
+        const modifierState:ReferenceState = ReferenceState.use<ReferenceState>(target);
+        modifierState.record(propertyKey.toString());
         // 
         if(!options){
             options = {};

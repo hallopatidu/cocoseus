@@ -1,5 +1,5 @@
 import { DEV } from "cc/env";
-import { getTokenSet, hasModifierImplement} from "./Modifierify";
+import { getTokenSet, hasImplement} from "./Modifierify";
 import { Component, Constructor, Enum, Vec3, _decorator, error, js, log, warn } from "cc";
 import { Action, BabelPropertyDecoratorDescriptor, ReferenceInfo, IOneFlowified, IPropertyOptions, LegacyPropertyDecorator, PropertyType } from "../types/ModifierType";
 import { Support } from "../utils/Support";
@@ -179,7 +179,7 @@ export function action(type:string, priority:number = 0){
     return function (that: any, propertyKey: string, descriptor: PropertyDescriptor) {
         const constructor:Constructor = that.constructor;
         if(DEV){
-            if(!hasModifierImplement(constructor as Constructor, ModifierName)){
+            if(!hasImplement(constructor as Constructor, ModifierName)){
                 error('You need add the OneFlowified Modifier for this class to use @action');
             }
         }

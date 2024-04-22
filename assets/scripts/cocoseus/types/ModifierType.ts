@@ -13,10 +13,14 @@ export interface IAsyncProcessified {
     ready(data?:any):void
 }
 
+export interface IModifierState {
+    
+}
+
 export interface IModified extends Component {
-    getInstanceTokens?:(modifierToken:number)=>number[],
-    getClassTokens?:(modifierToken:number)=>number[],
-    recordTokenData?:<TData>(modifierToken:number, token:number, data:TData)=>boolean
+    // getInstanceTokens?:(modifierToken:number)=>number[],
+    // getClassTokens?:(modifierToken:number)=>number[],
+    // recordTokenData?:<TData>(modifierToken:number, token:number, data:TData)=>boolean
 }
 
 export interface IDecoratified extends IModified {
@@ -33,9 +37,10 @@ export interface IReferencified extends IModified{
 
 // -------------
 
-export type ModifierMethod<TData> = {
-    record:(token:number, data:any)=>void;
-    select:(token:number)=>TData
+export type ModifierMethod= {
+    use:(modifier:Function)=>any
+    // record:(token:number, data:any)=>void;
+    // select:(token:number)=>TData
 }
 export type ReferenceInfo = {
     node?:string,
