@@ -199,7 +199,7 @@ export function getSuperBase(constructor:Constructor, lastSuper:Constructor = Co
 
 // --------------- Modifier -----------------
 
-const StateStorage:Map<number, Constructor<DefaultModifierState>> = new Map<number, Constructor<DefaultModifierState>>();
+const StateStorage:Map<number, Set<string>> = new Map<number, Set<string>>();
 
 export function hasModifierImplement(constructor:Constructor, state:Constructor):boolean{
     if(!constructor) return false;
@@ -212,23 +212,15 @@ export function hasModifierImplement(constructor:Constructor, state:Constructor)
  * @param additionalConstructor 
  * @returns 
  */
-export function Modifierify<TModifier>(modifier:Function, stateConstructor:Constructor<DefaultModifierState>):(<TBase>(base: Constructor<TBase>) => Constructor<TBase & TModifier>){
-    // Lay storge chua dang ky cua cac modifier. modifierifyStorage chua ten map voi class cua cac Modifier.
-    // const ModifierifyToken:number = Support.tokenize(modifier.name)
-    // modifierListingStorage Map token cua modifier.name voi state data.
-    // const modifierListingStorage:Map<number, Constructor> = getModifierStorage<Constructor>(Modifierify.name);
-    // 
-    
-    // 
-    // 
+export function Modifierify<TModifier>(modifier:Function, stateConstructor:Constructor<DefaultModifierState>):(<TBase>(base: Constructor<TBase>) => Constructor<TBase & TModifier>){    
     return function<TBase>(base:Constructor<TBase>):Constructor<TBase&TModifier>{
         // 
         if(hasModifierImplement(base, stateConstructor)) return base as unknown as Constructor<TBase&TModifier>;
         //
-        const stateToken:number = Support.tokenize(stateConstructor.name);
-        if(!StateStorage.has(stateToken)){
-            StateStorage.set(stateToken, stateConstructor)
-        }
+        
+        // if(!StateStorage.has(stateToken)){
+        //     StateStorage.set(stateToken, stateConstructor);
+        // }
         // Neu modifierTemplateClassName chua duoc khoi tao. Map tuong ung ten cua Modifier voi state data.
         // if(!modifierListingStorage.has(ModifierifyToken)) { 
         //     modifierListingStorage.set(ModifierifyToken, state);
@@ -242,6 +234,7 @@ export function Modifierify<TModifier>(modifier:Function, stateConstructor:Const
 
 @ccclass('DefaultIdentifier')
 export class DefaultModifierState {    
+    
     /**
      * Goi ra data dung chung giua cac class va cac instance dung chung modifier state
      * @param target 
@@ -250,16 +243,39 @@ export class DefaultModifierState {
     static use<TState>(target:any):TState{
         const constructor = target.constructor;
         if(!constructor) return null;
-        if(constructor[State] && constructor[State].constructor == this){
-
-            return constructor[State] as TState;
+        if(constructor[State] && constructor[State].constructor == this){            
+            const state:DefaultModifierState = constructor[State];
+            state.registerClass(this.name, constructor.name)
+            return state as TState;
         }else{
             return this.use<TState>(js.getSuper(constructor))
         }        
     }
 
-    registerClass(){
+    protected _token:number = -1
 
+    constructor(token:number|string){
+        this._token = js.isNumber(token) ? token as number : Support.tokenize(token as string);
+    }
+
+    registerClass(stateToken:string|number, className:string){
+        const verifyStateToken:number = js.isNumber(stateToken) ? stateToken as number : Support.tokenize(stateToken as string);
+        if(stateToken && !StateStorage.has(verifyStateToken)){
+            StateStorage.set(verifyStateToken, new Set<string>());
+        }
+        (StateStorage.get(verifyStateToken) as Set<string>).add(className);
+    }
+
+    hasRegister(stateToken:number, className:string):boolean{
+        const verifyStateToken:number = js.isNumber(stateToken) ? stateToken as number : Support.tokenize(stateToken as string);
+        if(stateToken && !StateStorage.has(verifyStateToken)){
+            StateStorage.set(verifyStateToken, new Set<string>());
+        }
+        return (StateStorage.get(verifyStateToken) as Set<string>).has(className);
+    }
+
+    getState(){
+        
     }
 
 }
