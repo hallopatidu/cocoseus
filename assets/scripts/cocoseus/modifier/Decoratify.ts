@@ -1,23 +1,20 @@
-import { Component, Constructor, _decorator } from "cc";
+import { Component, Constructor, Label, _decorator } from "cc";
 import { IDecoratified } from "../types/ModifierType";
 import { DefaultModifierState, Modifierify, getTokenSet } from "./Modifierify";
 import { EDITOR } from "cc/env";
 const { ccclass } = _decorator;
 
-@ccclass('DecorateIdentifier')
+@ccclass('DecoratorState')
 class DecoratorState extends DefaultModifierState{
     // static record()
 }
 
+type con = Constructor<Label>
 /**
  * 
  */
-export default Modifierify<IDecoratified>(function Decoratify<TBase>(base:Constructor<TBase>):Constructor<TBase & IDecoratified>{
-    class Decoratified extends (base as unknown as Constructor<Component>) implements IDecoratified {       
-
-        
-
-
+export default Modifierify<IDecoratified>(function Decoratify<TBase extends Constructor<Component>>(base:TBase):Constructor<TBase & IDecoratified>{
+    class Decoratified extends base implements IDecoratified {
         public get internalOnLoad (): (() => void) | undefined {
             if(EDITOR){
                 // enumifyProperty(this,)
@@ -28,6 +25,8 @@ export default Modifierify<IDecoratified>(function Decoratify<TBase>(base:Constr
     } 
     
 
+    
+    
     // storage.set()
     return Decoratified as unknown as Constructor<TBase & IDecoratified>
 }, DecoratorState)

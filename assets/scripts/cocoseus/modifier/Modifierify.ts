@@ -1,4 +1,4 @@
-import { Component, _decorator, warn } from "cc";
+import { Component, _decorator, log, warn } from "cc";
 import { CCClass } from "cc";
 import { js } from "cc";
 import { Enum } from "cc";
@@ -7,14 +7,12 @@ import { Support } from "../utils/Support";
 import { IModifierState } from "../types/ModifierType";
 const { ccclass } = _decorator;
 
-const State = Symbol()
+const State = '$modifier';
 
 export function getHierarchyMethod(constructor:any, methodName:string):Function{
     if(!constructor) return null;
     return constructor?.prototype[methodName] || getHierarchyMethod(js.getSuper(constructor), methodName)
 }
-
-
 
 export function hasImplement(constructor:Constructor, modifierName:string):boolean{
     if(!constructor) return false;    
@@ -199,11 +197,25 @@ export function getSuperBase(constructor:Constructor, lastSuper:Constructor = Co
 
 // --------------- Modifier -----------------
 
-const StateStorage:Map<number, Set<string>> = new Map<number, Set<string>>();
+const ModifierStateStorage:Map<number, Set<string>> = new Map<number, Set<string>>();
 
 export function hasModifierImplement(constructor:Constructor, state:Constructor):boolean{
     if(!constructor) return false;
     return constructor[State] && constructor[State].constructor == state ? true : hasModifierImplement(js.getSuper(constructor), state);
+}
+
+function useState<TState>(target:any):TState{
+    // const constructor = target.constructor; //Object.getPrototypeOf(target)
+    if(!target) return null;
+    const prototype = Object.getPrototypeOf(target);
+    if(prototype[State] && prototype[State].constructor == this){
+        const modifierState:string = this.name;
+        const state:DefaultModifierState = prototype[State];
+        if(!state.hasRegister(this.name, target.name)) {state.registerClass(modifierState, target.name)};
+        return state as TState;
+    }else{
+        return useState.call(this, js.getSuper(target))
+    }        
 }
 
 /**
@@ -212,66 +224,85 @@ export function hasModifierImplement(constructor:Constructor, state:Constructor)
  * @param additionalConstructor 
  * @returns 
  */
-export function Modifierify<TModifier>(modifier:Function, stateConstructor:Constructor<DefaultModifierState>):(<TBase>(base: Constructor<TBase>) => Constructor<TBase & TModifier>){    
-    return function<TBase>(base:Constructor<TBase>):Constructor<TBase&TModifier>{
-        // 
-        if(hasModifierImplement(base, stateConstructor)) return base as unknown as Constructor<TBase&TModifier>;
-        //
-        
-        // if(!StateStorage.has(stateToken)){
-        //     StateStorage.set(stateToken, stateConstructor);
-        // }
-        // Neu modifierTemplateClassName chua duoc khoi tao. Map tuong ung ten cua Modifier voi state data.
-        // if(!modifierListingStorage.has(ModifierifyToken)) { 
-        //     modifierListingStorage.set(ModifierifyToken, state);
-        // };
-        const superClass:Constructor = modifier.apply(this, Array.from(arguments));        
-        superClass[State] = new stateConstructor();
-        return superClass as unknown as Constructor<TBase&TModifier>;
-    } as <TBase>(base:Constructor<TBase>)=>Constructor<TBase&TModifier>;
+type validateTBase<T> = T extends { __props__: unknown, __values__: unknown } ? Constructor<T> : any;
+type ReturnModifier<T> = T extends Component? Constructor<T> : DefaultModifierState;
 
+export function Modifierify<TModifier>(modifier:Function, stateConstructor:Constructor<DefaultModifierState>):(<TBase>(base:validateTBase<TBase>)=>ReturnModifier<TBase&TModifier>){    
+    
+    return function<TBase>(base:validateTBase<TBase>):ReturnModifier<TBase&TModifier>{
+        if(base['__props__'] && base['__values__']){            // 
+            if(hasModifierImplement(base as Constructor, stateConstructor)) return base as unknown as ReturnModifier<TBase&TModifier>;
+            const superClass:Constructor = modifier.apply(this, Array.from(arguments));        
+            superClass[State] = new stateConstructor(modifier.name);
+            return superClass as unknown as ReturnModifier<TBase&TModifier>;
+        }else{
+            return useState.call(stateConstructor, base)
+        }   
+    } as <TBase>(base:validateTBase<TBase>)=>ReturnModifier<TBase&TModifier>
 }
 
 @ccclass('DefaultIdentifier')
-export class DefaultModifierState {    
-    
+export class DefaultModifierState {  
+        
     /**
      * Goi ra data dung chung giua cac class va cac instance dung chung modifier state
      * @param target 
      * @returns 
      */
-    static use<TState>(target:any):TState{
-        const constructor = target.constructor;
-        if(!constructor) return null;
-        if(constructor[State] && constructor[State].constructor == this){            
-            const state:DefaultModifierState = constructor[State];
-            state.registerClass(this.name, constructor.name)
-            return state as TState;
-        }else{
-            return this.use<TState>(js.getSuper(constructor))
-        }        
+    // static use<TState>(target:any):TState{
+    //     const constructor = target.constructor;
+    //     if(!constructor) return null;
+    //     if(constructor[State] && constructor[State].constructor == this){
+    //         const modifierState:string = this.name;
+    //         const state:DefaultModifierState = constructor[State];
+    //         if(!state.hasRegister(this.name, constructor.name)) {state.registerClass(modifierState, constructor.name)};
+    //         return state as TState;
+    //     }else{
+    //         return this.use<TState>(js.getSuper(constructor))
+    //     }        
+    // }
+
+    protected _modifierToken:number = -1;
+
+    private _token:number = -1;
+    get token():number{
+        if(this._token < 0){
+            this._token = Support.tokenize(this.constructor.name)
+        }
+        return this._token;
     }
 
-    protected _token:number = -1
-
-    constructor(token:number|string){
-        this._token = js.isNumber(token) ? token as number : Support.tokenize(token as string);
+    constructor(modifierName:string){        
+        this._modifierToken = Support.tokenize(modifierName);         
     }
 
+    
+
+    /**
+     * 
+     * @param stateToken 
+     * @param className 
+     */
     registerClass(stateToken:string|number, className:string){
         const verifyStateToken:number = js.isNumber(stateToken) ? stateToken as number : Support.tokenize(stateToken as string);
-        if(stateToken && !StateStorage.has(verifyStateToken)){
-            StateStorage.set(verifyStateToken, new Set<string>());
+        if(stateToken && !ModifierStateStorage.has(verifyStateToken)){
+            ModifierStateStorage.set(verifyStateToken, new Set<string>());
         }
-        (StateStorage.get(verifyStateToken) as Set<string>).add(className);
+        (ModifierStateStorage.get(verifyStateToken) as Set<string>).add(className);
     }
 
-    hasRegister(stateToken:number, className:string):boolean{
+    /**
+     * 
+     * @param stateToken 
+     * @param className 
+     * @returns 
+     */
+    hasRegister(stateToken:string|number, className:string):boolean{
         const verifyStateToken:number = js.isNumber(stateToken) ? stateToken as number : Support.tokenize(stateToken as string);
-        if(stateToken && !StateStorage.has(verifyStateToken)){
-            StateStorage.set(verifyStateToken, new Set<string>());
+        if(stateToken && !ModifierStateStorage.has(verifyStateToken)){
+            ModifierStateStorage.set(verifyStateToken, new Set<string>());
         }
-        return (StateStorage.get(verifyStateToken) as Set<string>).has(className);
+        return (ModifierStateStorage.get(verifyStateToken) as Set<string>).has(className);
     }
 
     getState(){

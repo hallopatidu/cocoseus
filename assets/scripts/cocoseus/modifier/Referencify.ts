@@ -5,6 +5,7 @@ import { convertToEnum, DefaultModifierState, getTokenSet, Modifierify } from ".
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, ModifierMethod } from "../types/ModifierType";
 import { Support } from "../utils/Support";
 import { EDITOR } from "cc/env";
+import Decoratify from "./Decoratify";
 const { ccclass,property } = _decorator;
 
 
@@ -76,7 +77,7 @@ export default Modifierify<IReferencified>(function Referencify <TBase>(base:Con
             
         }
     }
-    return Referencified as unknown as Constructor<TBase & IReferencified>;
+    return Decoratify(Decoratify(Referencified)) as unknown as Constructor<TBase & IReferencified>;
 
 }, ReferenceState) 
 
@@ -104,8 +105,9 @@ export function reference(
         propertyKey: Parameters<LegacyPropertyDecorator>[1],
         descriptorOrInitializer:  BabelPropertyDecoratorDescriptor)
     {     
-        const modifierState:ReferenceState = ReferenceState.use<ReferenceState>(target);
-        modifierState.record(propertyKey.toString());
+        // const modifierState:ReferenceState = ReferenceState.use<ReferenceState>(target);
+        // modifierState.record(propertyKey.toString());
+        Decoratify(target)
         // 
         if(!options){
             options = {};
