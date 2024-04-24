@@ -2,10 +2,11 @@
 
 import { _decorator, Component, Constructor, Enum, js, warn } from "cc";
 import { convertToEnum, DefaultModifierState, getTokenSet, Modifierify } from "./Modifierify"
-import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, ModifierMethod } from "../types/ModifierType";
+import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, ModifierMethod, IStaticReferencified } from "../types/ModifierType";
 import { Support } from "../utils/Support";
 import { EDITOR } from "cc/env";
 import Decoratify from "./Decoratify";
+import { Inheritancify } from "./Inheritancify";
 const { ccclass,property } = _decorator;
 
 
@@ -37,9 +38,9 @@ export class ReferenceState extends DefaultModifierState {
  * @param base 
  * @returns 
  */
-export default Modifierify<IReferencified>(function Referencify <TBase>(base:Constructor<TBase>):Constructor<TBase & IReferencified>{             
-    class Referencified extends (base as unknown as Constructor<Component>) implements IReferencified {
-        static _ENUM:any
+export default Inheritancify<IReferencified, IStaticReferencified>(function Referencify <TBase>(base:Constructor<TBase>):Constructor<TBase & IReferencified>{             
+    class Referencified extends Decoratify(base as unknown as Constructor<Component>) implements IReferencified {
+        // static _ENUM:any
         // static get ENUM():any{
         //     if(EDITOR){
         //         const storage:Map<number, ReferenceInfo> = getModifierStorage<ReferenceInfo>(Referencify.name);
@@ -77,18 +78,11 @@ export default Modifierify<IReferencified>(function Referencify <TBase>(base:Con
             
         }
     }
-    return Decoratify(Decoratify(Referencified)) as unknown as Constructor<TBase & IReferencified>;
+    return Referencified as unknown as Constructor<TBase & IReferencified>;
 
-}, ReferenceState) 
+}) 
 
 
-function record(){
-
-}
-
-function update(){
-
-}
 
 // ----------- Decorator ------------
 
@@ -105,9 +99,8 @@ export function reference(
         propertyKey: Parameters<LegacyPropertyDecorator>[1],
         descriptorOrInitializer:  BabelPropertyDecoratorDescriptor)
     {     
-        // const modifierState:ReferenceState = ReferenceState.use<ReferenceState>(target);
-        // modifierState.record(propertyKey.toString());
-        Decoratify(target)
+        // Truy xuất vào Injector cua mot prototype
+        Decoratify(target).record(propertyKey.toString())
         // 
         if(!options){
             options = {};

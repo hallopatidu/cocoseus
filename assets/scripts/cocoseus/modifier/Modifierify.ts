@@ -208,7 +208,8 @@ function useState<TState>(target:any):TState{
     // const constructor = target.constructor; //Object.getPrototypeOf(target)
     if(!target) return null;
     const prototype = Object.getPrototypeOf(target);
-    if(prototype[State] && prototype[State].constructor == this){
+    const constructor = prototype.constructor
+    if(constructor[State] && constructor[State] == this){
         const modifierState:string = this.name;
         const state:DefaultModifierState = prototype[State];
         if(!state.hasRegister(this.name, target.name)) {state.registerClass(modifierState, target.name)};
@@ -233,10 +234,11 @@ export function Modifierify<TModifier>(modifier:Function, stateConstructor:Const
         if(base['__props__'] && base['__values__']){            // 
             if(hasModifierImplement(base as Constructor, stateConstructor)) return base as unknown as ReturnModifier<TBase&TModifier>;
             const superClass:Constructor = modifier.apply(this, Array.from(arguments));        
-            superClass[State] = new stateConstructor(modifier.name);
+            superClass[State] = stateConstructor
             return superClass as unknown as ReturnModifier<TBase&TModifier>;
         }else{
             return useState.call(stateConstructor, base)
+            // return stateConstructor as unknown as ReturnModifier<TBase&TModifier>;
         }   
     } as <TBase>(base:validateTBase<TBase>)=>ReturnModifier<TBase&TModifier>
 }

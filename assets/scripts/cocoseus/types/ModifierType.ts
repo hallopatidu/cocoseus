@@ -1,6 +1,6 @@
 // export type Constructor<T> = new (...args: any[]) => T;
 
-import { Component, __private } from "cc"
+import { Component, Constructor, __private } from "cc"
 
 
 export interface IParasitified<TSuper> {
@@ -23,16 +23,31 @@ export interface IModified extends Component {
     // recordTokenData?:<TData>(modifierToken:number, token:number, data:TData)=>boolean
 }
 
+// ------------ Decoratify ---------
 export interface IDecoratified extends IModified {
 
 }
+
+export interface IStaticDecoratified extends Constructor<IDecoratified> {
+    record(key:string):boolean
+    keys():string[]
+}
+
+
 
 export interface IOneFlowified extends IModified{
     dispatch(action:Action, ...receiver:string[]):void
 }
 
+
+// ------------ Referencify ------------
+
 export interface IReferencified extends IModified{
     test():void
+}
+
+export interface IStaticReferencified extends Constructor<IReferencified>{
+   
 }
 
 // -------------
