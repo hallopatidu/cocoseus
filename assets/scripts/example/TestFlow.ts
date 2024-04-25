@@ -1,5 +1,5 @@
 import { _decorator, Component, Label, Node, Sprite } from 'cc';
-import OneFlowify, { action, reference } from '../cocoseus/modifier/OneFlowify';
+import OneFlowify from '../cocoseus/modifier/OneFlowify';
 import { Action } from '../cocoseus/types/ModifierType';
 const { ccclass, property } = _decorator;
 

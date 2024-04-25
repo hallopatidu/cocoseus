@@ -1,8 +1,9 @@
-import { _decorator, Component, Constructor, Node } from 'cc';
+import { _decorator, Constructor } from 'cc';
 import { IAsyncProcessified } from '../types/ModifierType';
-import { hasImplement } from './Modifierify';
+import { hadInjectorImplemented } from './Inheritancify';
+
 const { ccclass, property } = _decorator;
-export const ModifierName:string = 'AsyncProcessified';
+const ModifierName:string = 'AsyncProcessified';
 /**
  * 
  * @param base 
@@ -10,7 +11,7 @@ export const ModifierName:string = 'AsyncProcessified';
  */
 export default function AsyncProcessify<TBase>(base:Constructor<TBase>):Constructor<TBase & IAsyncProcessified>{
     // 
-    if(hasImplement(base, ModifierName)){
+    if(hadInjectorImplemented(base, ModifierName)){
         return base as unknown as any
     }else{
         // 

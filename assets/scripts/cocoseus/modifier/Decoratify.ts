@@ -1,34 +1,31 @@
-import { Component, Constructor, Label, _decorator, log } from "cc";
+import { Component, Constructor, _decorator, log } from "cc";
 import { IDecoratified, IStaticDecoratified } from "../types/ModifierType";
-import { DefaultModifierState, Modifierify, getTokenSet } from "./Modifierify";
 import { EDITOR } from "cc/env";
 import { Inheritancify } from "./Inheritancify";
-const { ccclass } = _decorator;
 
-// @ccclass('DecoratorState')
-// class DecoratorState extends DefaultModifierState{
-//     // static record()
-// }
-const DecoratedTag = '__$decorate'
+
+const DecoratedTag = '__$decorated'
 /**
  * 
  */
-export default Inheritancify<IDecoratified, IStaticDecoratified>(function Decoratify<TBase extends Constructor<Component>>(base:TBase):Constructor<TBase & IDecoratified>{
+export default Inheritancify<IDecoratified, IStaticDecoratified>(function Decoratify<TBase>(base:Constructor<TBase>):Constructor<TBase & IDecoratified>{
     /**
      * Injector class
      */
     class Decoratified extends (base as unknown as Constructor<Component>) implements IDecoratified {
 
-        static record(key:string):boolean{
-            if(!this[DecoratedTag]) this[DecoratedTag] = new Set<string>();
-            if((this[DecoratedTag] as Set<string>).has(key)) return false;
-            (this[DecoratedTag] as Set<string>).add(key);
+        static record(key:string, tag:string = DecoratedTag):boolean{
+            const customeTag:string = tag !== DecoratedTag ? '__$'+tag: DecoratedTag;
+            if(!this[customeTag]) this[customeTag] = new Set<string>();
+            if((this[customeTag] as Set<string>).has(key)) return false;
+            (this[customeTag] as Set<string>).add(key);
             return true
         }
 
-        static keys():string[]{
-            if(!this[DecoratedTag]) this[DecoratedTag] = new Set<string>();
-            return [...(this[DecoratedTag] as Set<string>)];
+        static keys(tag:string = DecoratedTag):string[]{
+            const customeTag:string = tag !== DecoratedTag ? '__$'+tag: DecoratedTag;
+            if(!this[customeTag]) this[customeTag] = new Set<string>();
+            return [...(this[customeTag] as Set<string>)];
         }
 
         public get internalOnLoad (): (() => void) | undefined {

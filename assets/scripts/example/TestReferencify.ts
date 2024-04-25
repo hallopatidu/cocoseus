@@ -9,6 +9,8 @@ export class TestReferencify extends Referencify(Component) {
     @reference
     abc:string
 
+    
+
     start() {
         log('TestReferencify ' + Decoratify(this).keys())
     }
