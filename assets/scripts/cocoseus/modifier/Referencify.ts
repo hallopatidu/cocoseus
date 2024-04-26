@@ -51,12 +51,12 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * 
          */
         public get internalOnLoad (): (() => void) | undefined {
-            this.references.set(this.refKey, this.refInfo);
+            this.references.set(this.token, this.refInfo);
             // 
             return super['internalOnLoad']
         }
 
-        get refKey():number{
+        get token():number{
             if(this._refKey == -1){
                 this._refKey = Support.tokenize(this.refInfo.node, this.refInfo.comp, this.refInfo.id.toString());
             }

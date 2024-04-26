@@ -61,7 +61,7 @@ export interface IStaticOneFlowified extends Constructor<IOneFlowified>{
 
 export interface IReferencified extends IInheritancified{
     get refInfo():ReferenceInfo;
-    get refKey():number
+    get token():number
 }
 
 export interface IStaticReferencified extends Constructor<IReferencified>{
@@ -106,11 +106,11 @@ export type Action = {
     // shares?: ActionObject | ActionType
 }
 
-export type ActionInfo = {
-    type:string,
-    method:string,
-    ref:number
-}
+// export type ActionInfo = {
+//     type:string,
+//     method:string,
+//     ref:number
+// }
 
 export type Initializer = () => unknown;
 export type IPropertyOptions = __private._cocos_core_data_decorators_property__IPropertyOptions;
