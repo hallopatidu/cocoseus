@@ -5,6 +5,7 @@ import { Inheritancify } from "./Inheritancify";
 
 
 const DecoratedTag = '__$decorated'
+const SelectedKey = '__$selected_key__'
 /**
  * 
  */
@@ -14,11 +15,16 @@ export default Inheritancify<IDecoratified, IStaticDecoratified>(function Decora
      */
     class Decoratified extends (base as unknown as Constructor<Component>) implements IDecoratified {
 
+        static get selectedKey():string{
+            return this[SelectedKey];
+        }
+
         static record(key:string, tag:string = DecoratedTag):boolean{
             const customeTag:string = tag !== DecoratedTag ? '__$'+tag: DecoratedTag;
             if(!this[customeTag]) this[customeTag] = new Set<string>();
             if((this[customeTag] as Set<string>).has(key)) return false;
             (this[customeTag] as Set<string>).add(key);
+            this[SelectedKey] = key;
             return true
         }
 
@@ -28,15 +34,15 @@ export default Inheritancify<IDecoratified, IStaticDecoratified>(function Decora
             return [...(this[customeTag] as Set<string>)];
         }
 
-        public get internalOnLoad (): (() => void) | undefined {
-            if(EDITOR){
-                // enumifyProperty(this,)
+        // public get internalOnLoad (): (() => void) | undefined {
+        //     if(EDITOR){
+        //         // enumifyProperty(this,)
                
-            }
-            log('[' + this.constructor.name + '] save key :: ' + Decoratified.keys())
-            // 
-            return super['internalOnLoad']
-        }
+        //     }
+        //     log('[' + this.constructor.name + '] save key :: ' + Decoratified.keys())
+        //     // 
+        //     return super['internalOnLoad']
+        // }
     };
     // 
     return Decoratified as unknown as Constructor<TBase & IDecoratified>

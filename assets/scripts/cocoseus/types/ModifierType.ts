@@ -34,6 +34,7 @@ export interface IDecoratified extends IInheritancified {
 
 export interface IStaticDecoratified extends Constructor<IDecoratified> {
     record(key:string,tag?:string):boolean
+    get selectedKey():string
     keys(tag?:string):string[]
 }
 
@@ -41,7 +42,9 @@ export interface IStaticDecoratified extends Constructor<IDecoratified> {
 
 
 export interface IActionized extends IReferencified{
-    
+    dispatch(action:Action, ...receiver:string[]):void
+    _startDispatching(action:Action):void
+    _stopDispatching(action:Action):void
 }
 
 export interface IStaticActionized extends Constructor<IActionized>{

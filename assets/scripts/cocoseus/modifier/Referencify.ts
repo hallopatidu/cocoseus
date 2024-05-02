@@ -16,23 +16,10 @@ const { property } = _decorator;
  */
 export default Inheritancify<IReferencified, IStaticReferencified>(function Referencify <TBase>(base:Constructor<TBase>):Constructor<TBase & IReferencified>{             
     class Referencified extends Storagify(Decoratify(base as unknown as Constructor<Component>)) implements IReferencified {
-        // static _ENUM:any
-        // static get ENUM():any{
-        //     if(EDITOR){
-        //         const storage:Map<number, ReferenceInfo> = getModifierStorage<ReferenceInfo>(Referencify.name);
-        //         const arrayList:string[] = [...storage.values()].reduce((refList:string[], info:ReferenceInfo, index:number)=>{
-        //             if(info){
-        //                 refList[index] = info.comp + '<' + info.node + '>' + (!!info.id ? '(' + info.id+ ')' : '');
-        //             }
-        //             return refList
-        //         },[])
-        //         return convertToEnum(arrayList);
-        //     }
-        //     return Enum({default:-1})
-        // }
+        
         protected _refInfo:ReferenceInfo;
 
-        protected _refKey:number = -1
+        protected _token:number = -1
 
         protected _references:Map<number, ReferenceInfo>;
 
@@ -57,10 +44,10 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
         }
 
         get token():number{
-            if(this._refKey == -1){
-                this._refKey = Support.tokenize(this.refInfo.node, this.refInfo.comp, this.refInfo.id.toString());
+            if(this._token == -1){
+                this._token = Support.tokenize(this.refInfo.node, this.refInfo.comp, this.refInfo.id.toString());
             }
-            return this._refKey
+            return this._token
         }
 
         get refInfo():ReferenceInfo{
@@ -79,9 +66,9 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             return this._refInfo
         }
 
-        test(): void {
+        // test(): void {
             
-        }
+        // }
     }
     return Referencified as unknown as Constructor<TBase & IReferencified>;
 
