@@ -1,5 +1,5 @@
-import { Component, Constructor, js, warn } from "cc";
-import { Action, IActionized, IReferencified, IStaticActionized } from "../types/ModifierType";
+import { Component, Constructor, error, find, js, log, warn } from "cc";
+import { Action, IActionized, IReferencified, IStaticActionized, ReferenceInfo } from "../types/ModifierType";
 import { Inheritancify, hadInjectorImplemented } from "./Inheritancify";
 import Storagify from "./Storagify";
 import Decoratify from "./Decoratify";
@@ -14,24 +14,10 @@ type ActionTaskInfo = {
     pending:{[n:number]:boolean},
     handled:{[n:number]:boolean},
     action:Action,
-    generator:Generator<number>
+    generator?:Generator<Function>
 }
 
-class ActionTask {
-    private actionToken:number
 
-    constructor(actionToken:number){
-        this.actionToken = actionToken
-    }
-
-    async invoke(){
-
-    }
-
-    async wait(){
-
-    }
-}
 
 /**
  * 
@@ -39,11 +25,11 @@ class ActionTask {
 export default Inheritancify<IActionized, IStaticActionized>(function Actionify<TBase>(base:Constructor<TBase>):Constructor<TBase & IActionized>{
     class Actionized extends Referencify(base as unknown as Constructor<Component>) implements IActionized {
         
-        private static _actions:Map<number, Map<number, Function>>;
+        private static _actions:Map<number, Map<number, string>>;
 
         static get actions(){
             if(!Actionized._actions){
-                Actionized._actions = Storagify(this).table<Map<number, Function>>(Actionify.name);
+                Actionized._actions = Storagify(this).table<Map<number, string>>(Actionify.name);
             }
             return Actionized._actions
         }
@@ -58,32 +44,57 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
             // 
             const actionToken:number = Support.tokenize(action.type);
             if(!ActionTaskDB[actionToken]){                
-                const actionFunctions:Map<number, Function> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
+                // const actionFunctions:Map<number, string> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
                 // const actionKeys:number[] = [...actionFunctions.keys()];
                 const taskInfo:ActionTaskInfo = {
                     pending:{},
                     handled:{},
-                    action : action,
-                    generator: this.generateExecutedFuntion(actionToken)
+                    action : action        
+                                
                 };
+                // taskInfo.generator = this.generateExecutedFuntion(actionToken, taskInfo);
+                // 
+                const proxyHandler = {
+                    get(target, prop) {                        
+                        target._actionToken = actionToken;
+                        log('call  -prop: ' + prop.toString());
+                        return Reflect.get(target, prop, receiver);
+                        
+                    },
+                    set(target, prop, value) {
+                        target._actionToken = actionToken;                       
+                        return Reflect.set(target, prop, value);
+                    },
+                }
                 ActionTaskDB[actionToken] = taskInfo;
                 // 
                 this._startDispatching(action);
                 try{
-                    if(taskInfo && taskInfo.generator){
-                        let iteratorResult:IteratorResult<number> = taskInfo.generator.next();                
-                        while(iteratorResult && !iteratorResult.done){
-                            const token:number = iteratorResult.value;
-                            if(token !== -1){
-                                const invokeFunc:Function = actionFunctions.get(token);
-                                if(invokeFunc){
-                                    taskInfo.pending[token] = true;
-                                    invokeFunc(action);
-                                    taskInfo.handled[token] = true;
-                                }
-                            }
-                        }
-                    }
+                    // this._invokeDispatching(actionToken)
+                    // const actionFunctions:Map<number, string> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
+                    // const actionKeys:number[] = [...actionFunctions.keys()];
+                    // for (let index = 0; index < actionKeys.length; index++) {
+                    //     const token:number = actionKeys[index];
+                    //     const methodName:string = actionFunctions.get(token);
+                    //     const comp:(TBase & IActionized) = Referencify(this).getComponent(token);
+                    //     if(comp){
+                    //         (new Proxy(comp, proxyHandler))[methodName](action);
+                    //     }
+                    // }
+                    // if(taskInfo && taskInfo.generator){                        
+                    //     let iteratorResult:IteratorResult<Function> = taskInfo.generator.next();       
+                    //     while(iteratorResult && !iteratorResult.done){
+                    //         const invokeFunc:Function = iteratorResult.value;
+                    //         if(invokeFunc){
+                    //             if(invokeFunc){
+                    //                 // taskInfo.pending[token] = true;
+                    //                 invokeFunc(action)
+                    //                 // taskInfo.handled[token] = true;
+                    //             }
+                    //         }
+                    //         iteratorResult = taskInfo.generator.next();
+                    //     }
+                    // }
 
                 }finally{
                     this._stopDispatching(action);
@@ -118,55 +129,84 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
             // }
         }
         
-        _invokeAction(token:number){
-            
+        _invokeDispatching(){
+            // if(taskInfo && taskInfo.generator){
+            //     let iteratorResult:IteratorResult<number> = taskInfo.generator.next();                
+            //     while(iteratorResult && !iteratorResult.done){
+            //         const token:number = iteratorResult.value;
+            //         if(token !== -1){
+            //             const invokeFunc:Function = actionFunctions.get(token);
+            //             if(invokeFunc){
+            //                 taskInfo.pending[token] = true;
+            //                 invokeFunc(action);
+            //                 taskInfo.handled[token] = true;
+            //             }
+            //         }
+            //     }
+            // }
         }
         
-        private *generateExecutedFuntion(actionToken:number):Generator<number>{
-            const actionFunctions:Map<number, Function> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
-            const actionKeys:number[] = [...actionFunctions.keys()];
-            const taskInfo:ActionTaskInfo = ActionTaskDB[actionToken]
-            if(!!taskInfo){
-                for (let index = 0; index < actionKeys.length; index++) {
-                    const token:number = actionKeys[index];
-                    if(!!taskInfo.pending[token]){
-                        yield -1;
-                        continue;
-                    }
-                    // this._invokeCallback(token);     
-                    yield token
-                }
-            }
-        }
+        // private *generateExecutedFuntion(actionToken:number, taskInfo:ActionTaskInfo):Generator<Function>{
+        //     const actionFunctions:Map<number, string> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
+        //     const actionKeys:number[] = [...actionFunctions.keys()];
+        //     const proxyHandler = {
+        //         get(target, prop) {                        
+        //             target._actionToken = actionToken;
+        //             log('call  -prop: ' + prop.toString())
+        //             return Reflect.get(target, prop);
+                    
+        //         },
+        //         set(target, prop, value) {
+        //             target._actionToken = actionToken;                       
+        //             return Reflect.set(target, prop, value);
+        //         },
+        //     }
+        //     if(!!taskInfo){
+        //         for (let index = 0; index < actionKeys.length; index++) {
+        //             const token:number = actionKeys[index];
+        //             if(!!taskInfo.pending[token]){
+        //                 yield null;
+        //                 continue;
+        //             }
+        //             const methodName:string = actionFunctions.get(token);
+        //             const comp:(TBase & IActionized) = Referencify(this).getComponent(token);
+        //             if(comp){
+        //                 yield (new Proxy(comp, proxyHandler))[methodName]
+        //             }                    
+        //         }
+        //     }
+        // }
 
         
         /**
          * 
          * @param target 
          */
-        async wait<TNextData = unknown>(target:IActionized | string | number, actionToken:number = this._actionToken):Promise<TNextData>{
+        async wait<TNextData = unknown>(target:IActionized | string | number):Promise<TNextData>{
+            const actionToken:number = this._actionToken;
             if(actionToken == -1){
                 DEV && warn('Do not register action token.')
                 return
             }
-            let token:number = -1;
+            let waitToken:number = -1;
             switch(true){
                 case js.isNumber(target):
-                    token = target as number;
+                    waitToken = target as number;
                     break;
                 case !!Actionify(target as any):
-                    token = (target as IActionized).token;
+                    waitToken = (target as IActionized).token;
                     break;
                 case js.isString(target):
-                    token = Support.tokenize(target as string); // underconstructor
+                    waitToken = Support.tokenize(target as string); // underconstructor
                     break;
                 default:
                     break;
             }
-            const taskInfo:ActionTaskInfo = ActionTaskDB[actionToken];
+            if(waitToken == -1) error('Unknow validate \'target\' agrument pass to the \'wait\' method.');
+            // const taskInfo:ActionTaskInfo = ActionTaskDB[actionToken];
 
             // Cap nhat lai con tro actionToken vi this._actionToken co the thay doi trong qua trinh wait do co action khac xen ke
-            this._actionToken = actionToken;
+            // this._actionToken = actionToken;
             // const token:number = js.isNumber(target) ? target as number : (!!Actionify(target as any) ? (target as IActionized).token : -1);
             return 
         }
@@ -184,15 +224,22 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 const actionType:string = actionInfoArr[0];
                 const actionToken:number = Support.tokenize(actionType);
                 const methodName:string = actionInfoArr[1];
-                if(!Actionized.actions.has(actionToken)) Actionized.actions.set(actionToken, new Map<number, Function>());
-                const descriptor:PropertyDescriptor = js.getPropertyDescriptor(this, methodName)
-                if(typeof descriptor.value == 'function'){
-                    const invokeFunc:Function = async function () {
-                        this._actionToken = actionToken;
-                        const returnValue:any = descriptor.value.apply(this, Array.from(arguments));
-                        return (typeof returnValue === 'object' && returnValue?.then && typeof returnValue.then === 'function') ? await returnValue : returnValue;
-                    }
-                    Actionized.actions.get(actionToken).set(this.token, invokeFunc.bind(this));
+                if(!Actionized.actions.has(actionToken)) Actionized.actions.set(actionToken, new Map<number, string>());
+                // const descriptor:PropertyDescriptor = js.getPropertyDescriptor(this, methodName)
+                // if(typeof descriptor.value == 'function'){
+                //     // const map:
+                //     // if(DEV && )
+                //     const invokeFunc:Function = async function (proxy:any) {                        
+                //         const returnValue:any = descriptor.value.apply(proxy, Array.from(arguments));
+                //         return (typeof returnValue === 'object' && returnValue?.then && typeof returnValue.then === 'function') ? await returnValue : returnValue;
+                //     }
+                //     // invokeFunc.constructor['actionToken'] = actionToken
+                //     Actionized.actions.get(actionToken).set(this.token, invokeFunc.bind(this));
+                // }
+                if(Actionized.actions.get(actionToken).has(this.token)){
+                    warn('There are two function handle to the same action type' + actionType);
+                }else{
+                    Actionized.actions.get(actionToken).set(this.token, methodName);
                 }
             })
             // 
@@ -211,10 +258,17 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
 export function action(type:string){
     const actionType:string = type;
     return function (that: any, propertyKey: string, descriptor: PropertyDescriptor) {        
-        Decoratify(that).record(actionType + '::' +propertyKey.toString(), '@action')
-
+        Decoratify(that).record(actionType + '::' +propertyKey.toString(), '@action');
         return descriptor;
     }
 }
+
+// export function wait(){
+//     return function (that: any, propertyKey: string, descriptor: PropertyDescriptor) {        
+//         // Decoratify(that).record(actionType + '::' +propertyKey.toString(), '@wait')
+
+//         return descriptor;
+//     }
+// }
 
 // export function wait()

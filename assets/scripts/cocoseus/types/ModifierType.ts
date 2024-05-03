@@ -68,7 +68,8 @@ export interface IReferencified extends IInheritancified{
 }
 
 export interface IStaticReferencified extends Constructor<IReferencified>{
-   
+    getRefInfo(token:number):ReferenceInfo,
+    getComponent<T>(token:number):T
 }
 
 // ---------------- Storagify -----------

@@ -1,6 +1,6 @@
 // Referencify
 
-import { _decorator, Component, Constructor } from "cc";
+import { _decorator, Component, Constructor, find } from "cc";
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified } from "../types/ModifierType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
@@ -21,24 +21,33 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
 
         protected _token:number = -1
 
-        protected _references:Map<number, ReferenceInfo>;
+        static _references:Map<number, ReferenceInfo>;
 
         protected genKey(info:ReferenceInfo):string{
             return Support.tokenize(info.node) + '.' + Support.tokenize(info.comp) + '.' + Support.tokenize(info.id.toString())
         }
 
-        protected get references(){
+        static get references(){
             if(!this._references){
                 this._references = Storagify(this).table<ReferenceInfo>(Referencify.name)
             }
             return this._references
         }
 
+        static getRefInfo(token:number):ReferenceInfo{
+            return Referencified.references.get(token);
+        }
+
+        static getComponent<T=Component>(token:number):T{
+            const info:ReferenceInfo = Referencified.getRefInfo(token);            
+            return find(info.node)?.getComponents(info.comp)?.find((comp, index)=> index == info.id) as T
+        }
+
         /**
          * 
          */
         public get internalOnLoad (): (() => void) | undefined {
-            this.references.set(this.token, this.refInfo);
+            Referencified.references.set(this.token, this.refInfo);
             // 
             return super['internalOnLoad']
         }
