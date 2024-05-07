@@ -1,6 +1,6 @@
 // Referencify
 
-import { _decorator, Component, Constructor, find } from "cc";
+import { _decorator, Component, Constructor, find, warn } from "cc";
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified } from "../types/ModifierType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
@@ -48,12 +48,13 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          */
         public get internalOnLoad (): (() => void) | undefined {
             Referencified.references.set(this.token, this.refInfo);
+            // warn('Init ' + this.node.name + ' -token:  ' + this.token)
             // 
             return super['internalOnLoad']
         }
 
         get token():number{
-            if(this._token == -1){
+            if(!this._token || this._token == -1){
                 this._token = Support.tokenize(this.refInfo.node, this.refInfo.comp, this.refInfo.id.toString());
             }
             return this._token

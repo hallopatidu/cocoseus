@@ -7,9 +7,11 @@ const { ccclass, property } = _decorator;
 export class TestAction extends Actionify(Component) {
 
     @action('test_action')
-    showTest(action:Action){
-        
-        log('Call success !!!' + action.type)
+    async showTest(action:Action){
+        await new Promise((resolve:Function)=>{
+            setTimeout(resolve, 2000)
+        })
+        log('Call success ' + this.node.name)
     }
     
     start() {

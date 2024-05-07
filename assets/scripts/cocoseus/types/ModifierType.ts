@@ -2,7 +2,7 @@
 
 import { Component, Constructor, ValueType, __private } from "cc"
 
-// ----------------------
+// -----------------------
 
 export interface IParasitified<TSuper> {
     get super():TSuper
@@ -24,6 +24,8 @@ export interface IModifierState {
     
 }
 
+// ------------ Inheritancify -------------
+
 export interface IInheritancified extends Component {
 }
 
@@ -38,11 +40,12 @@ export interface IStaticDecoratified extends Constructor<IDecoratified> {
     keys(tag?:string):string[]
 }
 
-// ---------------- OneFlowify ---------
+// ------------ Actionify ---------
 
 
 export interface IActionized extends IReferencified{
     dispatch(action:Action, ...receiver:string[]):void
+    wait<TNextData = unknown>(target:string | number | Component):Promise<TNextData>
     _startDispatching(action:Action):void
     _stopDispatching(action:Action):void
 }
@@ -51,6 +54,18 @@ export interface IStaticActionized extends Constructor<IActionized>{
     
 }
 
+// ------------ AsyncWaitify ---------
+export interface IAsyncWaited extends IStoragified {
+    
+}
+
+export interface IStaticAsyncWaited extends Constructor<IAsyncWaited>{
+    begin?(token:number):void
+    wait<TNextData = unknown>(target:string | number | Component):Promise<TNextData>
+    end?(token:number, data:any):void
+}
+
+// ---------------------------
 export interface IOneFlowified extends IInheritancified{
     dispatch(action:Action, ...receiver:string[]):void
 }

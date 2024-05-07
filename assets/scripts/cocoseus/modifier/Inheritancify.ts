@@ -78,12 +78,12 @@ export function hadInjectorImplemented(baseCtor:Constructor, injectorName:string
     return (baseCtor.name.indexOf(injectorName) !== -1) || (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? true : hadInjectorImplemented(js.getSuper(baseCtor), injectorName);    
 }
 
-export function getInjector(injectorName:string, baseCtor:Constructor):Constructor{
+export function getInjector(injectorName:string, baseCtor:Constructor, currentBaseCtorName:string = baseCtor.name):Constructor{
     if(!baseCtor) {
-        error("Can not find the injector with the name " + injectorName + ". The class " + baseCtor.name + " need to be Inheritancified with " + injectorName + " injector.");
+        error("Can not find the injector with the name " + injectorName + ". The class " + currentBaseCtorName + " need to be Inheritancified with " + injectorName + " injector.");
         return null;    
     }
-    return (baseCtor.name.indexOf(injectorName) !== -1) || (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? baseCtor : getInjector(injectorName, js.getSuper(baseCtor));    
+    return (baseCtor.name.indexOf(injectorName) !== -1) || (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? baseCtor : getInjector(injectorName, js.getSuper(baseCtor), currentBaseCtorName);    
 }
 
 /**

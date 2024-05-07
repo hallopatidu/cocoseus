@@ -1,11 +1,12 @@
 import { Component, Constructor, error, find, js, log, warn } from "cc";
-import { Action, IActionized, IReferencified, IStaticActionized, ReferenceInfo } from "../types/ModifierType";
-import { Inheritancify, hadInjectorImplemented } from "./Inheritancify";
+import { Action, IActionized, IAsyncWaited, IStaticActionized } from "../types/ModifierType";
+import { Inheritancify } from "./Inheritancify";
 import Storagify from "./Storagify";
 import Decoratify from "./Decoratify";
 import Referencify from "./Referencify";
 import { Support } from "../utils/Support";
-import { DEV } from "cc/env";
+import { DEBUG, DEV, EDITOR } from "cc/env";
+import AsyncWaitify from "./AsyncWaitify";
 
 
 const ActionTaskDB:{[n:number]:ActionTaskInfo} = Object.create(null);
@@ -23,7 +24,7 @@ type ActionTaskInfo = {
  * 
  */
 export default Inheritancify<IActionized, IStaticActionized>(function Actionify<TBase>(base:Constructor<TBase>):Constructor<TBase & IActionized>{
-    class Actionized extends Referencify(base as unknown as Constructor<Component>) implements IActionized {
+    class Actionized extends Referencify(AsyncWaitify(base as unknown as Constructor<Component>)) implements IActionized, IAsyncWaited {
         
         private static _actions:Map<number, Map<number, string>>;
 
@@ -34,7 +35,8 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
             return Actionized._actions
         }
 
-        protected _actionToken:number = -1
+        protected _actionToken:number = -1;
+        
         /**
          * 
          * @param action 
@@ -47,18 +49,16 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 // const actionFunctions:Map<number, string> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
                 // const actionKeys:number[] = [...actionFunctions.keys()];
                 const taskInfo:ActionTaskInfo = {
-                    pending:{},
-                    handled:{},
-                    action : action        
-                                
+                    pending:{}, // Dang xu ly goi vao day.
+                    handled:{}, // action nao xong goi vao day.
+                    action : action                                
                 };
                 // taskInfo.generator = this.generateExecutedFuntion(actionToken, taskInfo);
                 // 
                 const proxyHandler = {
                     get(target, prop) {                        
                         target._actionToken = actionToken;
-                        log('call  -prop: ' + prop.toString());
-                        return Reflect.get(target, prop, receiver);
+                        return Reflect.get(target, prop);
                         
                     },
                     set(target, prop, value) {
@@ -70,32 +70,38 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 // 
                 this._startDispatching(action);
                 try{
-                    // this._invokeDispatching(actionToken)
-                    // const actionFunctions:Map<number, string> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
-                    // const actionKeys:number[] = [...actionFunctions.keys()];
-                    // for (let index = 0; index < actionKeys.length; index++) {
-                    //     const token:number = actionKeys[index];
-                    //     const methodName:string = actionFunctions.get(token);
-                    //     const comp:(TBase & IActionized) = Referencify(this).getComponent(token);
-                    //     if(comp){
-                    //         (new Proxy(comp, proxyHandler))[methodName](action);
-                    //     }
-                    // }
-                    // if(taskInfo && taskInfo.generator){                        
-                    //     let iteratorResult:IteratorResult<Function> = taskInfo.generator.next();       
-                    //     while(iteratorResult && !iteratorResult.done){
-                    //         const invokeFunc:Function = iteratorResult.value;
-                    //         if(invokeFunc){
-                    //             if(invokeFunc){
-                    //                 // taskInfo.pending[token] = true;
-                    //                 invokeFunc(action)
-                    //                 // taskInfo.handled[token] = true;
-                    //             }
-                    //         }
-                    //         iteratorResult = taskInfo.generator.next();
-                    //     }
-                    // }
-
+                    const taskPromises:Promise<any>[] = [];
+                    const actionFunctions:Map<number, string> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
+                    const actionKeys:number[] = [...actionFunctions.keys()];
+                    // 
+                    actionKeys.forEach((token:number)=>{
+                        const comp:(TBase & IActionized) = Referencify(this).getComponent(token);
+                        AsyncWaitify(comp).begin(token);
+                    })
+                    // 
+                    for (let index = 0; index < actionKeys.length; index++) {
+                        const token:number = actionKeys[index];
+                        const methodName:string = actionFunctions.get(token);
+                        const comp:(TBase & IActionized) = Referencify(this).getComponent(token);
+                        if(comp){       
+                                             
+                            taskPromises.push(new Promise(async (resolve:Function)=>{
+                                // Sử dụng proxy với proxyHandler để đảm bảo this._actionToken không thay đổi khi gọi cùng lúc nhiều action       
+                                const proxy:IActionized = new Proxy(comp, proxyHandler);
+                                // proxy.begin(token);
+                                taskInfo.pending[token] = true;
+                                // log('----------- execute token start :: ' + token );
+                                let returnValue:any = proxy[methodName]?.apply(proxy, Array.from(arguments));
+                                // log('pending token 2 :: ' + token );
+                                returnValue = (typeof returnValue === 'object' && returnValue?.then && typeof returnValue.then === 'function') ? await returnValue : returnValue;
+                                taskInfo.handled[token] = true; 
+                                // log('----------- execute token end :: ' + token );                               
+                                resolve(returnValue);
+                                AsyncWaitify(comp).end(token, action);
+                            }));
+                        }
+                    }
+                    await Promise.all(taskPromises);
                 }finally{
                     this._stopDispatching(action);
                 }
@@ -110,79 +116,23 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
          * @param action 
          */
         _startDispatching(action:Action){
-            // const actionToken:number = Support.tokenize(action.type);
-            // const taskInfo:ActionTaskInfo = ActionTaskDB[actionToken];
-            // if(taskInfo && taskInfo.generator){
-            //     let iteratorResult:IteratorResult<Function> = taskInfo.generator.next();                
-            //     while(iteratorResult && !iteratorResult.done && iteratorResult.value){
-            //         const invokeFunc:Function = iteratorResult.value;
-            //         invokeFunc && invokeFunc(action);
-            //     }
-            // }
+
         }
 
         _stopDispatching(action:Action){
-            // const actionToken:number = Support.tokenize(action.type);
-            // const taskInfo:ActionTaskInfo = ActionTaskDB[actionToken]
-            // if(taskInfo && taskInfo.generator){
-            //     const invokeFunc:Function = taskInfo.generator.next().done
-            // }
+            const actionToken:number = Support.tokenize(action.type);
+            delete ActionTaskDB[actionToken];
         }
         
         _invokeDispatching(){
-            // if(taskInfo && taskInfo.generator){
-            //     let iteratorResult:IteratorResult<number> = taskInfo.generator.next();                
-            //     while(iteratorResult && !iteratorResult.done){
-            //         const token:number = iteratorResult.value;
-            //         if(token !== -1){
-            //             const invokeFunc:Function = actionFunctions.get(token);
-            //             if(invokeFunc){
-            //                 taskInfo.pending[token] = true;
-            //                 invokeFunc(action);
-            //                 taskInfo.handled[token] = true;
-            //             }
-            //         }
-            //     }
-            // }
         }
         
-        // private *generateExecutedFuntion(actionToken:number, taskInfo:ActionTaskInfo):Generator<Function>{
-        //     const actionFunctions:Map<number, string> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
-        //     const actionKeys:number[] = [...actionFunctions.keys()];
-        //     const proxyHandler = {
-        //         get(target, prop) {                        
-        //             target._actionToken = actionToken;
-        //             log('call  -prop: ' + prop.toString())
-        //             return Reflect.get(target, prop);
-                    
-        //         },
-        //         set(target, prop, value) {
-        //             target._actionToken = actionToken;                       
-        //             return Reflect.set(target, prop, value);
-        //         },
-        //     }
-        //     if(!!taskInfo){
-        //         for (let index = 0; index < actionKeys.length; index++) {
-        //             const token:number = actionKeys[index];
-        //             if(!!taskInfo.pending[token]){
-        //                 yield null;
-        //                 continue;
-        //             }
-        //             const methodName:string = actionFunctions.get(token);
-        //             const comp:(TBase & IActionized) = Referencify(this).getComponent(token);
-        //             if(comp){
-        //                 yield (new Proxy(comp, proxyHandler))[methodName]
-        //             }                    
-        //         }
-        //     }
-        // }
-
         
         /**
          * 
          * @param target 
          */
-        async wait<TNextData = unknown>(target:IActionized | string | number):Promise<TNextData>{
+        async wait<TNextData = unknown>(target:string | number | Component):Promise<TNextData>{
             const actionToken:number = this._actionToken;
             if(actionToken == -1){
                 DEV && warn('Do not register action token.')
@@ -203,14 +153,30 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                     break;
             }
             if(waitToken == -1) error('Unknow validate \'target\' agrument pass to the \'wait\' method.');
-            // const taskInfo:ActionTaskInfo = ActionTaskDB[actionToken];
-
+            const taskInfo:ActionTaskInfo = ActionTaskDB[actionToken];
+            if(taskInfo){                
+                if(!!taskInfo.pending[waitToken]){
+                    this.__detectCircleLoop(waitToken);
+                }
+                // log("wait token " + waitToken);
+                return await AsyncWaitify(this).wait(waitToken);
+            }else{
+                warn('Ko co trong task info !!')
+            }
             // Cap nhat lai con tro actionToken vi this._actionToken co the thay doi trong qua trinh wait do co action khac xen ke
             // this._actionToken = actionToken;
             // const token:number = js.isNumber(target) ? target as number : (!!Actionify(target as any) ? (target as IActionized).token : -1);
             return 
         }
 
+        /**
+         * 
+         * @param id 
+         */
+        protected __detectCircleLoop(token:number){
+            const taskInfo:ActionTaskInfo = ActionTaskDB[this._actionToken];
+            !taskInfo.handled[token] ? (DEBUG||DEV||EDITOR) ? error( this.token + ".wait(...): Phát hiện lỗi lặp vòng tròn (A đợi B, B đợi A).") : error(false) : undefined;
+        }
         // ---------------- Override ----------------
 
         /**
