@@ -1,5 +1,5 @@
 import { Component, Constructor, error, find, js, log, warn } from "cc";
-import { Action, IActionized, IAsyncWaited, IStaticActionized } from "../types/ModifierType";
+import { Action, IActionized, IAsyncProcessified, IAsyncWaited, IStaticActionized } from "../types/ModifierType";
 import { Inheritancify } from "./Inheritancify";
 import Storagify from "./Storagify";
 import Decoratify from "./Decoratify";
@@ -73,10 +73,11 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                     const taskPromises:Promise<any>[] = [];
                     const actionFunctions:Map<number, string> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
                     const actionKeys:number[] = [...actionFunctions.keys()];
+                    const progressTask:IAsyncProcessified = AsyncWaitify(this).task(actionToken)
                     // 
                     actionKeys.forEach((token:number)=>{
                         const comp:(TBase & IActionized) = Referencify(this).getComponent(token);
-                        AsyncWaitify(comp).begin(token);
+                        progressTask.begin(token);
                     })
                     // 
                     for (let index = 0; index < actionKeys.length; index++) {
@@ -97,7 +98,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                                 taskInfo.handled[token] = true; 
                                 // log('----------- execute token end :: ' + token );                               
                                 resolve(returnValue);
-                                AsyncWaitify(comp).end(token, action);
+                                progressTask.end(token, action);
                             }));
                         }
                     }
@@ -159,7 +160,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                     this.__detectCircleLoop(waitToken);
                 }
                 // log("wait token " + waitToken);
-                return await AsyncWaitify(this).wait(waitToken);
+                return await AsyncWaitify(this).task(actionToken).wait(waitToken);
             }else{
                 warn('Ko co trong task info !!')
             }

@@ -15,9 +15,9 @@ export interface IStaticParasitified<TSuper> extends Constructor<IParasitified<T
 // ----------------------
 
 export interface IAsyncProcessified {
-    waitForReady(task?:string):Promise<any>
-    execute():void
-    ready(data?:any):void
+    wait<TNextData = unknown>(token:number):Promise<TNextData>
+    begin(token:number):void
+    end(token:number, data?:any):void
 }
 
 export interface IModifierState {
@@ -60,9 +60,7 @@ export interface IAsyncWaited extends IStoragified {
 }
 
 export interface IStaticAsyncWaited extends Constructor<IAsyncWaited>{
-    begin?(token:number):void
-    wait<TNextData = unknown>(target:string | number | Component):Promise<TNextData>
-    end?(token:number, data:any):void
+    task(token:number):IAsyncProcessified
 }
 
 // ---------------------------

@@ -87,7 +87,8 @@ export function getInjector(injectorName:string, baseCtor:Constructor, currentBa
 }
 
 /**
- * 
+ * Base on the new Design Pattern found on Coco Engine Source (may be call Polyfill Design Pattern).
+ * Main Idea is generatting a new class from the given base class, after polyfill all functionalities
  * @param constructor 
  * @param additionalConstructor 
  * @returns 
