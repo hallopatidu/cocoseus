@@ -73,7 +73,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                     const taskPromises:Promise<any>[] = [];
                     const actionFunctions:Map<number, string> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
                     const actionKeys:number[] = [...actionFunctions.keys()];
-                    const progressTask:IAsyncProcessified = AsyncWaitify(this).task(actionToken)
+                    const progressTask:IAsyncProcessified = AsyncWaitify(this).task(actionToken);
                     // 
                     actionKeys.forEach((token:number)=>{
                         const comp:(TBase & IActionized) = Referencify(this).getComponent(token);
@@ -84,8 +84,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                         const token:number = actionKeys[index];
                         const methodName:string = actionFunctions.get(token);
                         const comp:(TBase & IActionized) = Referencify(this).getComponent(token);
-                        if(comp){       
-                                             
+                        if(comp){
                             taskPromises.push(new Promise(async (resolve:Function)=>{
                                 // Sử dụng proxy với proxyHandler để đảm bảo this._actionToken không thay đổi khi gọi cùng lúc nhiều action       
                                 const proxy:IActionized = new Proxy(comp, proxyHandler);
@@ -95,7 +94,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                                 let returnValue:any = proxy[methodName]?.apply(proxy, Array.from(arguments));
                                 // log('pending token 2 :: ' + token );
                                 returnValue = (typeof returnValue === 'object' && returnValue?.then && typeof returnValue.then === 'function') ? await returnValue : returnValue;
-                                taskInfo.handled[token] = true; 
+                                taskInfo.handled[token] = true;
                                 // log('----------- execute token end :: ' + token );                               
                                 resolve(returnValue);
                                 progressTask.end(token, action);
@@ -156,9 +155,9 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
             if(waitToken == -1) error('Unknow validate \'target\' agrument pass to the \'wait\' method.');
             const taskInfo:ActionTaskInfo = ActionTaskDB[actionToken];
             if(taskInfo){                
-                if(!!taskInfo.pending[waitToken]){
-                    this.__detectCircleLoop(waitToken);
-                }
+                // if(!!taskInfo.pending[waitToken]){
+                //     this.__detectCircleLoop(waitToken);
+                // }
                 // log("wait token " + waitToken);
                 return await AsyncWaitify(this).task(actionToken).wait(waitToken);
             }else{

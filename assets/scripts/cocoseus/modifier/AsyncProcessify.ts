@@ -17,7 +17,7 @@ export default function AsyncProcessify<TBase>(base:Constructor<TBase>):Construc
         // 
         class AsyncProcessified extends (base as unknown as Constructor<any>) implements IAsyncProcessified {
 
-            private _waitingTasks: Map<number, Function[]>;
+            private waitingTasks: Map<number, Function[]> = new Map();
 
             /**
              * 
@@ -57,7 +57,7 @@ export default function AsyncProcessify<TBase>(base:Constructor<TBase>):Construc
                     this.waitingTasks.delete(token);
                 }
                 log('end ----- ' + token + ' \n')
-                js.isEmptyObject(this._waitingTasks) && log('All completed !!')
+                this.waitingTasks.size == 0 && log('All completed !!')
             }
 
         }

@@ -22,7 +22,7 @@ export class TestWaitAction extends Actionify(Component) {
     @action('test_action')
     async showTest(action:Action){
         await this.wait(this.waitComp);
-        log('Call success token: ' + this.token + ' from '+ this.node.name)
+        log('Call success token: ' + this.token + ' from '+ this.node.name);
     }
 
 }

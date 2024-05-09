@@ -110,6 +110,3 @@ export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>
         }   
     } as <TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>
 }
-
-
-
