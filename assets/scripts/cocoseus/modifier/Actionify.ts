@@ -12,8 +12,6 @@ import AsyncWaitify from "./AsyncWaitify";
 const ActionTaskDB:{[n:number]:ActionTaskInfo} = Object.create(null);
 
 type ActionTaskInfo = {
-    pending:{[n:number]:boolean},
-    handled:{[n:number]:boolean},
     graph:{[n:number]:number[]},
     progress?:IAsyncProcessified
     action:Action
@@ -53,8 +51,6 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
             }
             if(!ActionTaskDB[actionToken]){
                 const taskInfo:ActionTaskInfo = {
-                    pending:{}, // Dang xu ly goi vao day.
-                    handled:{}, // action nao xong goi vao day.
                     graph:{},
                     action : action                                
                 };
@@ -207,6 +203,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 }
                 // 
                 const token:number = this.token;
+                // Sử dụng proxy với proxyHandler để đảm bảo this._actionToken không thay đổi khi gọi cùng lúc nhiều action                        
                 const proxy:IActionized = new Proxy(this, proxyHandler);
                 const funtionalInvoker:Function = function(taskInfo:ActionTaskInfo):Promise<any>{        
                     const progressTask:IAsyncProcessified = taskInfo.progress;
@@ -214,13 +211,11 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                     const funtionName:string = methodName;
                     const compProxy:IActionized = proxy;
                     return new Promise(async (resolve:Function)=>{
-                        // Sử dụng proxy với proxyHandler để đảm bảo this._actionToken không thay đổi khi gọi cùng lúc nhiều action                        
-                        taskInfo.pending[token] = true;
-                        // Call funtion
+                        // Invoke funtion
                         let returnValue:any = compProxy[funtionName]?.apply(compProxy, Array.from(arguments));
                         // 
                         returnValue = (typeof returnValue === 'object' && returnValue?.then && typeof returnValue.then === 'function') ? await returnValue : returnValue;
-                        taskInfo.handled[token] = true;                        
+                        // 
                         resolve(returnValue);
                         progressTask.end(token, action);
                         // 
