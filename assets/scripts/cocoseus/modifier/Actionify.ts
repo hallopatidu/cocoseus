@@ -41,7 +41,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
          * @param action 
          * @param receiver 
          */
-        async dispatch(action:Action, ...receiver:string[]){
+        async dispatch(action:Action, ...receiver:(string | number | Component)[]){
             // 
             const actionToken:number = Support.tokenize(action.type);
             const actionFunctions:Map<number, Function> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
@@ -55,6 +55,8 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                     action : action                                
                 };
                 ActionTaskDB[actionToken] = taskInfo;
+                // 
+                const receiverTokens:number[] = receiver.map(receiverToken => this.getTokenFrom(receiverToken))
                 // 
                 this._startDispatching(action);
                 try{
@@ -113,20 +115,20 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 DEV && warn('Do not register action token.')
                 return
             }
-            let waitToken:number = -1;
-            switch(true){
-                case js.isNumber(target):
-                    waitToken = target as number;
-                    break;
-                case !!Actionify(target as any):
-                    waitToken = (target as IActionized).token;
-                    break;
-                case js.isString(target):
-                    waitToken = Support.tokenize(target as string); // underconstructor
-                    break;
-                default:
-                    break;
-            }
+            const waitToken:number = this.getTokenFrom(target);
+            // switch(true){
+            //     case js.isNumber(target):
+            //         waitToken = target as number;
+            //         break;
+            //     case !!Actionify(target as any):
+            //         waitToken = (target as IActionized).token;
+            //         break;
+            //     case js.isString(target):
+            //         waitToken = Support.tokenize(target as string); // underconstructor
+            //         break;
+            //     default:
+            //         break;
+            // }
             if(waitToken == -1) error('Unknow validate \'target\' agrument pass to the \'wait\' method.');
             const taskInfo:ActionTaskInfo = ActionTaskDB[actionToken];
             if(taskInfo){
@@ -148,9 +150,32 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                     DEV && error('Error at ' + Referencify(this).getRefPath(this.token) + '.wait(' + Referencify(this).getRefPath(waitToken) + '). Each component just wait one other component on one time !')
                 }
             }else{
-                warn('Ko co trong task info !!')
+                warn('This funtion is not run on a action progress.')
             }
             return null;
+        }
+
+        /**
+         * 
+         * @param target 
+         * @returns 
+         */
+        protected getTokenFrom(target:string | number | Component){
+            let waitToken:number = -1;
+            switch(true){
+                case js.isNumber(target):
+                    waitToken = target as number;
+                    break;
+                case !!Actionify(target as any):
+                    waitToken = (target as IActionized).token;
+                    break;
+                case js.isString(target):
+                    waitToken = Support.tokenize(target as string); // underconstructor
+                    break;
+                default:
+                    break;
+            }
+            return waitToken;
         }
 
         /**
