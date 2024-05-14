@@ -1,4 +1,4 @@
-import { _decorator, CCClass, Component, Enum, Node } from 'cc';
+import { _decorator, CCClass, Component, Enum, log, Node } from 'cc';
 const { ccclass, property } = _decorator;
 
 @ccclass('Support')
@@ -75,6 +75,34 @@ export class Support extends Component {
      */
     static upperFirstCharacter(str:string):string{
         return str.replace(/\b\w/g, c => c.toUpperCase()).replace(/(?=[A-Z])/g,' ').toString();
+    }
+
+    // ------------- Data Structor -------------------
+    /**
+     * Detect Cycle in a Directed Graph Data . BFS solution (Bread First Search);
+     * a BFS solution that will find one cycle (if there are any), which will be (one of) the shortest
+     * Ex: var graph = {
+     *     a: ['b', 'c'],
+     *     b: ['d', 'c'],
+     *     e: ['a', 'b'],
+     *     d: ['e']
+     * };
+     * @param graph 
+     * @returns 
+     */
+    static getCycle(graph:{[n:number]:number[]}) {
+        let queue = Object.keys(graph).map( key => [key.toString()] );
+        while (queue.length) {
+            const batch = [];
+            for (const path of queue) {
+                const parents = graph[parseInt(path[0])] || [];
+                for (const key of parents) {
+                    if (key === parseInt(path[path.length-1])) return [key, ...path.map(key=>parseInt(key))];
+                    batch.push([key, ...path.map(key=>parseInt(key))]);
+                }
+            }
+            queue = batch;
+        }        
     }
 
 }

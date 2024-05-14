@@ -1,4 +1,5 @@
 import { _decorator, Component, log, Node } from 'cc';
+import { Support } from '../cocoseus/utils/Support';
 const { ccclass, property, executeInEditMode } = _decorator;
 
 @ccclass('Test')
@@ -13,8 +14,7 @@ export class Test extends Component {
     }
 
     public get internalOnLoad (): (() => void) | undefined {
-        
-        log('uuid:: ' + this.uuid + JSON.stringify(this.__editorExtras__) + ' hasFunc: ' + !!super['internalOnLoad'] + ' -_objFlags: ' + this['_objFlags'] )        
+               
         return super['internalOnLoad']
     }
 }

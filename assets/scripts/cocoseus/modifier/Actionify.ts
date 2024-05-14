@@ -1,5 +1,5 @@
 import { Component, Constructor, error, find, js, log, warn } from "cc";
-import { Action, IActionized, IAsyncProcessified, IAsyncWaited, IStaticActionized } from "../types/ModifierType";
+import { Action, IActionized, IAsyncProcessified, IAsyncWaited, IStaticActionized, ReferenceInfo } from "../types/ModifierType";
 import { Inheritancify } from "./Inheritancify";
 import Storagify from "./Storagify";
 import Decoratify from "./Decoratify";
@@ -14,6 +14,7 @@ const ActionTaskDB:{[n:number]:ActionTaskInfo} = Object.create(null);
 type ActionTaskInfo = {
     pending:{[n:number]:boolean},
     handled:{[n:number]:boolean},
+    graph:{[n:number]:number[]},
     progress?:IAsyncProcessified
     action:Action
 }
@@ -54,6 +55,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 const taskInfo:ActionTaskInfo = {
                     pending:{}, // Dang xu ly goi vao day.
                     handled:{}, // action nao xong goi vao day.
+                    graph:{},
                     action : action                                
                 };
                 ActionTaskDB[actionToken] = taskInfo;
@@ -131,19 +133,24 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
             }
             if(waitToken == -1) error('Unknow validate \'target\' agrument pass to the \'wait\' method.');
             const taskInfo:ActionTaskInfo = ActionTaskDB[actionToken];
-            if(taskInfo){                
-                // if(taskInfo.pending[waitToken]){
-                //     this.__detectCircleLoop(waitToken);
-                //     return
-                // }
-                // log("wait token " + waitToken);
-                // const returnData:TNextData = await AsyncWaitify(this).task(actionToken).wait<TNextData>(waitToken);
-                // if(taskInfo.pending[waitToken]){
-                //     this.__detectCircleLoop(waitToken, taskInfo);
-                //     return
-                // }
-
-                return await AsyncWaitify(this).task(actionToken).wait<TNextData>(waitToken);
+            if(taskInfo){
+                const graph:number[] = taskInfo.graph[this.token] ??= [];
+                if(graph.indexOf(waitToken) == -1){
+                    graph.push(waitToken);
+                    const cycleLoops:(string|number)[] = this.__detectCircleLoop(taskInfo.graph);
+                    if((DEBUG||DEV||EDITOR) && !!cycleLoops ){  
+                        error( 'At ' + Referencify(this).getRefPath(this.token) + ".wait( "+Referencify(this).getRefPath(waitToken) +" ): Phát hiện lỗi lặp vòng tròn (A đợi B, B đợi A). " );
+                        const cycleList:string[] = [];
+                        cycleLoops.forEach((eachToken:number)=>{
+                            const refInfo:ReferenceInfo = Referencify(this).getRefInfo(eachToken)
+                            refInfo && cycleList.push(refInfo?.comp + '<' + refInfo?.node );
+                        }, [])
+                        error(' Cyclic detail :: ' + cycleList?.join(' => ') + ' .\n Token: ' + cycleLoops?.join(' => '));
+                    }
+                    return await AsyncWaitify(this).task(actionToken).wait<TNextData>(waitToken);
+                }else{
+                    DEV && error('Error at ' + Referencify(this).getRefPath(this.token) + '.wait(' + Referencify(this).getRefPath(waitToken) + '). Each component just wait one other component on one time !')
+                }
             }else{
                 warn('Ko co trong task info !!')
             }
@@ -157,9 +164,19 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
          * 
          * @param id 
          */
-        protected __detectCircleLoop(token:number, taskInfo:ActionTaskInfo){
-            // const taskInfo:ActionTaskInfo = ActionTaskDB[this._actionToken];
-            !taskInfo.handled[token] ? (DEBUG||DEV||EDITOR) ? error( this.token + ".wait(...): Phát hiện lỗi lặp vòng tròn (A đợi B, B đợi A).") : error(false) : undefined;
+        protected __detectCircleLoop(graph:{[n:number]:number[]}){
+            let queue = Object.keys(graph).map( key => [key.toString()] );
+            while (queue.length) {
+                const batch = [];
+                for (const path of queue) {
+                    const parents = graph[parseInt(path[0])] || [];
+                    for (const key of parents) {
+                        if (key === parseInt(path[path.length-1])) return [key, ...path.map(key=>parseInt(key))];
+                        batch.push([key, ...path.map(key=>parseInt(key))]);
+                    }
+                }
+                queue = batch;
+            }
         }
         // ---------------- Override ----------------
 

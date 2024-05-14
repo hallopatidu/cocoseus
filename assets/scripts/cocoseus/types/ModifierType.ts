@@ -82,6 +82,7 @@ export interface IReferencified extends IInheritancified{
 
 export interface IStaticReferencified extends Constructor<IReferencified>{
     getRefInfo(token:number):ReferenceInfo,
+    getRefPath(token:number):string
     getComponent<T>(token:number):T
 }
 

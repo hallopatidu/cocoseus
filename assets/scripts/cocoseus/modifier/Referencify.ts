@@ -34,6 +34,11 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             return this._references
         }
 
+        static getRefPath(token:number):string{
+            const refInfo:ReferenceInfo = this.getRefInfo(token)
+            return refInfo?.comp + '<' + refInfo?.node + '>' + (refInfo.id ? '(' +refInfo.id+')' : '' );
+        }
+
         static getRefInfo(token:number):ReferenceInfo{
             return Referencified.references.get(token);
         }
