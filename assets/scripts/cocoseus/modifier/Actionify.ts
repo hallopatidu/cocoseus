@@ -107,7 +107,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
          * @param target 
          */
         async wait<TNextData = unknown>(target:string | number | Component):Promise<TNextData>{
-            if(!target) return
+            if(!target) return null
             const actionToken:number = this._actionToken;
             if(actionToken == -1){
                 DEV && warn('Do not register action token.')
@@ -133,15 +133,15 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 const graph:number[] = taskInfo.graph[this.token] ??= [];
                 if(graph.indexOf(waitToken) == -1){
                     graph.push(waitToken);
-                    const cycleLoops:(string|number)[] = this.__detectCircleLoop(taskInfo.graph);
-                    if((DEBUG||DEV||EDITOR) && !!cycleLoops ){  
-                        error( 'At ' + Referencify(this).getRefPath(this.token) + ".wait( "+Referencify(this).getRefPath(waitToken) +" ): Phát hiện lỗi lặp vòng tròn (A đợi B, B đợi A). " );
+                    const cyclicLoops:(string|number)[] = this.__detectCircleLoop(taskInfo.graph);
+                    if((DEBUG||DEV||EDITOR) && !!cyclicLoops ){  
+                        error( 'At ' + Referencify(this).getRefPath(this.token) + ".wait( "+Referencify(this).getRefPath(waitToken) +" ): Detect cyclic loop error (A wait B, B wait A). " );
                         const cycleList:string[] = [];
-                        cycleLoops.forEach((eachToken:number)=>{
+                        cyclicLoops.forEach((eachToken:number)=>{
                             const refInfo:ReferenceInfo = Referencify(this).getRefInfo(eachToken)
                             refInfo && cycleList.push(refInfo?.comp + '<' + refInfo?.node );
                         }, [])
-                        error(' Cyclic detail :: ' + cycleList?.join(' => ') + ' .\n Token: ' + cycleLoops?.join(' => '));
+                        error(' Cyclic detail :: ' + cycleList?.join(' => ') + ' .\n Token: ' + cyclicLoops?.join(' => '));
                     }
                     return await AsyncWaitify(this).task(actionToken).wait<TNextData>(waitToken);
                 }else{
@@ -150,14 +150,12 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
             }else{
                 warn('Ko co trong task info !!')
             }
-            // Cap nhat lai con tro actionToken vi this._actionToken co the thay doi trong qua trinh wait do co action khac xen ke
-            // this._actionToken = actionToken;
-            // const token:number = js.isNumber(target) ? target as number : (!!Actionify(target as any) ? (target as IActionized).token : -1);
-            return 
+            return null;
         }
 
         /**
-         * 
+         * Detect Cycle in a Directed Graph Data . BFS solution (Bread First Search);
+         * A BFS solution that will find one cycle (if there are any), which will be (one of) the shortest.
          * @param id 
          */
         protected __detectCircleLoop(graph:{[n:number]:number[]}){
@@ -167,8 +165,9 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 for (const path of queue) {
                     const parents = graph[parseInt(path[0])] || [];
                     for (const key of parents) {
-                        if (key === parseInt(path[path.length-1])) return [key, ...path.map(key=>parseInt(key))];
-                        batch.push([key, ...path.map(key=>parseInt(key))]);
+                        const repaths:number[] = path.map(key=>parseInt(key))
+                        if (key === parseInt(path[path.length-1])) return [key, ...repaths];
+                        batch.push([key, ...repaths]);
                     }
                 }
                 queue = batch;
