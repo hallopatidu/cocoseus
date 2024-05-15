@@ -21,28 +21,82 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
 
         protected _token:number = -1
 
-        static _references:Map<number, ReferenceInfo>;
+        private static _references:Map<number, ReferenceInfo>;
 
-        protected genKey(info:ReferenceInfo):string{
-            return Support.tokenize(info.node) + '.' + Support.tokenize(info.comp) + '.' + Support.tokenize(info.id.toString())
+        private static _keys:Map<number, string>;
+
+        /**
+         * 
+         * @param info 
+         * @returns 
+         */
+        private static genKey(info:ReferenceInfo):string{            
+            return info.node.split('/').map(nodeName=> Support.tokenize(nodeName)).toString() + '.' + Support.tokenize(info.comp) + '.' + Support.tokenize(info.id.toString())
         }
 
-        static get references(){
+        /**
+         * 
+         * @param info 
+         * @returns 
+         */
+        private static genToken(info:ReferenceInfo):number{
+            return Support.tokenize(this.genKey(info))
+        }
+
+        /**
+         * 
+         */
+        private static get references():Map<number, ReferenceInfo>{
             if(!this._references){
-                this._references = Storagify(this).table<ReferenceInfo>(Referencify.name)
+                this._references = Storagify(this).table<ReferenceInfo>(Referencify.name);
             }
-            return this._references
+            return this._references;
+        }
+        
+        /**
+         * 
+         */
+        private static get keys():Map<number, string>{
+            if(!this._keys){
+                this._keys = Storagify(this).table<string>(Referencify.name+'.keys');
+            }
+            return this._keys;
+        }
+        
+
+        /**
+         * 
+         * @param comp 
+         */
+        private static register(comp:IReferencified){
+            this.references.set(comp.token, comp.refInfo);
+            this.keys.set(comp.token, this.genKey(comp.refInfo));
         }
 
+        /**
+         * 
+         * @param token 
+         * @returns 
+         */
         static getRefPath(token:number):string{
-            const refInfo:ReferenceInfo = this.getRefInfo(token)
-            return refInfo?.comp + '<' + refInfo?.node + '>' + (refInfo.id ? '(' +refInfo.id+')' : '' );
+            const refInfo:ReferenceInfo = this.getRefInfo(token);
+            return '[' + refInfo?.comp + ']<' + refInfo?.node + '>' + (refInfo.id ? '(' +refInfo.id+')' : '' );
         }
 
+        /**
+         * 
+         * @param token 
+         * @returns 
+         */
         static getRefInfo(token:number):ReferenceInfo{
             return Referencified.references.get(token);
         }
 
+        /**
+         * 
+         * @param token 
+         * @returns 
+         */
         static getComponent<T=Component>(token:number):T{
             const info:ReferenceInfo = Referencified.getRefInfo(token);            
             return find(info.node)?.getComponents(info.comp)?.find((comp, index)=> index == info.id) as T
@@ -50,21 +104,52 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
 
         /**
          * 
+         * @param searchValue 
+         * @returns 
+         */
+        static findToken(searchValue:string):number{
+            const searchToken:string = Support.tokenize(searchValue.trim()).toString();
+            const shortcutToken:string = Support.searchStringArray(searchToken, Array.from(this.keys.values()))
+            return shortcutToken ? Support.tokenize(shortcutToken) : -1;
+        }
+
+        /**
+         * 
+         * @param token 
+         * @returns 
+         */
+        static validToken(token:number):boolean{
+            return Referencified.references.has(token);
+        }
+
+        // ---------------
+
+        // ---------------
+
+        /**
+         * 
          */
         public get internalOnLoad (): (() => void) | undefined {
-            Referencified.references.set(this.token, this.refInfo);
-            // warn('Init ' + this.node.name + ' -token:  ' + this.token)
+            // Referencified.references.set(this.token, this.refInfo);
+            Referencified.register(this)
             // 
             return super['internalOnLoad']
         }
 
+        /**
+         * 
+         */
         get token():number{
-            if(!this._token || this._token == -1){
-                this._token = Support.tokenize(this.refInfo.node, this.refInfo.comp, this.refInfo.id.toString());
+            if(!this._token || this._token == -1){                
+                // this._token = Support.tokenize(this.refInfo.node, this.refInfo.comp, this.refInfo.id.toString());
+                this._token = Referencified.genToken(this.refInfo)
             }
             return this._token
         }
 
+        /**
+         * 
+         */
         get refInfo():ReferenceInfo{
             if(this.node && !this._refInfo){
                 const hierachyPath:string = this.node.getPathInHierarchy();

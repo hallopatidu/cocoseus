@@ -98,7 +98,7 @@ type ReturnInheritancified<T, TCtor> = T extends { __props__: unknown, __values_
 export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>(...args:Constructor<TBase>[])=>Constructor<TBase & TInjector>):(<TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>){    
     
     return function<TBase>(base:validateTBase<TBase>):ReturnInheritancified<TBase&TInjector, TStaticInjector>{
-        if(base['__props__'] && base['__values__']){            // 
+        if(!!base['__props__'] && !!base['__values__']){            // 
             if(hadInjectorImplemented(base as Constructor, injectorMethod.name)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
             const superClass:TStaticInjector = injectorMethod.apply(this, Array.from(arguments));
             if(hadInjectorImplemented(base as Constructor, (superClass as Constructor).name)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;     

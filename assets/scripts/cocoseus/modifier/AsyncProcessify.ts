@@ -70,7 +70,7 @@ export default function AsyncProcessify<TBase>(base:Constructor<TBase>):Construc
                 }
                 
                 if(this.waitingTasks.size == 0) {
-                    DEV && warn('call from ' + token)
+                    // DEV && warn('call from ' + token)
                     log('All completed !!')
                 }
             }

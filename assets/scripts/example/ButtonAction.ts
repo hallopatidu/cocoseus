@@ -13,7 +13,7 @@ export class ButtonAction extends Actionify(Button) {
     }
 
     clickTest(){
-        this.dispatch({type:'test_action'})
+        this.dispatch({type:'test_action'},'TestWaitAction-001','TestWaitAction-002');
     }
 }
 

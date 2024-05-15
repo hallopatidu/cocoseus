@@ -6,7 +6,15 @@ import AsyncProcessify from "./AsyncProcessify";
 
 
 class AsyncWaitedTask extends AsyncProcessify(CCObject) {
-    
+    /**
+     * 
+     * @param token 
+     * @returns 
+     */
+    // async wait<TNextData = unknown>(token:number = -1):Promise<TNextData>{
+
+    //     return await super.wait(token)
+    // }
 }
 
 /**

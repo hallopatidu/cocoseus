@@ -62,18 +62,17 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 try{
                     const taskPromises:Promise<any>[] = [];                    
                     const actionKeys:number[] = [...actionFunctions.keys()];
-                    const progressTask:IAsyncProcessified = AsyncWaitify(this).task(actionToken);
+                    const progressTask:IAsyncProcessified = AsyncWaitify(this).task(actionToken); 
                     taskInfo.progress = progressTask;
                     // 
-                    actionKeys.forEach((token:number)=>{
-                        progressTask.begin(token);
-                    });
+                    actionKeys.forEach((token:number)=> !(receiver && receiver.length && receiverTokens.indexOf(token) == -1) && progressTask.begin(token));
                     // 
                     for (let index = 0; index < actionKeys.length; index++) {
                         const token:number = actionKeys[index];
-                        // progressTask.begin(token);
-                        const funtionalInvoker:Function = actionFunctions.get(token);
-                        taskPromises.push(funtionalInvoker(taskInfo));
+                        if(!(receiver && receiver.length && receiverTokens.indexOf(token) == -1)){
+                            const funtionalInvoker:Function = actionFunctions.get(token);
+                            taskPromises.push(funtionalInvoker(taskInfo));
+                        }
                     }
                     await Promise.all(taskPromises);
                 }finally{
@@ -81,7 +80,8 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 }
 
             }else{
-                warn('Action ' + action.type + ' is dispatching. This action ' + action.type + ' is auto pushed to queue dispatching stack')
+                warn('Action ' + action.type + ' is still dispatching. This action ' + action.type + ' is auto pushed to queue dispatching stack')
+
             }
         }
 
@@ -115,21 +115,10 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 DEV && warn('Do not register action token.')
                 return
             }
+            // 
             const waitToken:number = this.getTokenFrom(target);
-            // switch(true){
-            //     case js.isNumber(target):
-            //         waitToken = target as number;
-            //         break;
-            //     case !!Actionify(target as any):
-            //         waitToken = (target as IActionized).token;
-            //         break;
-            //     case js.isString(target):
-            //         waitToken = Support.tokenize(target as string); // underconstructor
-            //         break;
-            //     default:
-            //         break;
-            // }
             if(waitToken == -1) error('Unknow validate \'target\' agrument pass to the \'wait\' method.');
+            // 
             const taskInfo:ActionTaskInfo = ActionTaskDB[actionToken];
             if(taskInfo){
                 const graph:number[] = taskInfo.graph[this.token] ??= [];
@@ -138,16 +127,12 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                     const cyclicLoops:(string|number)[] = this.__detectCircleLoop(taskInfo.graph);
                     if((DEBUG||DEV||EDITOR) && !!cyclicLoops ){  
                         error( 'At ' + Referencify(this).getRefPath(this.token) + ".wait( "+Referencify(this).getRefPath(waitToken) +" ): Detect cyclic loop error (A wait B, B wait A). " );
-                        const cycleList:string[] = [];
-                        cyclicLoops.forEach((eachToken:number)=>{
-                            const refInfo:ReferenceInfo = Referencify(this).getRefInfo(eachToken)
-                            refInfo && cycleList.push(refInfo?.comp + '<' + refInfo?.node );
-                        }, [])
-                        error(' Cyclic detail :: ' + cycleList?.join(' => ') + ' .\n Token: ' + cyclicLoops?.join(' => '));
+                        const cycleList:string[] = cyclicLoops?.map(eachToken=>Referencify(this).getRefPath(eachToken as number));
+                        error('Cyclic detail :: ' + cycleList.join(' => ') + ' .\n Cyclic Token List: ' + cyclicLoops?.join(' => '));
                     }
                     return await AsyncWaitify(this).task(actionToken).wait<TNextData>(waitToken);
                 }else{
-                    DEV && error('Error at ' + Referencify(this).getRefPath(this.token) + '.wait(' + Referencify(this).getRefPath(waitToken) + '). Each component just wait one other component on one time !')
+                    DEV && error('Error at ' + Referencify(this).getRefPath(this.token) + '.wait(' + Referencify(this).getRefPath(waitToken) + '). Each component just wait one other component on one time dispatching !')
                 }
             }else{
                 warn('This funtion is not run on a action progress.')
@@ -164,14 +149,23 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
             let waitToken:number = -1;
             switch(true){
                 case js.isNumber(target):
-                    waitToken = target as number;
+                    if(Referencify(this).validToken(target as number) ){
+                        waitToken = target as number;
+                    }else if(DEV){
+                        error('The token is invalid')
+                    }
                     break;
+                
+                case js.isString(target):
+                    // waitToken = Support.tokenize(target as string); // underconstructor
+                    waitToken = Referencify(this).findToken(target as string);
+                    if(DEV && waitToken == -1) {error('Can\'t find the token map with ' + target.toString())}
+                    break;
+
                 case !!Actionify(target as any):
                     waitToken = (target as IActionized).token;
                     break;
-                case js.isString(target):
-                    waitToken = Support.tokenize(target as string); // underconstructor
-                    break;
+
                 default:
                     break;
             }
@@ -179,7 +173,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
         }
 
         /**
-         * Detect Cycle in a Directed Graph Data . BFS solution (Bread First Search);
+         * Detect Cycle in a Directed Graph Data. BFS solution (Bread First Search);
          * A BFS solution that will find one cycle (if there are any), which will be (one of) the shortest.
          * @param id 
          */
@@ -217,8 +211,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 const proxyHandler = {
                     get(target, prop) {                        
                         target._actionToken = actionToken;
-                        return Reflect.get(target, prop);
-                        
+                        return Reflect.get(target, prop);                        
                     },
                     set(target, prop, value) {
                         target._actionToken = actionToken;                       
@@ -226,7 +219,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                     },
                 }
                 // 
-                const token:number = this.token;
+                const invokerToken:number = this.token;
                 // Sử dụng proxy với proxyHandler để đảm bảo this._actionToken không thay đổi khi gọi cùng lúc nhiều action                        
                 const proxy:IActionized = new Proxy(this, proxyHandler);
                 const funtionalInvoker:Function = function(taskInfo:ActionTaskInfo):Promise<any>{        
@@ -241,7 +234,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                         returnValue = (typeof returnValue === 'object' && returnValue?.then && typeof returnValue.then === 'function') ? await returnValue : returnValue;
                         // 
                         resolve(returnValue);
-                        progressTask.end(token, action);
+                        progressTask.end(invokerToken, action);
                         // 
                     })
                 };

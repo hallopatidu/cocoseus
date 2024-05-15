@@ -44,7 +44,7 @@ export interface IStaticDecoratified extends Constructor<IDecoratified> {
 
 
 export interface IActionized extends IReferencified{
-    dispatch(action:Action, ...receiver:string[]):void
+    dispatch(action:Action, ...receiver:(string | number | Component)[]):void
     wait<TNextData = unknown>(target:string | number | Component):Promise<TNextData>
     _startDispatching(action:Action):void
     _stopDispatching(action:Action):void
@@ -82,8 +82,10 @@ export interface IReferencified extends IInheritancified{
 
 export interface IStaticReferencified extends Constructor<IReferencified>{
     getRefInfo(token:number):ReferenceInfo,
-    getRefPath(token:number):string
-    getComponent<T>(token:number):T
+    getRefPath(token:number):string,
+    getComponent<T>(token:number):T,
+    validToken(token:number):boolean,
+    findToken(searchValue:string):number
 }
 
 // ---------------- Storagify -----------

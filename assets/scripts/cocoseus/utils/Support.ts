@@ -60,6 +60,30 @@ export class Support extends Component {
 
     /**
      * 
+     * @param str 
+     * @param strOrRegxArray 
+     * @returns 
+     */
+    static searchStringArray (str:string, strOrRegxArray:string[]) {        
+        return strOrRegxArray.find((value:string)=> !!value.match(str))
+    }
+
+    /**
+     * 
+     * @param fullString 
+     * @param signal 
+     * @returns 
+     */
+    static getStringInsideSignal(fullString:string, signal:string = "<>"):string{
+        if(fullString && fullString.length){
+            const InsideSignalRegex:string = "/(?"+signal.charAt(0)+"=\\"+signal.charAt(0)+").+?(?=\\"+signal.charAt(1)+")/g;"
+            const insideSignalStr:string[] = fullString.match(new RegExp(InsideSignalRegex))[0].split(/\s/g);
+            if(insideSignalStr && insideSignalStr.length) return insideSignalStr[0];            
+        }
+    }
+
+    /**
+     * 
      * @param values 
      * @returns 
      */
