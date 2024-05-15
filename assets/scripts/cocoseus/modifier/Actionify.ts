@@ -25,11 +25,11 @@ type ActionTaskInfo = {
 export default Inheritancify<IActionized, IStaticActionized>(function Actionify<TBase>(base:Constructor<TBase>):Constructor<TBase & IActionized>{
     class Actionized extends Referencify(AsyncWaitify(base as unknown as Constructor<Component>)) implements IActionized, IAsyncWaited {
         
-        private static _actions:Map<number, Map<number, Function>>;
+        private static _actions:Map<number, Map<number, Function[]>>;
 
         static get actions(){
             if(!Actionized._actions){
-                Actionized._actions = Storagify(this).table<Map<number, Function>>(Actionify.name);
+                Actionized._actions = Storagify(this).table<Map<number, Function[]>>(Actionify.name);
             }
             return Actionized._actions
         }
@@ -44,7 +44,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
         async dispatch(action:Action, ...receiver:(string | number | Component)[]){
             // 
             const actionToken:number = Support.tokenize(action.type);
-            const actionFunctions:Map<number, Function> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
+            const actionFunctions:Map<number, Function[]> = Actionized.actions.get(actionToken); // Map <reference token, handler function>
             if(!actionFunctions){
                 DEV && warn('The action \"' + action.type + '\" was not registed !');
                 return;
@@ -70,8 +70,8 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                     for (let index = 0; index < actionKeys.length; index++) {
                         const token:number = actionKeys[index];
                         if(!(receiver && receiver.length && receiverTokens.indexOf(token) == -1)){
-                            const funtionalInvoker:Function = actionFunctions.get(token);
-                            taskPromises.push(funtionalInvoker(taskInfo));
+                            const functionalInvokers:Function[] = actionFunctions.get(token);
+                            functionalInvokers && taskPromises.push(Promise.all(functionalInvokers.map(invoker=>invoker(taskInfo))));
                         }
                     }
                     await Promise.all(taskPromises);
@@ -205,7 +205,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 const actionType:string = actionInfoArr[0];
                 const actionToken:number = Support.tokenize(actionType);
                 const methodName:string = actionInfoArr[1];
-                if(!Actionized.actions.has(actionToken)) Actionized.actions.set(actionToken, new Map<number, Function>());
+                if(!Actionized.actions.has(actionToken)) Actionized.actions.set(actionToken, new Map<number, Function[]>());
                 // 
                 // Registration of this Component to the dispatcher system.
                 const proxyHandler = {
@@ -219,31 +219,38 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                     },
                 }
                 // 
-                const invokerToken:number = this.token;
+                const currentToken:number = this.token;
                 // Sử dụng proxy với proxyHandler để đảm bảo this._actionToken không thay đổi khi gọi cùng lúc nhiều action                        
                 const proxy:IActionized = new Proxy(this, proxyHandler);
-                const funtionalInvoker:Function = function(taskInfo:ActionTaskInfo):Promise<any>{        
+                const functionalInvoker:Function = function(taskInfo:ActionTaskInfo):Promise<any>{        
                     const progressTask:IAsyncProcessified = taskInfo.progress;
                     const action:Action = taskInfo.action;
-                    const funtionName:string = methodName;
+                    const functionName:string = methodName;
                     const compProxy:IActionized = proxy;
                     return new Promise(async (resolve:Function)=>{
                         // Invoke funtion
-                        let returnValue:any = compProxy[funtionName]?.apply(compProxy, Array.from(arguments));
+                        let returnValue:any = compProxy[functionName]?.apply(compProxy, Array.from(arguments));
                         // 
                         returnValue = (typeof returnValue === 'object' && returnValue?.then && typeof returnValue.then === 'function') ? await returnValue : returnValue;
                         // 
                         resolve(returnValue);
-                        progressTask.end(invokerToken, action);
+                        progressTask.end(currentToken, action);
                         // 
                     })
                 };
-                // Record callback to the handler funtion map to token.
-                if(Actionized.actions.get(actionToken).has(this.token)){
-                    warn('There are two function handle to the same action type' + actionType);
+                // Record invoker function via mapping with token.
+                let functionalInvokers:Function[] = Actionized.actions.get(actionToken).get(this.token);
+                if(!functionalInvokers){
+                    functionalInvokers = [functionalInvoker];                    
                 }else{
-                    Actionized.actions.get(actionToken).set(this.token, funtionalInvoker);
+                    functionalInvokers.push(functionalInvoker)
                 }
+                Actionized.actions.get(actionToken).set(this.token, functionalInvokers);
+                // if(Actionized.actions.get(actionToken).has(this.token)){
+                //     warn('There are two function handle to the same action type' + actionType);
+                // }else{
+                //     Actionized.actions.get(actionToken).set(this.token, functionalInvoker);
+                // }
             })
             // 
             return super['internalOnLoad']
