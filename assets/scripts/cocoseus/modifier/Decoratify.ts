@@ -19,6 +19,12 @@ export default Inheritancify<IDecoratified, IStaticDecoratified>(function Decora
             return this[SelectedKey];
         }
 
+        /**
+         * 
+         * @param key 
+         * @param tag 
+         * @returns 
+         */
         static record(key:string, tag:string = DecoratedTag):boolean{
             const customeTag:string = tag !== DecoratedTag ? '__$'+tag: DecoratedTag;
             if(!this[customeTag]) this[customeTag] = new Set<string>();
@@ -28,6 +34,11 @@ export default Inheritancify<IDecoratified, IStaticDecoratified>(function Decora
             return true
         }
 
+        /**
+         * 
+         * @param tag 
+         * @returns 
+         */
         static keys(tag:string = DecoratedTag):string[]{
             const customeTag:string = tag !== DecoratedTag ? '__$'+tag: DecoratedTag;
             if(!this[customeTag]) this[customeTag] = new Set<string>();
