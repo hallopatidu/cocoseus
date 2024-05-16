@@ -36,7 +36,7 @@ export interface IDecoratified extends IInheritancified {
 
 export interface IStaticDecoratified extends Constructor<IDecoratified> {
     record(key:string,tag?:string):boolean
-    get selectedKey():string
+    remove(key:string, tag:string):boolean
     keys(tag?:string):string[]
 }
 

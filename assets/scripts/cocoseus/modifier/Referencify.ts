@@ -26,6 +26,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
         private static _keys:Map<number, string>;
 
         /**
+         * Key đươc sinh ra từ ReferenceInfo.
          * 
          * @param info 
          * @returns 
@@ -35,6 +36,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
         }
 
         /**
+         * Token được sinh ra từ key.
          * 
          * @param info 
          * @returns 
@@ -72,6 +74,15 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             this.references.set(comp.token, comp.refInfo);
             this.keys.set(comp.token, this.genKey(comp.refInfo));
         }
+        
+        /**
+         * 
+         * @param comp 
+         */
+        private static remove(comp:IReferencified){
+            this.references.delete(comp.token);
+            this.keys.delete(comp.token);
+        }
 
         /**
          * 
@@ -99,7 +110,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          */
         static getComponent<T=Component>(token:number):T{
             const info:ReferenceInfo = Referencified.getRefInfo(token);            
-            return find(info.node)?.getComponents(info.comp)?.find((comp, index)=> index == info.id) as T
+            return find(info.node)?.getComponents(info.comp)?.find((comp, index)=> index == info.id) as T;
         }
 
         /**
@@ -130,10 +141,16 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * 
          */
         public get internalOnLoad (): (() => void) | undefined {
-            // Referencified.references.set(this.token, this.refInfo);
-            Referencified.register(this)
-            // 
+            Referencified.register(this);
             return super['internalOnLoad']
+        }
+
+        /**
+         * 
+         */
+        public get internalOnDisable (): (() => void) | undefined {
+            Referencified.remove(this);
+            return super['internalOnDisable']
         }
 
         /**
@@ -155,20 +172,15 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
                 const hierachyPath:string = this.node.getPathInHierarchy();
                 const compName:string = this.constructor.name;
                 const orderIndex:number = this.node.getComponents(compName).findIndex((_comp:Component)=>_comp === this)||0;
-                // const modifierToken:number = Support.tokenize(Referencify.name)
-                // const referenceToken:number = Support.tokenize(hierachyPath, compName, orderIndex.toString());
                 this._refInfo = {
                     node:hierachyPath,
                     comp:compName,
                     id:orderIndex
-                }                
+                }
             }
             return this._refInfo
         }
 
-        // test(): void {
-            
-        // }
     }
     return Referencified as unknown as Constructor<TBase & IReferencified>;
 
@@ -192,7 +204,7 @@ export function reference(
         descriptorOrInitializer:  BabelPropertyDecoratorDescriptor)
     {     
         // Truy xuất vào Injector cua mot prototype
-        Decoratify(target).record(propertyKey.toString(), '@reference')
+        Decoratify(target).record(propertyKey.toString(), '@reference');
         // 
         if(!options){
             options = {};

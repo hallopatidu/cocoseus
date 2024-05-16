@@ -220,7 +220,8 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                 }
                 // 
                 const currentToken:number = this.token;
-                // Sử dụng proxy với proxyHandler để đảm bảo this._actionToken không thay đổi khi gọi cùng lúc nhiều action                        
+                // Use a proxy with proxyHandler to ensure this._actionToken does not change when calling multiple actions at the same time.  
+                // This like use flyweight design pattern
                 const proxy:IActionized = new Proxy(this, proxyHandler);
                 const functionalInvoker:Function = function(taskInfo:ActionTaskInfo):Promise<any>{        
                     const progressTask:IAsyncProcessified = taskInfo.progress;
@@ -246,14 +247,25 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
                     functionalInvokers.push(functionalInvoker)
                 }
                 Actionized.actions.get(actionToken).set(this.token, functionalInvokers);
-                // if(Actionized.actions.get(actionToken).has(this.token)){
-                //     warn('There are two function handle to the same action type' + actionType);
-                // }else{
-                //     Actionized.actions.get(actionToken).set(this.token, functionalInvoker);
-                // }
             })
             // 
             return super['internalOnLoad']
+        }
+
+        /**
+         * 
+         */
+        public get internalOnDisable (): (() => void) | undefined {
+            const actionKeys:string[] = Decoratify(this).keys('@action');
+            actionKeys.forEach((key:string)=>{
+                const actionInfoArr:string[] = key.split('::');
+                const actionType:string = actionInfoArr[0];
+                const actionToken:number = Support.tokenize(actionType);                
+                if(Actionized.actions.get(actionToken).has(this.token)){
+                    Actionized.actions.get(actionToken).delete(this.token);
+                }
+            })
+            return super['internalOnDisable']
         }
 
     }
@@ -272,13 +284,3 @@ export function action(type:string){
         return descriptor;
     }
 }
-
-// export function wait(){
-//     return function (that: any, propertyKey: string, descriptor: PropertyDescriptor) {        
-//         // Decoratify(that).record(actionType + '::' +propertyKey.toString(), '@wait')
-
-//         return descriptor;
-//     }
-// }
-
-// export function wait()
