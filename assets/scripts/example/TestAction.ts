@@ -1,5 +1,5 @@
 import { _decorator, Component, log, Node } from 'cc';
-import Actionify, { action } from '../cocoseus/modifier/Actionify';
+import Actionify, { action } from '../cocoseus/core/Actionify';
 import { Action } from '../cocoseus/types/ModifierType';
 // import { Support } from '../cocoseus/utils/Support';
 const { ccclass, property } = _decorator;

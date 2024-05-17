@@ -1,5 +1,5 @@
 import { _decorator, Component, log, Node } from 'cc';
-import Decoratify from '../cocoseus/modifier/Decoratify';
+import Decoratify from '../cocoseus/core/Decoratify';
 const { ccclass, property } = _decorator;
 
 @ccclass('TestDecoratify')

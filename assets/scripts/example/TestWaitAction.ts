@@ -1,7 +1,7 @@
 import { _decorator, Component, log, Node } from 'cc';
-import Actionify, { action } from '../cocoseus/modifier/Actionify';
+import Actionify, { action } from '../cocoseus/core/Actionify';
 import { Action } from '../cocoseus/types/ModifierType';
-import { reference } from '../cocoseus/modifier/Referencify';
+import { reference } from '../cocoseus/core/Referencify';
 const { ccclass, property } = _decorator;
 
 @ccclass('TestWaitAction')
@@ -10,6 +10,8 @@ export class TestWaitAction extends Actionify(Component) {
     @property({type:Component})
     waitComp:Component
 
+    @reference
+    secondComp:Component
 
     start() {
 

@@ -1,6 +1,6 @@
 import { _decorator, Component, log, Node, Vec3 } from 'cc';
-import  Referencify, { reference }  from '../cocoseus/modifier/Referencify';
-import Decoratify from '../cocoseus/modifier/Decoratify';
+import  Referencify, { reference }  from '../cocoseus/core/Referencify';
+import Decoratify from '../cocoseus/core/Decoratify';
 const { ccclass, property, executeInEditMode } = _decorator;
 
 @ccclass('TestReferencify')

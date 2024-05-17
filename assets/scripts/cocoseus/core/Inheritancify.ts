@@ -8,6 +8,9 @@ import { DEV } from 'cc/env';
 
 const InjectorTag:string = '$injector';
 
+export const CACHE_KEY = '__ccclassCache__';
+export const ENUM_PROPERTY_PREFIX:string = '__$enum__';
+export const STRING_PROPERTY_PREFIX:string = '__$string__';
 /**
  * Dangerous Function !!!
  * This function can changed all inheritances of cocos system.
@@ -84,6 +87,11 @@ export function getInjector(injectorName:string, baseCtor:Constructor, currentBa
         return null;    
     }
     return (baseCtor.name.indexOf(injectorName) !== -1) || (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? baseCtor : getInjector(injectorName, js.getSuper(baseCtor), currentBaseCtorName);    
+}
+
+export function lastInjector<TStaticInjector>(base:any):TStaticInjector|null{
+    if(!base) return null;
+    return (base[InjectorTag] ? getInjector(base[InjectorTag], base) : lastInjector(base)) as TStaticInjector|null;
 }
 
 /**

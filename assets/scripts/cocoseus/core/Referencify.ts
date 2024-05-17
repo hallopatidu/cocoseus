@@ -1,10 +1,10 @@
 // Referencify
 
-import { _decorator, Component, Constructor, find, warn } from "cc";
+import { _decorator, Component, Constructor, find, js, warn } from "cc";
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified } from "../types/ModifierType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
-import { Inheritancify } from "./Inheritancify";
+import { CACHE_KEY, ENUM_PROPERTY_PREFIX, Inheritancify, lastInjector, STRING_PROPERTY_PREFIX } from "./Inheritancify";
 import Storagify from "./Storagify";
 const { property } = _decorator;
 
@@ -82,6 +82,12 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
         private static remove(comp:IReferencified){
             this.references.delete(comp.token);
             this.keys.delete(comp.token);
+        }
+
+        private static listingReferences(){
+            
+            this.references
+            // Support.enumifyProperty()
         }
 
         /**
@@ -190,6 +196,10 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
 
 // ----------- Decorator ------------
 
+/**
+ * Phù hợp với việc sử dụng trong prefab độc lập để trỏ đến một component ngoài scene.
+ * @param options 
+ */
 export function reference(options?: IPropertyOptions|string|unknown): LegacyPropertyDecorator;
 export function reference(type?: PropertyType): LegacyPropertyDecorator;
 export function reference(...args: Parameters<LegacyPropertyDecorator>): void;
@@ -205,18 +215,38 @@ export function reference(
     {     
         // Truy xuất vào Injector cua mot prototype
         Decoratify(target).record(propertyKey.toString(), '@reference');
+        // lastInjector<IStaticReferencified>(target).findToken()
+        const constructor:any = target.constructor;  
+        const propertyName:string = propertyKey.toString();
+        const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
+        const stringPropertyName:any = STRING_PROPERTY_PREFIX + propertyName;
+        // 
+        const classStash:unknown = constructor[CACHE_KEY] || ((constructor[CACHE_KEY]) = {});
+        const ccclassProto:unknown = classStash['proto'] || ((classStash['proto'])={});
+        const properties:unknown = ccclassProto['properties'] || ((ccclassProto['properties'])={});
+        const enumPropertyStash:unknown = properties[enumPropertyName] ??= {};    
+        // 
+        const enumPropertyRecordOptions:any = {            
+            displayName: ''+ propertyName.replace(/\b\w/g, c => c.toUpperCase()).replace(/(?=[A-Z])/g,' ')+'',  // upper first character
+            // visible:true
+        }
+        
+        const enumPropertyRecord:any = js.mixin(enumPropertyStash, enumPropertyRecordOptions);
+        
         // 
         if(!options){
             options = {};
         }
         if(!(options as IPropertyOptions).type){
             (options as IPropertyOptions).type = Component;
+            (options as IPropertyOptions).visible = function(){return true}
         }
         // ((options ??= {}) as IPropertyOptions).type = Component;
         const propertyNormalized:LegacyPropertyDecorator = property(options);
         propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyKey, descriptorOrInitializer);
         return descriptorOrInitializer
     }
+    
 
     if (target === undefined) {
         // @audio() => LegacyPropertyDecorator

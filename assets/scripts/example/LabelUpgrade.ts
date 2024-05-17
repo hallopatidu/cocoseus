@@ -1,5 +1,5 @@
 import { _decorator, Component, Label, log, Node } from 'cc';
-import  Parasitify, { override }  from '../cocoseus/modifier/Parasitify';
+import  Parasitify, { override }  from '../cocoseus/core/Parasitify';
 const { ccclass, property, executeInEditMode } = _decorator;
 
 @ccclass('LabelUpgrade')
