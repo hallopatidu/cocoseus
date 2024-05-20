@@ -1,5 +1,5 @@
 import { Component, Constructor, error, find, js, log, warn } from "cc";
-import { Action, IActionized, IAsyncProcessified, IAsyncWaited, IStaticActionized, ReferenceInfo } from "../types/ModifierType";
+// import { Action, IActionized, IAsyncProcessified, IAsyncWaited, IStaticActionized, ReferenceInfo } from "../types/CoreType";
 import { Inheritancify } from "./Inheritancify";
 import Storagify from "./Storagify";
 import Decoratify from "./Decoratify";
@@ -7,6 +7,7 @@ import Referencify from "./Referencify";
 import { Support } from "../utils/Support";
 import { DEBUG, DEV, EDITOR } from "cc/env";
 import AsyncWaitify from "./AsyncWaitify";
+import { Action, IActionized, IAsyncProcessified, IAsyncWaited, IStaticActionized } from "../types/CoreType";
 
 
 const ActionTaskDB:{[n:number]:ActionTaskInfo} = Object.create(null);

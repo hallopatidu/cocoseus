@@ -1,10 +1,11 @@
 import { _decorator, Component, log, Node } from 'cc';
 import Actionify, { action } from '../cocoseus/core/Actionify';
-import { Action } from '../cocoseus/types/ModifierType';
+import { Action } from '../cocoseus/types/CoreType';
 import { reference } from '../cocoseus/core/Referencify';
-const { ccclass, property } = _decorator;
+const { ccclass, property, executeInEditMode } = _decorator;
 
 @ccclass('TestWaitAction')
+@executeInEditMode(true)
 export class TestWaitAction extends Actionify(Component) {
 
     @property({type:Component})

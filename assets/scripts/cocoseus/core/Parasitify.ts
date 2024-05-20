@@ -1,6 +1,6 @@
 import { Component, Constructor, error, js, warn, _decorator } from "cc";
 import { DEV, EDITOR } from "cc/env";
-import { IParasitified } from "../types/ModifierType";
+import { IParasitified } from "../types/CoreType";
 import { hadInjectorImplemented } from "./Inheritancify";
 const { property } = _decorator;
 

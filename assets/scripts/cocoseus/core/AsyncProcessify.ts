@@ -1,5 +1,5 @@
 import { _decorator, Constructor, js, log, warn } from 'cc';
-import { IAsyncProcessified } from '../types/ModifierType';
+import { IAsyncProcessified } from '../types/CoreType';
 import { hadInjectorImplemented } from './Inheritancify';
 import { DEV } from 'cc/env';
 

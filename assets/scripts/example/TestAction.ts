@@ -1,7 +1,6 @@
 import { _decorator, Component, log, Node } from 'cc';
 import Actionify, { action } from '../cocoseus/core/Actionify';
-import { Action } from '../cocoseus/types/ModifierType';
-// import { Support } from '../cocoseus/utils/Support';
+import { Action } from '../cocoseus/types/CoreType';
 const { ccclass, property } = _decorator;
 
 @ccclass('TestAction')

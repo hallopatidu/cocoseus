@@ -1,6 +1,6 @@
 import { _decorator, Component, Constructor, Node } from 'cc';
 import { Inheritancify } from './Inheritancify';
-import { IStaticStoragified, IStoragified } from '../types/ModifierType';
+import { IStaticStoragified, IStoragified } from '../types/CoreType';
 import { Support } from '../utils/Support';
 const { ccclass, property } = _decorator;
 

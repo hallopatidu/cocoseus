@@ -1,5 +1,5 @@
 import { CCClass, CCObject, Component, Constructor, log } from "cc";
-import { IAsyncProcessified, IAsyncWaited, IStaticAsyncWaited } from "../types/ModifierType";
+import { IAsyncProcessified, IAsyncWaited, IStaticAsyncWaited } from "../types/CoreType";
 import { Inheritancify } from "./Inheritancify";
 import Storagify from "./Storagify";
 import AsyncProcessify from "./AsyncProcessify";
