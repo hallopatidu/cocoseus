@@ -1,14 +1,18 @@
 // Referencify
 
-import { _decorator, Component, Constructor, Enum, find, js, log, warn } from "cc";
+import { _decorator, Component, Constructor, director, Enum, find, js, log, SceneGlobals, sys, warn } from "cc";
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified } from "../types/CoreType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
-import { CACHE_KEY, ENUM_PROPERTY_PREFIX, Inheritancify, lastInjector, STRING_PROPERTY_PREFIX } from "./Inheritancify";
+import { CACHE_KEY, ENUM_PROPERTY_PREFIX, INDEX_PROPERTY_PREFIX, Inheritancify, lastInjector, STRING_PROPERTY_PREFIX } from "./Inheritancify";
 import Storagify from "./Storagify";
+import { EDITOR } from "cc/env";
 const { property } = _decorator;
+// const {Editor} = globalThis
+let ReferenceEnum = Enum({Default:-1});
 
-let ReferenceEnum = Enum({Default:-1})
+globalThis.Editor.Message.addBroadcastListener('console:logsUpdate', () => {log('-------------------- ????????')});
+
 /**
  * 
  * @param base 
@@ -79,15 +83,37 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
                 // const compPath:string = Referencified.getRefPath(token);
                 refPaths.push(Referencified.getRefPath(token))
             })
-            log('>>>>>>> ' + refPaths)
+            // log('>>>>>>> ' + refPaths)
             ReferenceEnum = Support.convertToEnum(refPaths);
             
             const propertyNames:string[] = Array.from( Decoratify(comp).keys('@reference'));
             propertyNames.forEach((propName:string)=>{
                 const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propName;
                 Support.enumifyProperty(comp, enumPropertyName, ReferenceEnum);
-                propName && log(comp.node.name + ' Enum >> ------------------ ' + propName + '' + ReferenceEnum)
+                // propName && log(comp.node.name + ' Enum >> ------------------ ' + propName + '' + ReferenceEnum)
             })
+            
+            if(EDITOR){ 
+                // globalThis.Editor.Message.request('scene', 'query-components').then((value:any)=>{
+                //     // log('value:: ' + value)
+                // });
+                // globalThis.Editor.Message.request('scene', 'query-component').then((value:any)=>{
+                //     // log('value:: ' + value)
+                // });
+                globalThis.Editor.Message.request('scene', 'query-components', 'cc.Sprite').then((...args)=>{
+                    log('Component class ' + args)
+                });
+                // 
+                globalThis.Editor.Message.addBroadcastListener('console:logsUpdate', function(val){
+                    log('Remove ====>>>>   ' + val)
+                })
+                // 
+            }
+
+            const json:string = JSON.stringify(Array.from(this.references)); 
+            const map:Map<any,any> = new Map(JSON.parse(json));
+            // scene:component-removed
+            log('All:: ' + json) ;
         }
         
         /**
@@ -95,9 +121,16 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * @param comp 
          */
         private static remove(comp:IReferencified){
-            this.references.delete(comp.token);
-            this.keys.delete(comp.token);
-            
+            if(!EDITOR){
+                this.references.delete(comp.token);
+                this.keys.delete(comp.token);
+            }else{
+                // globalThis.Editor.Message.request('scene', 'query-component', comp.node.uuid).then((val)=>{
+                //     log('KKKKKKKKK:: ' + val)
+                // });
+                log('Scene:: ' + director.getScene().name)
+                
+            }
         }
 
         
@@ -246,10 +279,11 @@ export function reference(
         // Truy xuất vào Injector cua mot prototype
         Decoratify(target).record(propertyKey.toString(), '@reference');
         // lastInjector<IStaticReferencified>(target).findToken()
-        // const constructor:any = target.constructor;  
-        // const propertyName:string = propertyKey.toString();
-        // const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
-        // const stringPropertyName:any = STRING_PROPERTY_PREFIX + propertyName;
+        const constructor:any = target.constructor;  
+        const propertyName:string = propertyKey.toString();
+        const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
+        const indexEnumPropertyName:any = INDEX_PROPERTY_PREFIX + propertyName;
+        const stringPropertyName:any = STRING_PROPERTY_PREFIX + propertyName;
         // // 
         // const classStash:unknown = constructor[CACHE_KEY] || ((constructor[CACHE_KEY]) = {});
         // const ccclassProto:unknown = classStash['proto'] || ((classStash['proto'])={});
@@ -262,18 +296,29 @@ export function reference(
         // }
         
         // const enumPropertyRecord:any = js.mixin(enumPropertyStash, enumPropertyRecordOptions);
-        
+        Object.defineProperty(target, enumPropertyName, {
+            get:function():number{                
+                return !this[indexEnumPropertyName] || this[indexEnumPropertyName] == -1 ? 0 :this[indexEnumPropertyName];
+            },
+            set:function(val:number){           
+                this[indexEnumPropertyName] = val;     
+
+                
+            }
+        });
         // 
         if(!options){
             options = {};
         }
         if(!(options as IPropertyOptions).type){
-            (options as IPropertyOptions).type = ReferenceEnum;
-            (options as IPropertyOptions).visible = function(){return true}
+            // (options as IPropertyOptions).type = ReferenceEnum;
+            (options as IPropertyOptions).visible = function(){return true};
+            (options as IPropertyOptions).displayName = ''+ propertyName.replace(/\b\w/g, c => c.toUpperCase()).replace(/(?=[A-Z])/g,' ')+'';  // upper first character
         }
         // ((options ??= {}) as IPropertyOptions).type = Component;
         const propertyNormalized:LegacyPropertyDecorator = property(options);
-        propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyKey, descriptorOrInitializer);
+        // propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyKey, descriptorOrInitializer);
+        propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], enumPropertyName, descriptorOrInitializer);
         return descriptorOrInitializer
     }
     
@@ -281,7 +326,7 @@ export function reference(
     if (target === undefined) {
         // @audio() => LegacyPropertyDecorator
         return reference({
-            type: Decoratify,
+            type: ReferenceEnum,
         });
     } else if (typeof propertyKey === 'undefined') {
         options = target;

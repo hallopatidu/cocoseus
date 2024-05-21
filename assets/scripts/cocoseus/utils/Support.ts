@@ -25,6 +25,15 @@ export class Support extends Component {
 
     /**
      * 
+     * @param map 
+     * @returns 
+     */
+    static mapToJson(map:Map<any,any>):string{
+        return JSON.stringify( [...map].reduce((acc, [key, value]) => {acc[key] = value; return acc}, {}));
+    }
+
+    /**
+     * 
      * @param value 
      * @param canBeNegative 
      * @returns 

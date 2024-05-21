@@ -10,6 +10,7 @@ const InjectorTag:string = '$injector';
 
 export const CACHE_KEY = '__ccclassCache__';
 export const ENUM_PROPERTY_PREFIX:string = '__$enum__';
+export const INDEX_PROPERTY_PREFIX:string = '__$enum_id__';
 export const STRING_PROPERTY_PREFIX:string = '__$string__';
 /**
  * Dangerous Function !!!
@@ -94,15 +95,16 @@ export function lastInjector<TStaticInjector>(base:any):TStaticInjector|null{
     return (base[InjectorTag] ? getInjector(base[InjectorTag], base) : lastInjector(base)) as TStaticInjector|null;
 }
 
+
+type validateTBase<T> = T extends Constructor<Component> ? Constructor<T> : any;
+type ReturnInheritancified<T, TCtor> = T extends { __props__: unknown, __values__: unknown }? Constructor<T> : TCtor;
 /**
- * Base on the new Design Pattern found on Coco Engine Source (may be call Polyfill Design Pattern).
+ * Base on the new intergaraion method class which found on Coco Engine Source.
  * Main Idea is generatting a new class from the given base class, after polyfill all functionalities
  * @param constructor 
  * @param additionalConstructor 
  * @returns 
  */
-type validateTBase<T> = T extends Constructor<Component> ? Constructor<T> : any;
-type ReturnInheritancified<T, TCtor> = T extends { __props__: unknown, __values__: unknown }? Constructor<T> : TCtor;
 export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>(...args:Constructor<TBase>[])=>Constructor<TBase & TInjector>):(<TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>){    
     
     return function<TBase>(base:validateTBase<TBase>):ReturnInheritancified<TBase&TInjector, TStaticInjector>{

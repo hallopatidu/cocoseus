@@ -22,7 +22,7 @@ export class TestAction extends Actionify(Component) {
         //     231: [34, 45],
         //     405: [231]
         // };
-
+        
         // log("Circle :: " + Support.getCycle(graph));
     }
 

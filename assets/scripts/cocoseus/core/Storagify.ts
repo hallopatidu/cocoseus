@@ -1,10 +1,15 @@
-import { _decorator, Component, Constructor, Node } from 'cc';
+import { _decorator, Component, Constructor, log, Node, sys } from 'cc';
 import { Inheritancify } from './Inheritancify';
 import { IStaticStoragified, IStoragified } from '../types/CoreType';
 import { Support } from '../utils/Support';
 const { ccclass, property } = _decorator;
 
-const StorageDB:Map<number, Map<string, any>> = new Map<number, Map<string, any>> ()
+
+
+const SettingStorage:Map<number, Map<string, any>> = new Map<number, Map<string, any>> ();
+class ClientStorage {
+
+}
 /**
  * 
  * @param base 
@@ -21,18 +26,28 @@ export default Inheritancify<IStoragified, IStaticStoragified>(function Storagif
         static update(){}
         static delete(){}
 
+        
         // static select(){}
         // static search(){}        
         static table<TData>(name:string):Map<string, TData>{
             const token:number = Support.tokenize(name);
-            if(!StorageDB.has(token)) StorageDB.set(token, new Map<string, TData>())
-            return StorageDB.get(token) as unknown as Map<string, TData>
+            if(!SettingStorage.has(token)) SettingStorage.set(token, new Map<string, TData>());
+            return SettingStorage.get(token) as unknown as Map<string, TData>
         }
 
-        static save(){}
+        static save(){            
+            // sys.localStorage.setItem('editor_storage', JSON.stringify(SettingStorage));
+        }
+
         static provider(){}
 
-        
+        protected select(dbName:string):IStoragified{
+            return
+        }
+
+        protected record(){
+
+        }
 
     }
     
