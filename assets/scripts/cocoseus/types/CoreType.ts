@@ -77,15 +77,16 @@ export interface IStaticOneFlowified extends Constructor<IOneFlowified>{
 
 export interface IReferencified extends IInheritancified{
     get refInfo():ReferenceInfo;
-    get token():number
+    get token():number;
+    updateReferenceEnum(enumData:any):void;
 }
 
 export interface IStaticReferencified extends Constructor<IReferencified>{
-    getRefInfo(token:number):ReferenceInfo,
-    getRefPath(token:number):string,
-    getComponent<T>(token:number):T,
-    validToken(token:number):boolean,
-    findToken(searchValue:string):number
+    getRefInfo(token:number):ReferenceInfo;
+    getRefPath(token:number):string;
+    getComponent<T>(token:number):T;
+    validToken(token:number):boolean;
+    findToken(searchValue:string):number;
 }
 
 // ---------------- Storagify -----------
@@ -101,6 +102,7 @@ export interface IStaticStoragified extends Constructor<IStoragified>{
 // -------------
 
 export type ReferenceInfo = {
+    scene?:string,
     node?:string,
     comp:string,
     id:number,    

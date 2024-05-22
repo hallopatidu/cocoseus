@@ -35,8 +35,9 @@ export default function AsyncProcessify<TBase>(base:Constructor<TBase>):Construc
              * @param token 
              * @returns 
              */
-            async wait<TNextData = unknown>(token:number = -1):Promise<TNextData>{
-                let waitingHandlers:Function[] = this.waitingTasks.get(token);
+            async wait<TNextData = unknown>(token:number = -1):Promise<TNextData>{   
+                if(token == -1) this.begin();             
+                let waitingHandlers:Function[] = this.waitingTasks.get(token);                
                 if(waitingHandlers){
                     return await new Promise((resolve:Function)=>{
                         waitingHandlers.push(resolve);

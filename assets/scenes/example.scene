@@ -200,7 +200,7 @@
     "_priority": 0,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 439.646017699115,
+    "_orthoHeight": 376.3636363636364,
     "_near": 0,
     "_far": 1000,
     "_color": {
@@ -862,7 +862,9 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "waitComp": null,
+    "waitComp": {
+      "__id__": 20
+    },
     "__$enum__secondComp": 0,
     "_id": "fdqZKelORAYoeYzZQI1fch"
   },

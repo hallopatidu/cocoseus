@@ -11,7 +11,7 @@ const { property } = _decorator;
 // const {Editor} = globalThis
 let ReferenceEnum = Enum({Default:-1});
 
-globalThis.Editor.Message.addBroadcastListener('console:logsUpdate', () => {log('-------------------- ????????')});
+// globalThis.Editor.Message.addBroadcastListener('console:logsUpdate', () => {log('-------------------- ????????')});
 
 /**
  * 
@@ -36,7 +36,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * @returns 
          */
         private static genKey(info:ReferenceInfo):string{            
-            return info.node.split('/').map(nodeName=> Support.tokenize(nodeName)).join('.').toString() + '.' + Support.tokenize(info.comp) + '.' + Support.tokenize(info.id.toString())
+            return (info.scene ? Support.tokenize(info.scene) + '.' : '') + info.node.split('/').map(nodeName=> Support.tokenize(nodeName)).join('.').toString() + '.' + Support.tokenize(info.comp) + '.' + Support.tokenize(info.id.toString())
         }
 
         /**
@@ -78,42 +78,22 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             this.references.set(comp.token, comp.refInfo);
             this.keys.set(comp.token, this.genKey(comp.refInfo));
             // 
-            let refPaths:string[] = [];
+            const refPaths:string[] = [];
+            const comps:IReferencified[] = [];
             Referencified.keys.forEach((value:string, token:number)=>{
-                // const compPath:string = Referencified.getRefPath(token);
-                refPaths.push(Referencified.getRefPath(token))
+                refPaths.push(Referencified.getRefPath(token));
+                comps.push(Referencified.getComponent(token));
             })
-            // log('>>>>>>> ' + refPaths)
-            ReferenceEnum = Support.convertToEnum(refPaths);
-            
-            const propertyNames:string[] = Array.from( Decoratify(comp).keys('@reference'));
-            propertyNames.forEach((propName:string)=>{
-                const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propName;
-                Support.enumifyProperty(comp, enumPropertyName, ReferenceEnum);
-                // propName && log(comp.node.name + ' Enum >> ------------------ ' + propName + '' + ReferenceEnum)
+            // 
+            const ReferenceEnum:any = Support.convertToEnum(refPaths);            
+            comps.forEach((serachComp:IReferencified)=>{
+                serachComp.updateReferenceEnum(ReferenceEnum);
             })
-            
-            if(EDITOR){ 
-                // globalThis.Editor.Message.request('scene', 'query-components').then((value:any)=>{
-                //     // log('value:: ' + value)
-                // });
-                // globalThis.Editor.Message.request('scene', 'query-component').then((value:any)=>{
-                //     // log('value:: ' + value)
-                // });
-                globalThis.Editor.Message.request('scene', 'query-components', 'cc.Sprite').then((...args)=>{
-                    log('Component class ' + args)
-                });
-                // 
-                globalThis.Editor.Message.addBroadcastListener('console:logsUpdate', function(val){
-                    log('Remove ====>>>>   ' + val)
-                })
-                // 
-            }
 
-            const json:string = JSON.stringify(Array.from(this.references)); 
-            const map:Map<any,any> = new Map(JSON.parse(json));
+            // const json:string = JSON.stringify(Array.from(this.references)); 
+            // const map:Map<any,any> = new Map(JSON.parse(json));
             // scene:component-removed
-            log('All:: ' + json) ;
+            // log('All:: ' + json) ;
         }
         
         /**
@@ -141,7 +121,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          */
         static getRefPath(token:number):string{
             const refInfo:ReferenceInfo = this.getRefInfo(token);
-            return '[' + refInfo?.comp + ']<' + refInfo?.node + '>' + (refInfo.id ? '(' +refInfo.id+')' : '' );
+            return '[' + refInfo?.comp + ']' + (refInfo.id ? '(' +refInfo.id+')' : '' ) + '<' + refInfo?.node + '>' + '%' + refInfo.scene + '%';
         }
 
         /**
@@ -191,8 +171,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * 
          */
         public get internalOnLoad (): (() => void) | undefined {
-            Referencified.register(this);
-            this.implementReferences()
+            Referencified.register(this);            
             return super['internalOnLoad']
         }
 
@@ -208,8 +187,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * 
          */
         get token():number{
-            if(!this._token || this._token == -1){                
-                // this._token = Support.tokenize(this.refInfo.node, this.refInfo.comp, this.refInfo.id.toString());
+            if(!this._token || this._token == -1){
                 this._token = Referencified.genToken(this.refInfo)
             }
             return this._token
@@ -222,8 +200,9 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             if(this.node && !this._refInfo){
                 const hierachyPath:string = this.node.getPathInHierarchy();
                 const compName:string = this.constructor.name;
-                const orderIndex:number = this.node.getComponents(compName).findIndex((_comp:Component)=>_comp === this)||0;
+                const orderIndex:number = this.node.getComponents(compName).findIndex((_comp:Component)=>_comp === this)||0;                
                 this._refInfo = {
+                    scene:director.getScene().name,
                     node:hierachyPath,
                     comp:compName,
                     id:orderIndex
@@ -235,19 +214,12 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
         /**
          * 
          */
-        protected implementReferences(){            
-            // log('\n ------------------- ' + this.node.getPathInHierarchy());
-            // log('Token ' + Referencified.findToken(this.node.getPathInHierarchy()))
-            // let refPaths:string[] = []
-            // Referencified.keys.forEach((value:string, token:number)=>{
-            //     refPaths.push(Referencified.getRefPath(token))
-            // })
-            // log(Object.keys(refPaths))
-            // const allProperties:string[] = Decoratify(this).keys('@reference');
-            // allProperties.forEach((propName:string)=>{
-
-            // })
-            // Referencified.
+        updateReferenceEnum(enumData:any):void{            
+            const propertyNames:string[] = Array.from( Decoratify(this).keys('@reference'));
+            propertyNames.forEach((propName:string)=>{
+                const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propName;
+                Support.enumifyProperty(this, enumPropertyName, enumData);
+            })
         }
 
     }
@@ -279,7 +251,7 @@ export function reference(
         // Truy xuất vào Injector cua mot prototype
         Decoratify(target).record(propertyKey.toString(), '@reference');
         // lastInjector<IStaticReferencified>(target).findToken()
-        const constructor:any = target.constructor;  
+        const constructor:any = target.constructor;
         const propertyName:string = propertyKey.toString();
         const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
         const indexEnumPropertyName:any = INDEX_PROPERTY_PREFIX + propertyName;
@@ -301,9 +273,7 @@ export function reference(
                 return !this[indexEnumPropertyName] || this[indexEnumPropertyName] == -1 ? 0 :this[indexEnumPropertyName];
             },
             set:function(val:number){           
-                this[indexEnumPropertyName] = val;     
-
-                
+                this[indexEnumPropertyName] = val;                
             }
         });
         // 

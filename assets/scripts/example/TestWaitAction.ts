@@ -9,10 +9,19 @@ const { ccclass, property, executeInEditMode } = _decorator;
 export class TestWaitAction extends Actionify(Component) {
 
     @property({type:Component})
-    waitComp:Component
+    waitComp:Component;
 
     @reference
-    secondComp:Component
+    secondComp:Component;
+
+    @reference
+    get thirdComp():Component{
+        return this['_thirdComp']
+    }
+
+    set thirdComp(value:Component){
+        this['_thirdComp'] = value;
+    }
 
     start() {
 
