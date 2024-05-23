@@ -110,6 +110,21 @@ export class Support extends Component {
         return str.replace(/\b\w/g, c => c.toUpperCase()).replace(/(?=[A-Z])/g,' ').toString();
     }
 
+    /**
+    * 
+    * @param fullPath 
+    */
+    static *getPartialPath(fullPath:string):Generator<string[]>{
+        const partialPaths:string[] = fullPath.replace(/(db|http|https):\/\//g,'').split(/\/|\\/);
+        let path:string = '';
+        let baseUrl:string = '';
+        while(partialPaths.length){
+            path = partialPaths.shift();
+            baseUrl += (baseUrl.length ? '/' : '') + path;
+            yield [baseUrl, path];
+        }
+    }
+
     // ------------- Data Structor -------------------
     /**
      * Detect Cycle in a Directed Graph Data . BFS solution (Bread First Search);
