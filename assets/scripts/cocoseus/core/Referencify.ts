@@ -36,7 +36,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * @returns 
          */
         private static genKey(info:ReferenceInfo):string{            
-            return (info.scene ? Support.tokenize(info.scene) + '.' : '') + info.node.split('/').map(nodeName=> Support.tokenize(nodeName)).join('.').toString() + '.' + Support.tokenize(info.comp) + '.' + Support.tokenize(info.id.toString())
+            return (info.scene ? Support.tokenize(info.scene) + '.' : '') + Support.pathToToken(info.node) + '.' + Support.tokenize(info.comp) + '.' + Support.tokenize(info.id.toString())
         }
 
         /**

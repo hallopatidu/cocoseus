@@ -5,6 +5,10 @@ const { ccclass, property } = _decorator;
 export class Support extends Component {
 
     //  ------------------- Enum ------------------------
+    static editorProperty(targetObj:any, propName:string , value:unknown){
+        CCClass["Attr"].setClassAttr(targetObj, propName, 'visible', value);
+    }
+
     static enumifyProperty (targetObj:any, propName:string , newEnum:unknown):any {
         let defaultEnum = Object.assign( Enum({}) , newEnum);
         Enum['update'](defaultEnum);
@@ -55,7 +59,8 @@ export class Support extends Component {
      * @param value 
      * @returns 
      */
-    static hashString(value:string):number {        
+    static hashString(value:string):number {
+        if(!value) return 0
         let hash:number = 5381,i:number=value.length;      
         while(i) {
           hash = (hash * 33) ^ value.charCodeAt(--i);
@@ -99,6 +104,15 @@ export class Support extends Component {
     static tokenize(...values:string[]):number{
         const combineString:string = Array.from(values).join('.');
         return Support.hashString(combineString);
+    }
+
+    /**
+     * 
+     * @param path 
+     * @returns 
+     */
+    static pathToToken(path:string):string{
+        return path && path.indexOf('/') !== -1 ? path.split('/').map(nodeName=> Support.tokenize(nodeName)).join('.').toString() : Support.tokenize(path).toString();
     }
 
     /**

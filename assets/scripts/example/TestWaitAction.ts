@@ -24,7 +24,7 @@ export class TestWaitAction extends Actionify(Component) {
     }
 
     start() {
-
+        this.node
     }
 
     update(deltaTime: number) {

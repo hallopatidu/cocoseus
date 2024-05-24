@@ -1328,6 +1328,13 @@
     "_enabled": true,
     "__prefab": null,
     "_prefab": null,
+    "_enumPrefab": 1,
+    "_infoPrefab": {
+      "bundle": "resources",
+      "url": "/prefab/TestWaitAction-003",
+      "uuid": "8dfb9c8a-ed90-494d-90a5-1d6f8687501d",
+      "name": "TestWaitAction-003.prefab"
+    },
     "_id": "2cOMEpOQdFyqKrA4iFWn0+"
   },
   {

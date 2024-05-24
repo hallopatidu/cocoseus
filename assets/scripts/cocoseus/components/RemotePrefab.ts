@@ -3,6 +3,7 @@ import Referencify from '../core/Referencify';
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, LegacyPropertyDecorator, PropertyType } from '../types/CoreType';
 import { EDITOR } from 'cc/env';
 import { CCEditor, SimpleAssetInfo } from '../utils/CCEditor';
+import { Support } from '../utils/Support';
 const { ccclass, property } = _decorator;
 
 // export type SimpleAssetInfo = {
@@ -92,9 +93,18 @@ export class RemotePrefab extends Component {
     private _prefab:Prefab;
     @property({serializable:true})
     private _enumPrefab:number;
+    @property({serializable:true})
+    private _infoPrefab:SimpleAssetInfo;
     
-    @property({type:Prefab})
+    @property({
+        type:Prefab,
+        visible(){
+            return !this._prefab
+        }
+    })
     get prefab():Prefab{
+        // log('--------AAAA get prefab')
+        // this.checkForEmbedingOrLoading(this._prefab);
         return this._prefab;
     }
 
@@ -105,7 +115,10 @@ export class RemotePrefab extends Component {
 
     @property({
         type:PrefabNameEnum,
-        displayName:'Prefab'
+        displayName:'Prefab',
+        visible(){
+            return !!this._enumPrefab
+        }
     })
     get enumPrefab():number{
         return this._enumPrefab;
@@ -113,7 +126,11 @@ export class RemotePrefab extends Component {
 
     set enumPrefab(val:number){
         this._enumPrefab = val
+        
     }
+
+    // -----------
+    private isRemoted:boolean = false
 
     // -----------
 
@@ -122,12 +139,21 @@ export class RemotePrefab extends Component {
      * @param asset 
      */
     private async checkForEmbedingOrLoading(asset:Prefab){
-        if(EDITOR){
+        if(EDITOR && asset){
             const assetInfo:SimpleAssetInfo = await CCEditor.getAssetInfo(asset);
             const bundleName:string = assetInfo.bundle;
             const isRemoted:boolean = Boolean(bundleName == AssetManager.BuiltinBundleName.RESOURCES);
             if(isRemoted){                
-                log('asset name: ' + asset.name + ' asset.nativeUrl:  ' + assetInfo.url + ' assetInfo.name: ' + assetInfo.name);
+                log(this.node.name + 'asset name: ' + asset.name + ' asset.nativeUrl:  ' + assetInfo.url + ' assetInfo.name: ' + assetInfo.name);
+                this._prefab = null;
+                this._infoPrefab = assetInfo;
+                const enumAsset:any = Support.convertToEnum(['REMOVE',assetInfo.url]);
+                Support.enumifyProperty(this, 'enumPrefab', enumAsset);
+                this.enumPrefab = 1;
+            }else{
+                this._infoPrefab = null;
+                this._prefab = asset;
+                
             }
             
         }
@@ -137,7 +163,9 @@ export class RemotePrefab extends Component {
 
     // -----------
     protected onLoad(): void {
-        
+
+        Support.editorProperty(this, 'enumPrefab', !!this._infoPrefab)
+        Support.editorProperty(this, 'prefab', !this._infoPrefab)
     }
 }
 
