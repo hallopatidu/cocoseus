@@ -1,12 +1,13 @@
 // Referencify
 
-import { _decorator, Component, Constructor, director, Enum, find, js, log, SceneGlobals, sys, warn } from "cc";
+import { _decorator, Component, Constructor, director, Enum, find, log} from "cc";
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified } from "../types/CoreType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
 import { CACHE_KEY, ENUM_PROPERTY_PREFIX, INDEX_PROPERTY_PREFIX, Inheritancify, lastInjector, STRING_PROPERTY_PREFIX } from "./Inheritancify";
 import Storagify from "./Storagify";
 import { EDITOR } from "cc/env";
+import { CCEditor } from "../utils/CCEditor";
 const { property } = _decorator;
 // const {Editor} = globalThis
 let ReferenceEnum = Enum({Default:-1});
@@ -218,7 +219,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             const propertyNames:string[] = Array.from( Decoratify(this).keys('@reference'));
             propertyNames.forEach((propName:string)=>{
                 const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propName;
-                Support.enumifyProperty(this, enumPropertyName, enumData);
+                CCEditor.enumifyProperty(this, enumPropertyName, enumData);
             })
         }
 

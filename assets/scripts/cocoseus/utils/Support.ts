@@ -5,13 +5,13 @@ const { ccclass, property } = _decorator;
 export class Support extends Component {
 
     //  ------------------- Enum ------------------------
-    static enumifyProperty (targetObj:any, propName:string , newEnum:unknown):any {
-        let defaultEnum = Object.assign( Enum({}) , newEnum);
-        Enum['update'](defaultEnum);
-        CCClass["Attr"].setClassAttr(targetObj, propName, 'type', 'Enum');
-        CCClass["Attr"].setClassAttr(targetObj, propName, 'enumList', Enum["getList"](defaultEnum));
-        return defaultEnum
-    }
+    // static enumifyProperty (targetObj:any, propName:string , newEnum:unknown):any {
+    //     let defaultEnum = Object.assign( Enum({}) , newEnum);
+    //     Enum['update'](defaultEnum);
+    //     CCClass["Attr"].setClassAttr(targetObj, propName, 'type', 'Enum');
+    //     CCClass["Attr"].setClassAttr(targetObj, propName, 'enumList', Enum["getList"](defaultEnum));
+    //     return defaultEnum
+    // }
     
     static convertToEnum(objOrArray:any):any{
         const enumDef: {[key: string]: number} = {};
