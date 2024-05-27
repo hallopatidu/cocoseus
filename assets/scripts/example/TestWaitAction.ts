@@ -11,17 +11,17 @@ export class TestWaitAction extends Actionify(Component) {
     @property({type:Component})
     waitComp:Component;
 
-    @reference
-    secondComp:Component;
+    // @reference
+    // secondComp:Component;
 
-    @reference
-    get thirdComp():Component{
-        return this['_thirdComp']
-    }
+    // @reference
+    // get thirdComp():Component{
+    //     return this['_thirdComp']
+    // }
 
-    set thirdComp(value:Component){
-        this['_thirdComp'] = value;
-    }
+    // set thirdComp(value:Component){
+    //     this['_thirdComp'] = value;
+    // }
 
     start() {
         this.node

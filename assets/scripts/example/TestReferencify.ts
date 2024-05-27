@@ -1,4 +1,4 @@
-import { _decorator, Component, log, Node, Vec3 } from 'cc';
+import { _decorator, Component, log, Node, Prefab, Vec3 } from 'cc';
 import  Referencify, { reference }  from '../cocoseus/core/Referencify';
 import Decoratify from '../cocoseus/core/Decoratify';
 const { ccclass, property, executeInEditMode } = _decorator;
@@ -7,8 +7,8 @@ const { ccclass, property, executeInEditMode } = _decorator;
 @executeInEditMode(true)
 export class TestReferencify extends Referencify(Component) {
 
-    @reference
-    abc:string
+    @reference({type:Prefab})
+    abc:Prefab
 
     protected onLoad(): void {
         log('--------------------------- ')

@@ -1,18 +1,26 @@
 // Referencify
 
-import { _decorator, Component, Constructor, director, Enum, find, log} from "cc";
+import { _decorator, Asset, AssetManager, Component, Constructor, director, Enum, error, find, js, log} from "cc";
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified } from "../types/CoreType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
-import { CACHE_KEY, ENUM_PROPERTY_PREFIX, INDEX_PROPERTY_PREFIX, Inheritancify, lastInjector, STRING_PROPERTY_PREFIX } from "./Inheritancify";
+import { CACHE_KEY, Inheritancify, lastInjector } from "./Inheritancify";
 import Storagify from "./Storagify";
 import { EDITOR } from "cc/env";
-import { CCEditor } from "../utils/CCEditor";
+import { CCEditor, SimpleAssetInfo } from "../utils/CCEditor";
 const { property } = _decorator;
 // const {Editor} = globalThis
 let ReferenceEnum = Enum({Default:-1});
 
 // globalThis.Editor.Message.addBroadcastListener('console:logsUpdate', () => {log('-------------------- ????????')});
+
+export const ENUM_PROPERTY_PREFIX:string = '__$enum__';
+export const INDEX_PROPERTY_PREFIX:string = '__$id__';
+export const STRING_PROPERTY_PREFIX:string = '__$string__';
+export const INFO_PROPERTY_PREFIX:string = '__$info__';
+export const WRAPPER_PROPERTY_PREFIX:string = '__$';
+
+
 
 /**
  * 
@@ -164,7 +172,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             return Referencified.references.has(token);
         }
 
-        // ---------------
+        // --------------- PRIVATE --------------
 
         // ---------------
 
@@ -209,8 +217,8 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
                     id:orderIndex
                 }
             }
-            return this._refInfo
-        }
+            return this._refInfo;
+        };
 
         /**
          * 
@@ -249,47 +257,61 @@ export function reference(
         propertyKey: Parameters<LegacyPropertyDecorator>[1],
         descriptorOrInitializer:  BabelPropertyDecoratorDescriptor)
     {     
-        // Truy xuất vào Injector cua mot prototype
-        Decoratify(target).record(propertyKey.toString(), '@reference');
-        // lastInjector<IStaticReferencified>(target).findToken()
-        const constructor:any = target.constructor;
+        // 
+        
         const propertyName:string = propertyKey.toString();
-        const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
-        const indexEnumPropertyName:any = INDEX_PROPERTY_PREFIX + propertyName;
-        const stringPropertyName:any = STRING_PROPERTY_PREFIX + propertyName;
+        // const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
+        // const underlinePropertyName:any = WRAPPER_PROPERTY_PREFIX + propertyName;
+        // const infoPropertyName:any = INFO_PROPERTY_PREFIX + propertyName;
+        // 
+        Decoratify(target).record(propertyName, '@reference');
         // // 
+        // const constructor:any = target.constructor;
         // const classStash:unknown = constructor[CACHE_KEY] || ((constructor[CACHE_KEY]) = {});
         // const ccclassProto:unknown = classStash['proto'] || ((classStash['proto'])={});
         // const properties:unknown = ccclassProto['properties'] || ((ccclassProto['properties'])={});
+        // const propertyStash:unknown = properties[propertyName] ??= {};    
+        // const infoPropertyStash:unknown = properties[infoPropertyName] ??= {};    
+        // const underlinePropertyStash:unknown = properties[underlinePropertyName] ??= {};    
         // const enumPropertyStash:unknown = properties[enumPropertyName] ??= {};    
         // // 
-        // const enumPropertyRecordOptions:any = {            
-        //     displayName: ''+ propertyName.replace(/\b\w/g, c => c.toUpperCase()).replace(/(?=[A-Z])/g,' ')+'',  // upper first character
-        //     // visible:true
-        // }
+        // js.mixin(infoPropertyStash, {serializable:true, visible:false})
+        // js.mixin(underlinePropertyStash, {serializable:true, visible:false})
+        // // 
+        // js.mixin(propertyStash, {
+        //     displayName: Support.upperFirstCharacter(propertyName),
+        //     visible(){
+        //         return !this[infoPropertyName]
+        //     }
+        // });
+        // js.mixin(enumPropertyStash, {
+        //     type:Enum({NONE:0}),
+        //     displayName: Support.upperFirstCharacter(enumPropertyName),
+        //     visible(){
+        //         return !!this[infoPropertyName]
+        //     }
+        // });
         
-        // const enumPropertyRecord:any = js.mixin(enumPropertyStash, enumPropertyRecordOptions);
-        Object.defineProperty(target, enumPropertyName, {
-            get:function():number{                
-                return !this[indexEnumPropertyName] || this[indexEnumPropertyName] == -1 ? 0 :this[indexEnumPropertyName];
-            },
-            set:function(val:number){           
-                this[indexEnumPropertyName] = val;                
-            }
-        });
+        
+
         // 
         if(!options){
             options = {};
-        }
-        if(!(options as IPropertyOptions).type){
-            // (options as IPropertyOptions).type = ReferenceEnum;
-            (options as IPropertyOptions).visible = function(){return true};
-            (options as IPropertyOptions).displayName = ''+ propertyName.replace(/\b\w/g, c => c.toUpperCase()).replace(/(?=[A-Z])/g,' ')+'';  // upper first character
-        }
+        };
+
+        defineSmartProperty(target, propertyName, options, descriptorOrInitializer);
+
+        // if(!(options as IPropertyOptions).type){
+        //     // (options as IPropertyOptions).type = ReferenceEnum;
+        //     (options as IPropertyOptions).visible = function(){return true};
+        //     (options as IPropertyOptions).displayName = ''+ propertyName.replace(/\b\w/g, c => c.toUpperCase()).replace(/(?=[A-Z])/g,' ')+'';  // upper first character
+        // }
         // ((options ??= {}) as IPropertyOptions).type = Component;
-        const propertyNormalized:LegacyPropertyDecorator = property(options);
-        // propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyKey, descriptorOrInitializer);
-        propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], enumPropertyName, descriptorOrInitializer);
+
+        // Ẩn thuộc tính chính, chỉ dùng để lưu trữ.
+        // (options as IPropertyOptions).visible = false;
+        // const propertyNormalized:LegacyPropertyDecorator = property(options);
+        // propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyName, descriptorOrInitializer);        
         return descriptorOrInitializer
     }
     
@@ -297,7 +319,7 @@ export function reference(
     if (target === undefined) {
         // @audio() => LegacyPropertyDecorator
         return reference({
-            type: ReferenceEnum,
+            type: Component,
         });
     } else if (typeof propertyKey === 'undefined') {
         options = target;
@@ -308,3 +330,113 @@ export function reference(
         return undefined;
     }
 }
+
+/**
+ * 
+ * @param target 
+ * @param propertyName 
+ * @param options 
+ * @param descriptorOrInitializer 
+ */
+function defineSmartProperty(target:Parameters<LegacyPropertyDecorator>[0], propertyName:string, options:IPropertyOptions, descriptorOrInitializer:  BabelPropertyDecoratorDescriptor){
+    const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
+    const wrapperPropertyName:any = WRAPPER_PROPERTY_PREFIX + propertyName;
+    const infoPropertyName:any = INFO_PROPERTY_PREFIX + propertyName;   
+    // 
+    if(!options){
+        options = {};
+    }
+    
+    // Record info -------------
+    Object.defineProperty(target, infoPropertyName, {value:null, writable:true});
+
+    // Define Enum ------------------------------
+    const enumPropetyDescriptor:PropertyDescriptor = {
+        get():number{
+            return !!this[infoPropertyName] ? 1:0;
+        },
+        set(val:number){
+            if(val == 0){
+                this[wrapperPropertyName] = null;
+                this[infoPropertyName] = null;
+            }
+        }
+    }
+    Object.defineProperty(target, enumPropertyName, enumPropetyDescriptor);
+    const enumOption:IPropertyOptions = {
+        type:Enum({NONE:0}),
+        displayName:Support.upperFirstCharacter(propertyName),
+        visible(){
+            return true//!!this[infoPropertyName]
+        }
+    }
+    const enumPropertyNormalized:LegacyPropertyDecorator = property(enumOption);
+    enumPropertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], wrapperPropertyName, enumPropetyDescriptor);
+    // ------------------------------ end Define Enum
+
+    // Define Wrapper ------------------------------
+    const wrapperDescriptor:PropertyDescriptor = {
+        get():Asset{                
+            if(this[infoPropertyName]){
+                CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', this[infoPropertyName]?.url]))
+            }
+            return this[propertyName];
+        },
+        set:async function(asset:Asset){           
+            if(EDITOR && !!asset){
+                const assetInfo:SimpleAssetInfo = await CCEditor.getAssetInfo(asset);
+                const bundleName:string = assetInfo.bundle;            
+                if( bundleName !== AssetManager.BuiltinBundleName.INTERNAL &&
+                    bundleName !== AssetManager.BuiltinBundleName.MAIN  &&
+                    bundleName !== AssetManager.BuiltinBundleName.START_SCENE){
+                    // 
+                    this[infoPropertyName] = assetInfo;
+                    CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', this[infoPropertyName]?.url]))
+                    // 
+                }               
+            }     
+            this[propertyName] = asset;       
+        },
+        configurable: descriptorOrInitializer.configurable,
+        enumerable: descriptorOrInitializer.enumerable,
+        // writable: descriptorOrInitializer.writable,        
+    } as PropertyDescriptor;
+    
+    Object.defineProperty(target, wrapperPropertyName, wrapperDescriptor);
+
+    const wrapperOption:IPropertyOptions = Object.assign({}, options, {
+        displayName:Support.upperFirstCharacter(propertyName),
+        visible(){
+            return !this[infoPropertyName]
+        }
+    }) as IPropertyOptions
+    const wrapperPropertyNormalized:LegacyPropertyDecorator = property(wrapperOption);
+    wrapperPropertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], wrapperPropertyName, wrapperDescriptor);
+    // ------------------------------------- end Define Wrapper
+
+    // Current property ---------------
+    (options as IPropertyOptions).visible = false;
+    const propertyNormalized:LegacyPropertyDecorator = property(options);
+    propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyName, descriptorOrInitializer);
+}
+
+
+// async function checkForEmbedingOrLoading(target: Parameters<LegacyPropertyDecorator>[0], propertyName:string, asset:Asset, ){
+//     if(EDITOR && !!asset){
+//         const assetInfo:SimpleAssetInfo = await CCEditor.getAssetInfo(asset);
+//         const bundleName:string = assetInfo.bundle;            
+//         if( bundleName !== AssetManager.BuiltinBundleName.INTERNAL &&
+//             bundleName !== AssetManager.BuiltinBundleName.MAIN  &&
+//             bundleName !== AssetManager.BuiltinBundleName.START_SCENE){
+//             // 
+//             const infoPropertyName:any = INFO_PROPERTY_PREFIX + propertyName;
+//             const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
+//             this[infoPropertyName] = assetInfo;
+//             CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetInfo.url]))
+//             // 
+//         }else{
+//             const underlinePropertyName:any = UNDERLINE_PROPERTY_PREFIX + propertyName;
+//             this[underlinePropertyName] = asset;
+//         }                
+//     }        
+// }

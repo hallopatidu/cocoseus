@@ -9,9 +9,7 @@ import { DEV } from 'cc/env';
 const InjectorTag:string = '$injector';
 
 export const CACHE_KEY = '__ccclassCache__';
-export const ENUM_PROPERTY_PREFIX:string = '__$enum__';
-export const INDEX_PROPERTY_PREFIX:string = '__$enum_id__';
-export const STRING_PROPERTY_PREFIX:string = '__$string__';
+
 /**
  * Dangerous Function !!!
  * This function can changed all inheritances of cocos system.
