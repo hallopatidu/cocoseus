@@ -1,10 +1,10 @@
-import { _decorator, AssetManager, Component, Enum, log, Node, Prefab } from 'cc';
-import Referencify from '../core/Referencify';
-import { BabelPropertyDecoratorDescriptor, IPropertyOptions, LegacyPropertyDecorator, PropertyType } from '../types/CoreType';
-import { EDITOR } from 'cc/env';
+import { _decorator, assetManager, AssetManager, Component, Enum, error, instantiate, log, Node, Prefab } from 'cc';
+// import Referencify from '../core/Referencify';
+// import { BabelPropertyDecoratorDescriptor, IPropertyOptions, LegacyPropertyDecorator, PropertyType } from '../types/CoreType';
+import { DEV, EDITOR } from 'cc/env';
 import { CCEditor, SimpleAssetInfo } from '../utils/CCEditor';
 import { Support } from '../utils/Support';
-const { ccclass, property } = _decorator;
+const { ccclass, property, executeInEditMode } = _decorator;
 
 // export type SimpleAssetInfo = {
 //     uuid?:string,
@@ -88,28 +88,28 @@ let PrefabNameEnum = Enum({REMOVE:0})
  * 
  */
 @ccclass('RemotePrefab')
+@executeInEditMode(true)
 export class RemotePrefab extends Component {
     @property({serializable:true})
-    private _prefab:Prefab;
+    private _prefab:Prefab = null;
+
     @property({serializable:true})
-    private _enumPrefab:number;
-    @property({serializable:true})
-    private _infoPrefab:SimpleAssetInfo;
+    private prefabInfo:SimpleAssetInfo = null;
     
     @property({
         type:Prefab,
         visible(){
-            return !this._prefab
+            return !this.prefabInfo
         }
     })
-    get prefab():Prefab{
-        // log('--------AAAA get prefab')
-        // this.checkForEmbedingOrLoading(this._prefab);
+    get prefab():Prefab{        
+        if(this.prefabInfo){
+            CCEditor.enumifyProperty(this, 'enumPrefab', Support.convertToEnum(['REMOVE', this.prefabInfo.url]))
+        }
         return this._prefab;
     }
 
-    set prefab(asset:Prefab){
-        this._prefab = asset;
+    set prefab(asset:Prefab){        
         this.checkForEmbedingOrLoading(asset);
     }
 
@@ -117,55 +117,112 @@ export class RemotePrefab extends Component {
         type:PrefabNameEnum,
         displayName:'Prefab',
         visible(){
-            return !!this._enumPrefab
+            return !!this.prefabInfo
         }
     })
     get enumPrefab():number{
-        return this._enumPrefab;
+        
+        return  !!this.prefabInfo ? 1:0;
     }
 
     set enumPrefab(val:number){
-        this._enumPrefab = val
-        
+        // this._enumPrefab = val
+        if(val == 0){
+            this.prefab = null;
+            this.prefabInfo = null;
+        }
     }
 
-    // -----------
-    private isRemoted:boolean = false
-
-    // -----------
+    // ----------------
 
     /**
      * 
      * @param asset 
      */
     private async checkForEmbedingOrLoading(asset:Prefab){
-        if(EDITOR && asset){
+        if(EDITOR && !!asset){
             const assetInfo:SimpleAssetInfo = await CCEditor.getAssetInfo(asset);
-            const bundleName:string = assetInfo.bundle;
-            const isRemoted:boolean = Boolean(bundleName == AssetManager.BuiltinBundleName.RESOURCES);
-            if(isRemoted){                
-                log(this.node.name + 'asset name: ' + asset.name + ' asset.nativeUrl:  ' + assetInfo.url + ' assetInfo.name: ' + assetInfo.name);
-                this._prefab = null;
-                this._infoPrefab = assetInfo;
-                const enumAsset:any = Support.convertToEnum(['REMOVE',assetInfo.url]);
-                Support.enumifyProperty(this, 'enumPrefab', enumAsset);
-                this.enumPrefab = 1;
-            }else{
-                this._infoPrefab = null;
+            const bundleName:string = assetInfo.bundle;            
+            if(bundleName == AssetManager.BuiltinBundleName.RESOURCES){                
+                log('asset name: ' + asset.name + ' asset.nativeUrl:  ' + assetInfo.url + ' assetInfo.name: ' + assetInfo.name);                
+                this.prefabInfo = assetInfo;
+                CCEditor.enumifyProperty(this, 'enumPrefab', Support.convertToEnum(['REMOVE', assetInfo.url]))
+            }else{                
                 this._prefab = asset;
-                
             }
             
         }
 
     }
 
+    /**
+     * 
+     * @param assetInfo 
+     */
+    private async loadPrefab(assetInfo:SimpleAssetInfo):Promise<Prefab>{
+        if(!assetInfo) return null
+        if(!assetInfo.bundle?.length) error('Asset no bundle !!');
+        if(!EDITOR){
+            const bundleName:string = assetInfo.bundle;
+            let bundle:AssetManager.Bundle = assetManager.getBundle(bundleName);
+            if(!bundle){
+                bundle = await new Promise<AssetManager.Bundle>((resolve:Function)=>{
+                    assetManager.loadBundle(bundleName,(err:Error, downloadBundle:AssetManager.Bundle)=>{                   
+                        if(!err){                               
+                            resolve(downloadBundle);
+                        }else{
+                            DEV && error('Bundle Loading Error ' + err + ' bundle name: ' + bundleName);
+                            resolve(null)
+                        }                    
+                    }) 
+                })
+            }
+            if(!bundle){
+                error('Bundle ' + bundleName + ' is not found !');
+                return null
+            }   
+            const prefabPath:string = assetInfo.url;
+            let remotePrefab:Prefab = bundle.get(prefabPath, Prefab);
+            if(!remotePrefab){
+                remotePrefab = await new Promise((resolve:Function)=>{
+                    bundle.load(prefabPath, Prefab, (err:Error, prefab:Prefab ) =>{                
+                        if(!err){                                               
+                            // this.instantiateLoadedPrefab(prefab);
+                            resolve(prefab)
+                        }else{
+                            DEV && error('Prefab Loading Error: ' + prefabPath + ' with bundle: ' + bundle.name + ' -node ' + this.node.getPathInHierarchy() )       
+                            resolve(null);
+                        }     
+                        
+                    })
+                })
+            }
+            if(!remotePrefab) {
+                error('Prefab ' + prefabPath + ' in bundle '+ bundleName + ' is not found !');
+                return null
+            }
+            log('load prefab success')
+            return remotePrefab
+        }else{
+
+        }
+    }
+
 
     // -----------
-    protected onLoad(): void {
 
-        Support.editorProperty(this, 'enumPrefab', !!this._infoPrefab)
-        Support.editorProperty(this, 'prefab', !this._infoPrefab)
+    /**
+     * 
+     */
+    protected async onLoad(): Promise<void> {
+        if(this.prefabInfo){
+            this._prefab = await this.loadPrefab(this.prefabInfo);
+        }
+        if(!this.prefab){ !EDITOR && DEV && error('There is no prefab !')}
+        else{
+            const contentNode:Node = instantiate(this.prefab);
+            this.node.addChild(contentNode);
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-import { _decorator, Asset, Component, js, Node } from 'cc';
+import { _decorator, Asset, CCClass, Component, Enum, js, Node } from 'cc';
 import { EDITOR } from 'cc/env';
 import { Support } from './Support';
 const { ccclass, property } = _decorator;
@@ -120,6 +120,25 @@ export class CCEditor {
         return EDITOR ?  await this.getAssetInfo_Editor(asset.uuid) : null;
     }
 
+    static enumifyProperty (targetObj:any, propName:string , newEnum:unknown):any {
+        let defaultEnum = Object.assign( Enum({}) , newEnum);
+        Enum['update'](defaultEnum);
+        CCClass["Attr"].setClassAttr(targetObj, propName, 'type', 'Enum');
+        CCClass["Attr"].setClassAttr(targetObj, propName, 'enumList', Enum["getList"](defaultEnum));
+        return defaultEnum
+    }
+
+    /**
+     * 
+     * @param targetObj 
+     * @param propName 
+     * @param propType 
+     * @param value 
+     */
+    static changeEditorProperty(targetObj:any, propName:string , propType:string, value:any):any {
+        CCClass["Attr"].setClassAttr(targetObj, propName, propType, value);
+    }
+    // 
 }
 
 

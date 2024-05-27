@@ -205,7 +205,7 @@
     "_priority": 0,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 376.3636363636364,
+    "_orthoHeight": 360,
     "_near": 0,
     "_far": 1000,
     "_color": {
@@ -1328,8 +1328,7 @@
     "_enabled": true,
     "__prefab": null,
     "_prefab": null,
-    "_enumPrefab": 1,
-    "_infoPrefab": {
+    "prefabInfo": {
       "bundle": "resources",
       "url": "/prefab/TestWaitAction-003",
       "uuid": "8dfb9c8a-ed90-494d-90a5-1d6f8687501d",
