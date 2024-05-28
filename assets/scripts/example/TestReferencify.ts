@@ -4,23 +4,21 @@ import Decoratify from '../cocoseus/core/Decoratify';
 const { ccclass, property, executeInEditMode } = _decorator;
 
 @ccclass('TestReferencify')
-@executeInEditMode(true)
+// @executeInEditMode(true)
 export class TestReferencify extends Referencify(Component) {
 
     @reference({type:Prefab})
     abc:Prefab
 
     protected onLoad(): void {
-        log('--------------------------- ')
-        const indexVec:Vec3=new Vec3(2,4,6)
-        const map:Map<Vec3, string> = new Map()
-        map.set(indexVec, 'hello');
+        // 
+        
 
-        log('Test map ' + map.get(indexVec))
+        
     }
 
     start() {
-        log('TestReferencify ' + Decoratify(this).keys())
+        // log('TestReferencify ' + Decoratify(this).keys())
     }
 
     update(deltaTime: number) {

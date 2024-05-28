@@ -1,6 +1,6 @@
 // Referencify
 
-import { _decorator, Asset, AssetManager, Component, Constructor, director, Enum, error, find, js, log} from "cc";
+import { _decorator, Asset, AssetManager, CCObject, Component, Constructor, director, Enum, error, find, js, log, Prefab} from "cc";
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified } from "../types/CoreType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
@@ -20,7 +20,12 @@ export const STRING_PROPERTY_PREFIX:string = '__$string__';
 export const INFO_PROPERTY_PREFIX:string = '__$info__';
 export const WRAPPER_PROPERTY_PREFIX:string = '__$';
 
-
+enum BaseCCObject {
+    PREFAB,
+    ASSET,
+    COMPONENT,
+    NODE
+}
 
 /**
  * 
@@ -96,7 +101,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             // 
             const ReferenceEnum:any = Support.convertToEnum(refPaths);            
             comps.forEach((serachComp:IReferencified)=>{
-                serachComp.updateReferenceEnum(ReferenceEnum);
+                serachComp.updateReferenceEnum && serachComp.updateReferenceEnum(ReferenceEnum);
             })
 
             // const json:string = JSON.stringify(Array.from(this.references)); 
@@ -110,16 +115,8 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * @param comp 
          */
         private static remove(comp:IReferencified){
-            if(!EDITOR){
-                this.references.delete(comp.token);
-                this.keys.delete(comp.token);
-            }else{
-                // globalThis.Editor.Message.request('scene', 'query-component', comp.node.uuid).then((val)=>{
-                //     log('KKKKKKKKK:: ' + val)
-                // });
-                log('Scene:: ' + director.getScene().name)
-                
-            }
+            this.references.delete(comp.token);
+            this.keys.delete(comp.token);            
         }
 
         
@@ -224,6 +221,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * 
          */
         updateReferenceEnum(enumData:any):void{            
+            return
             const propertyNames:string[] = Array.from( Decoratify(this).keys('@reference'));
             propertyNames.forEach((propName:string)=>{
                 const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propName;
@@ -258,7 +256,6 @@ export function reference(
         descriptorOrInitializer:  BabelPropertyDecoratorDescriptor)
     {     
         // 
-        
         const propertyName:string = propertyKey.toString();
         // const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
         // const underlinePropertyName:any = WRAPPER_PROPERTY_PREFIX + propertyName;
@@ -273,45 +270,26 @@ export function reference(
         // const propertyStash:unknown = properties[propertyName] ??= {};    
         // const infoPropertyStash:unknown = properties[infoPropertyName] ??= {};    
         // const underlinePropertyStash:unknown = properties[underlinePropertyName] ??= {};    
-        // const enumPropertyStash:unknown = properties[enumPropertyName] ??= {};    
-        // // 
-        // js.mixin(infoPropertyStash, {serializable:true, visible:false})
-        // js.mixin(underlinePropertyStash, {serializable:true, visible:false})
-        // // 
-        // js.mixin(propertyStash, {
-        //     displayName: Support.upperFirstCharacter(propertyName),
-        //     visible(){
-        //         return !this[infoPropertyName]
-        //     }
-        // });
-        // js.mixin(enumPropertyStash, {
-        //     type:Enum({NONE:0}),
-        //     displayName: Support.upperFirstCharacter(enumPropertyName),
-        //     visible(){
-        //         return !!this[infoPropertyName]
-        //     }
-        // });
-        
-        
-
+        // const enumPropertyStash:unknown = properties[enumPropertyName] ??= {};
         // 
+        
+
         if(!options){
-            options = {};
+            options = {type:Asset};
         };
-
-        defineSmartProperty(target, propertyName, options, descriptorOrInitializer);
-
-        // if(!(options as IPropertyOptions).type){
-        //     // (options as IPropertyOptions).type = ReferenceEnum;
-        //     (options as IPropertyOptions).visible = function(){return true};
-        //     (options as IPropertyOptions).displayName = ''+ propertyName.replace(/\b\w/g, c => c.toUpperCase()).replace(/(?=[A-Z])/g,' ')+'';  // upper first character
-        // }
-        // ((options ??= {}) as IPropertyOptions).type = Component;
-
-        // Ẩn thuộc tính chính, chỉ dùng để lưu trữ.
-        // (options as IPropertyOptions).visible = false;
-        // const propertyNormalized:LegacyPropertyDecorator = property(options);
-        // propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyName, descriptorOrInitializer);        
+        const propertyType:BaseCCObject = detechBaseCCObject((options as IPropertyOptions).type);
+        switch(propertyType){
+            case BaseCCObject.PREFAB:
+                defineSmartProperty(target, propertyName, options, descriptorOrInitializer);
+                break;
+            case BaseCCObject.ASSET:
+                break;
+            case BaseCCObject.NODE:
+                break;
+            case BaseCCObject.COMPONENT:
+                break;            
+        }        
+   
         return descriptorOrInitializer
     }
     
@@ -348,7 +326,11 @@ function defineSmartProperty(target:Parameters<LegacyPropertyDecorator>[0], prop
     }
     
     // Record info -------------
-    Object.defineProperty(target, infoPropertyName, {value:null, writable:true});
+    const infoPropetyDescriptor:PropertyDescriptor = {value:null, writable:true}
+    Object.defineProperty(target, infoPropertyName, infoPropetyDescriptor);
+    const infoOption:IPropertyOptions = {serializable:true, visible:false};
+    const infoPropertyNormalized:LegacyPropertyDecorator = property(infoOption);
+    infoPropertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], infoPropertyName, infoPropetyDescriptor);
 
     // Define Enum ------------------------------
     const enumPropetyDescriptor:PropertyDescriptor = {
@@ -363,17 +345,19 @@ function defineSmartProperty(target:Parameters<LegacyPropertyDecorator>[0], prop
         }
     }
     Object.defineProperty(target, enumPropertyName, enumPropetyDescriptor);
+    //
     const enumOption:IPropertyOptions = {
         type:Enum({NONE:0}),
         displayName:Support.upperFirstCharacter(propertyName),
         visible(){
-            return true//!!this[infoPropertyName]
+            return !!this[infoPropertyName]
         }
     }
     const enumPropertyNormalized:LegacyPropertyDecorator = property(enumOption);
-    enumPropertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], wrapperPropertyName, enumPropetyDescriptor);
+    enumPropertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], enumPropertyName, enumPropetyDescriptor);
     // ------------------------------ end Define Enum
 
+    
     // Define Wrapper ------------------------------
     const wrapperDescriptor:PropertyDescriptor = {
         get():Asset{                
@@ -393,7 +377,7 @@ function defineSmartProperty(target:Parameters<LegacyPropertyDecorator>[0], prop
                     this[infoPropertyName] = assetInfo;
                     CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', this[infoPropertyName]?.url]))
                     // 
-                }               
+                }
             }     
             this[propertyName] = asset;       
         },
@@ -407,7 +391,7 @@ function defineSmartProperty(target:Parameters<LegacyPropertyDecorator>[0], prop
     const wrapperOption:IPropertyOptions = Object.assign({}, options, {
         displayName:Support.upperFirstCharacter(propertyName),
         visible(){
-            return !this[infoPropertyName]
+            return !this[infoPropertyName];
         }
     }) as IPropertyOptions
     const wrapperPropertyNormalized:LegacyPropertyDecorator = property(wrapperOption);
@@ -416,27 +400,24 @@ function defineSmartProperty(target:Parameters<LegacyPropertyDecorator>[0], prop
 
     // Current property ---------------
     (options as IPropertyOptions).visible = false;
-    const propertyNormalized:LegacyPropertyDecorator = property(options);
+    (options as IPropertyOptions).serializable = false;
+    const propertyNormalized:LegacyPropertyDecorator = property(options);    
     propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyName, descriptorOrInitializer);
 }
 
-
-// async function checkForEmbedingOrLoading(target: Parameters<LegacyPropertyDecorator>[0], propertyName:string, asset:Asset, ){
-//     if(EDITOR && !!asset){
-//         const assetInfo:SimpleAssetInfo = await CCEditor.getAssetInfo(asset);
-//         const bundleName:string = assetInfo.bundle;            
-//         if( bundleName !== AssetManager.BuiltinBundleName.INTERNAL &&
-//             bundleName !== AssetManager.BuiltinBundleName.MAIN  &&
-//             bundleName !== AssetManager.BuiltinBundleName.START_SCENE){
-//             // 
-//             const infoPropertyName:any = INFO_PROPERTY_PREFIX + propertyName;
-//             const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
-//             this[infoPropertyName] = assetInfo;
-//             CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetInfo.url]))
-//             // 
-//         }else{
-//             const underlinePropertyName:any = UNDERLINE_PROPERTY_PREFIX + propertyName;
-//             this[underlinePropertyName] = asset;
-//         }                
-//     }        
-// }
+/**
+ * 
+ * @param classTypes 
+ */
+function detechBaseCCObject(classTypes:CCObject|CCObject[]):BaseCCObject{
+    if(!classTypes) return null;
+    const classType:CCObject = Array.isArray(classTypes) ? classTypes[0] : classTypes;
+    if(!classType) error('Type is empty !');
+    switch(true){
+        case js.isChildClassOf(classType, Prefab): return BaseCCObject.PREFAB;
+        case js.isChildClassOf(classType, Asset): return BaseCCObject.ASSET;
+        case js.isChildClassOf(classType, Component): return BaseCCObject.COMPONENT;
+        case js.isChildClassOf(classType, Node): return BaseCCObject.NODE;
+    }
+    return null;
+}

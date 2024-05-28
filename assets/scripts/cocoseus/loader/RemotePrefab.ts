@@ -1,4 +1,4 @@
-import { _decorator, assetManager, AssetManager, Component, Enum, error, instantiate, log, Node, Prefab } from 'cc';
+import { _decorator, assetManager, AssetManager, Component, Enum, error, instantiate, log, Node, Prefab, Vec3 } from 'cc';
 // import Referencify from '../core/Referencify';
 // import { BabelPropertyDecoratorDescriptor, IPropertyOptions, LegacyPropertyDecorator, PropertyType } from '../types/CoreType';
 import { DEV, EDITOR } from 'cc/env';
@@ -211,19 +211,24 @@ export class RemotePrefab extends Component {
 
     // -----------
 
+    protected async startLoadAssets(){
+
+    }
+
     /**
      * 
      */
-    protected async onLoad(): Promise<void> {
+    protected onLoad(): void {
         if(this.prefabInfo){
-            this._prefab = await this.loadPrefab(this.prefabInfo);
-        }
-        if(!this.prefab){ !EDITOR && DEV && error('There is no prefab !')}
-        else{
-            const contentNode:Node = instantiate(this.prefab);
-            this.node.addChild(contentNode);
+            this.loadPrefab(this.prefabInfo).then((prefab:Prefab)=>{
+                if(!prefab){ !EDITOR && DEV && error('There is no prefab !')}
+                const contentNode:Node = instantiate(prefab);
+                contentNode.setPosition(new Vec3())
+                this.node.addChild(contentNode);
+            });
         }
     }
+
 }
 
 

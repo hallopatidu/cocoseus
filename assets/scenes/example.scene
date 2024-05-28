@@ -1070,8 +1070,8 @@
     ],
     "value": {
       "__type__": "cc.Vec3",
-      "x": -640,
-      "y": -360.00000000000006,
+      "x": 116.489,
+      "y": -265.126,
       "z": 0
     }
   },
@@ -1265,8 +1265,8 @@
     "_prefab": null,
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 0,
-      "y": 0,
+      "x": 37.45,
+      "y": -257.156,
       "z": 0
     },
     "_lrot": {
@@ -1324,6 +1324,7 @@
     },
     "_enabled": true,
     "__prefab": null,
+    "_prefab": null,
     "prefabInfo": {
       "bundle": "resources",
       "url": "/prefab/TestWaitAction-003",
@@ -1387,6 +1388,12 @@
     },
     "_enabled": true,
     "__prefab": null,
+    "__$info__abc": {
+      "bundle": "resources",
+      "url": "/prefab/TestWaitAction-003",
+      "uuid": "8dfb9c8a-ed90-494d-90a5-1d6f8687501d",
+      "name": "TestWaitAction-003.prefab"
+    },
     "_id": "7cEaB9AXFHpqus2jq+2ZAI"
   },
   {
