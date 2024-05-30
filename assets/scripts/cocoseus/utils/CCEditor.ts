@@ -1,6 +1,7 @@
 import { _decorator, Asset, CCClass, Component, Enum, js, Node } from 'cc';
 import { EDITOR } from 'cc/env';
 import { Support } from './Support';
+import { IPropertyOptions, LegacyPropertyDecorator, PropertyType } from '../types/CoreType';
 const { ccclass, property } = _decorator;
 
 export type SimpleAssetInfo = {
@@ -137,6 +138,22 @@ export class CCEditor {
      */
     static changeEditorProperty(targetObj:any, propName:string , propType:string, value:any):any {
         CCClass["Attr"].setClassAttr(targetObj, propName, propType, value);
+    }
+    // 
+
+    /**
+     * 
+     * @param target 
+     * @param propertyName 
+     * @param option 
+     * @param propertyDescriptor 
+     */
+    static createEditorProperty(target:Record<string, any>, propertyName:string, option:IPropertyOptions, propertyDescriptor:PropertyDescriptor){   
+        if(!Object.prototype.hasOwnProperty.call(target, propertyName)){
+            Object.defineProperty(target, propertyName, propertyDescriptor);
+        }
+        const propertyNormalized:LegacyPropertyDecorator = property(option);
+        propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyName, propertyDescriptor);
     }
     // 
 }

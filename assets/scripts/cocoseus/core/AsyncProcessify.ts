@@ -24,14 +24,6 @@ export default function AsyncProcessify<TBase>(base:Constructor<TBase>):Construc
             
             /**
              * 
-             */
-            public get internalOnLoad (): (() => void) | undefined {
-                this.begin();
-                return super['internalOnLoad']
-            }
-
-            /**
-             * 
              * @param token 
              * @returns 
              */

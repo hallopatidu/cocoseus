@@ -78,7 +78,7 @@ export interface IStaticOneFlowified extends Constructor<IOneFlowified>{
 export interface IReferencified extends IInheritancified{
     get refInfo():ReferenceInfo;
     get token():number;
-    updateReferenceEnum(enumData:any):void;
+    // updateReferenceEnum(enumData:any):void;
 }
 
 export interface IStaticReferencified extends Constructor<IReferencified>{

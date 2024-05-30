@@ -104,7 +104,7 @@ export class RemotePrefab extends Component {
     })
     get prefab():Prefab{        
         if(this.prefabInfo){
-            CCEditor.enumifyProperty(this, 'enumPrefab', Support.convertToEnum(['REMOVE', this.prefabInfo.url]))
+            CCEditor.enumifyProperty(this, 'enumPrefab', Support.convertToEnum(['REMOVE', '[' + this.prefabInfo.bundle + ']' + this.prefabInfo.url]));
         }
         return this._prefab;
     }
@@ -180,7 +180,7 @@ export class RemotePrefab extends Component {
             if(!bundle){
                 error('Bundle ' + bundleName + ' is not found !');
                 return null
-            }   
+            }
             const prefabPath:string = assetInfo.url;
             let remotePrefab:Prefab = bundle.get(prefabPath, Prefab);
             if(!remotePrefab){

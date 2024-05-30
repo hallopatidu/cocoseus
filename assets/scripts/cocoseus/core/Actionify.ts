@@ -35,7 +35,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
             return Actionized._actions
         }
 
-        protected _actionToken:number = -1;
+        protected _actionToken:number = -1; // -1 Using for loading assets.
         
         /**
          * 
@@ -113,8 +113,8 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
             if(!target) return null
             const actionToken:number = this._actionToken;
             if(actionToken == -1){
-                DEV && warn('Do not register action token.')
-                return
+                // DEV && warn('Do not register action token.')
+                return await super['wait'](-1)       // loading action, default on Referencify.
             }
             // 
             const waitToken:number = this.getTokenFrom(target);

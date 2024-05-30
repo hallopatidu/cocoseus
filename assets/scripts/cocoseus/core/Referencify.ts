@@ -1,13 +1,14 @@
 // Referencify
 
-import { _decorator, Asset, AssetManager, CCObject, Component, Constructor, director, Enum, error, find, js, log, Prefab} from "cc";
-import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified } from "../types/CoreType";
+import { _decorator, Asset, assetManager, AssetManager, CCObject, Component, Constructor, director, Enum, error, find, js, log, Prefab, warn} from "cc";
+import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified, IAsyncProcessified } from "../types/CoreType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
 import { CACHE_KEY, Inheritancify, lastInjector } from "./Inheritancify";
 import Storagify from "./Storagify";
-import { EDITOR } from "cc/env";
+import { DEV, EDITOR } from "cc/env";
 import { CCEditor, SimpleAssetInfo } from "../utils/CCEditor";
+import AsyncProcessify from "./AsyncProcessify";
 const { property } = _decorator;
 // const {Editor} = globalThis
 let ReferenceEnum = Enum({Default:-1});
@@ -20,8 +21,7 @@ export const STRING_PROPERTY_PREFIX:string = '__$string__';
 export const INFO_PROPERTY_PREFIX:string = '__$info__';
 export const WRAPPER_PROPERTY_PREFIX:string = '__$';
 
-enum BaseCCObject {
-    PREFAB,
+enum ClassType {
     ASSET,
     COMPONENT,
     NODE
@@ -33,7 +33,7 @@ enum BaseCCObject {
  * @returns 
  */
 export default Inheritancify<IReferencified, IStaticReferencified>(function Referencify <TBase>(base:Constructor<TBase>):Constructor<TBase & IReferencified>{             
-    class Referencified extends Storagify(Decoratify(base as unknown as Constructor<Component>)) implements IReferencified {
+    class Referencified extends Storagify(Decoratify( AsyncProcessify( base as unknown as Constructor<Component>) ) ) implements IReferencified {
         
         protected _refInfo:ReferenceInfo;
 
@@ -92,17 +92,17 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             this.references.set(comp.token, comp.refInfo);
             this.keys.set(comp.token, this.genKey(comp.refInfo));
             // 
-            const refPaths:string[] = [];
-            const comps:IReferencified[] = [];
-            Referencified.keys.forEach((value:string, token:number)=>{
-                refPaths.push(Referencified.getRefPath(token));
-                comps.push(Referencified.getComponent(token));
-            })
-            // 
-            const ReferenceEnum:any = Support.convertToEnum(refPaths);            
-            comps.forEach((serachComp:IReferencified)=>{
-                serachComp.updateReferenceEnum && serachComp.updateReferenceEnum(ReferenceEnum);
-            })
+            // const refPaths:string[] = [];
+            // const comps:IReferencified[] = [];
+            // Referencified.keys.forEach((value:string, token:number)=>{
+            //     refPaths.push(Referencified.getRefPath(token));
+            //     comps.push(Referencified.getComponent(token));
+            // })
+            // // 
+            // const ReferenceEnum:any = Support.convertToEnum(refPaths);            
+            // comps.forEach((serachComp:IReferencified)=>{
+            //     serachComp.updateReferenceEnum && serachComp.updateReferenceEnum(ReferenceEnum);
+            // })
 
             // const json:string = JSON.stringify(Array.from(this.references)); 
             // const map:Map<any,any> = new Map(JSON.parse(json));
@@ -171,14 +171,66 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
 
         // --------------- PRIVATE --------------
 
+        /**
+         * 
+         */
+        private async startLoadingAssets(){
+            const propertyNames:string[] = Array.from( Decoratify(this).keys('@reference.load'));
+            if(propertyNames && propertyNames.length){
+                const thisAsyncLoading:IAsyncProcessified = this as unknown as IAsyncProcessified;
+                thisAsyncLoading.begin(-1);                
+                // 
+                const promises:Promise<any>[] = []
+                propertyNames.forEach((propName:string)=>{
+                    const propArr:string[] = propName?.split("::");
+                    if(propArr && propArr.length){                    
+                        const propertyName:string = propArr[0];
+                        const classTypeName:string = propArr[1];
+                        const classType:any = js.getClassByName(classTypeName);
+                        const assetInfo:SimpleAssetInfo = this[INFO_PROPERTY_PREFIX + propertyName];
+                        if(propertyName && classType && assetInfo){                            
+                            promises.push(new Promise(async (resolve:Function)=>{
+                                const asset:Asset = await loadAsset(assetInfo, classType);
+                                this[propertyName] = asset;
+                                resolve(asset);
+                            }) )
+
+                        }else{
+                            DEV && error('Unload ' + propertyName)
+                        }
+                    }
+                });
+                await Promise.all(promises);
+                // 
+                thisAsyncLoading.end(-1);
+            }
+        }
+
+
         // ---------------
 
         /**
          * 
          */
+        public get internalOnStart (): (() => void) | undefined {
+            return async ()=>{
+                await (this as unknown as IAsyncProcessified).wait(-1);
+                super['internalOnStart'] && super['internalOnStart']()
+            }
+            // return super['internalOnStart']
+        }
+
+        /**
+         * 
+         */
         public get internalOnLoad (): (() => void) | undefined {
-            Referencified.register(this);            
-            return super['internalOnLoad']
+            Referencified.register(this); 
+            this.startLoadingAssets();
+            return async ()=>{
+                await (this as unknown as IAsyncProcessified).wait(-1);
+                super['internalOnLoad'] && super['internalOnLoad']()
+            }
+            // return super['internalOnLoad']
         }
 
         /**
@@ -220,14 +272,14 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
         /**
          * 
          */
-        updateReferenceEnum(enumData:any):void{            
-            return
-            const propertyNames:string[] = Array.from( Decoratify(this).keys('@reference'));
-            propertyNames.forEach((propName:string)=>{
-                const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propName;
-                CCEditor.enumifyProperty(this, enumPropertyName, enumData);
-            })
-        }
+        // updateReferenceEnum(enumData:any):void{            
+        //     return
+        //     const propertyNames:string[] = Array.from( Decoratify(this).keys('@reference'));
+        //     propertyNames.forEach((propName:string)=>{
+        //         const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propName;
+        //         CCEditor.enumifyProperty(this, enumPropertyName, enumData);
+        //     })
+        // }
 
     }
     return Referencified as unknown as Constructor<TBase & IReferencified>;
@@ -256,40 +308,32 @@ export function reference(
         descriptorOrInitializer:  BabelPropertyDecoratorDescriptor)
     {     
         // 
-        const propertyName:string = propertyKey.toString();
-        // const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
-        // const underlinePropertyName:any = WRAPPER_PROPERTY_PREFIX + propertyName;
-        // const infoPropertyName:any = INFO_PROPERTY_PREFIX + propertyName;
-        // 
-        Decoratify(target).record(propertyName, '@reference');
-        // // 
-        // const constructor:any = target.constructor;
-        // const classStash:unknown = constructor[CACHE_KEY] || ((constructor[CACHE_KEY]) = {});
-        // const ccclassProto:unknown = classStash['proto'] || ((classStash['proto'])={});
-        // const properties:unknown = ccclassProto['properties'] || ((ccclassProto['properties'])={});
-        // const propertyStash:unknown = properties[propertyName] ??= {};    
-        // const infoPropertyStash:unknown = properties[infoPropertyName] ??= {};    
-        // const underlinePropertyStash:unknown = properties[underlinePropertyName] ??= {};    
-        // const enumPropertyStash:unknown = properties[enumPropertyName] ??= {};
+        const propertyName:string = propertyKey.toString();        
         // 
         
-
+        //   
         if(!options){
             options = {type:Asset};
         };
-        const propertyType:BaseCCObject = detechBaseCCObject((options as IPropertyOptions).type);
+        const propertyType:ClassType = detechBaseCCObject((options as IPropertyOptions).type);
         switch(propertyType){
-            case BaseCCObject.PREFAB:
+            case ClassType.ASSET:
                 defineSmartProperty(target, propertyName, options, descriptorOrInitializer);
+                // 
+                const classType:string = getClassName((options as IPropertyOptions).type);
+                Decoratify(target).record(propertyName + (classType ? "::" + classType : ""), '@reference.load');
                 break;
-            case BaseCCObject.ASSET:
+            // case ClassType.NODE:
+            //     CCEditor.createEditorProperty(target, propertyName, options, descriptorOrInitializer);
+            //     break;
+            // case ClassType.COMPONENT:
+            //     CCEditor.createEditorProperty(target, propertyName, options, descriptorOrInitializer);
+            //     break;
+            default:
+                CCEditor.createEditorProperty(target, propertyName, options, descriptorOrInitializer);
                 break;
-            case BaseCCObject.NODE:
-                break;
-            case BaseCCObject.COMPONENT:
-                break;            
-        }        
-   
+        }   
+        Decoratify(target).record(propertyName, '@reference');
         return descriptorOrInitializer
     }
     
@@ -316,21 +360,16 @@ export function reference(
  * @param options 
  * @param descriptorOrInitializer 
  */
-function defineSmartProperty(target:Parameters<LegacyPropertyDecorator>[0], propertyName:string, options:IPropertyOptions, descriptorOrInitializer:  BabelPropertyDecoratorDescriptor){
+function defineSmartProperty(target:Record<string, any>, propertyName:string, options:IPropertyOptions, descriptorOrInitializer:  BabelPropertyDecoratorDescriptor){
     const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
     const wrapperPropertyName:any = WRAPPER_PROPERTY_PREFIX + propertyName;
     const infoPropertyName:any = INFO_PROPERTY_PREFIX + propertyName;   
     // 
-    if(!options){
-        options = {};
-    }
-    
     // Record info -------------
-    const infoPropetyDescriptor:PropertyDescriptor = {value:null, writable:true}
-    Object.defineProperty(target, infoPropertyName, infoPropetyDescriptor);
+    const infoPropertyDescriptor:PropertyDescriptor = {value:null, writable:true}    
     const infoOption:IPropertyOptions = {serializable:true, visible:false};
-    const infoPropertyNormalized:LegacyPropertyDecorator = property(infoOption);
-    infoPropertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], infoPropertyName, infoPropetyDescriptor);
+    CCEditor.createEditorProperty(target, infoPropertyName,infoOption, infoPropertyDescriptor);
+    // -------------------------- End info
 
     // Define Enum ------------------------------
     const enumPropetyDescriptor:PropertyDescriptor = {
@@ -344,7 +383,6 @@ function defineSmartProperty(target:Parameters<LegacyPropertyDecorator>[0], prop
             }
         }
     }
-    Object.defineProperty(target, enumPropertyName, enumPropetyDescriptor);
     //
     const enumOption:IPropertyOptions = {
         type:Enum({NONE:0}),
@@ -353,8 +391,7 @@ function defineSmartProperty(target:Parameters<LegacyPropertyDecorator>[0], prop
             return !!this[infoPropertyName]
         }
     }
-    const enumPropertyNormalized:LegacyPropertyDecorator = property(enumOption);
-    enumPropertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], enumPropertyName, enumPropetyDescriptor);
+    CCEditor.createEditorProperty(target, enumPropertyName, enumOption, enumPropetyDescriptor);
     // ------------------------------ end Define Enum
 
     
@@ -362,20 +399,24 @@ function defineSmartProperty(target:Parameters<LegacyPropertyDecorator>[0], prop
     const wrapperDescriptor:PropertyDescriptor = {
         get():Asset{                
             if(this[infoPropertyName]){
-                CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', this[infoPropertyName]?.url]))
+                const assetPath:string = '[' + this[infoPropertyName]?.bundle + '] ' + this[infoPropertyName]?.url
+                CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]))
             }
             return this[propertyName];
         },
         set:async function(asset:Asset){           
             if(EDITOR && !!asset){
                 const assetInfo:SimpleAssetInfo = await CCEditor.getAssetInfo(asset);
-                const bundleName:string = assetInfo.bundle;            
-                if( bundleName !== AssetManager.BuiltinBundleName.INTERNAL &&
+                const bundleName:string = assetInfo.bundle;
+                log('bundle name ' + bundleName)            
+                if( !!bundleName &&
+                    bundleName !== AssetManager.BuiltinBundleName.INTERNAL &&
                     bundleName !== AssetManager.BuiltinBundleName.MAIN  &&
                     bundleName !== AssetManager.BuiltinBundleName.START_SCENE){
                     // 
                     this[infoPropertyName] = assetInfo;
-                    CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', this[infoPropertyName]?.url]))
+                    const assetPath:string = '[' + this[infoPropertyName]?.bundle + '] ' + this[infoPropertyName]?.url;
+                    CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]))
                     // 
                 }
             }     
@@ -385,39 +426,113 @@ function defineSmartProperty(target:Parameters<LegacyPropertyDecorator>[0], prop
         enumerable: descriptorOrInitializer.enumerable,
         // writable: descriptorOrInitializer.writable,        
     } as PropertyDescriptor;
-    
-    Object.defineProperty(target, wrapperPropertyName, wrapperDescriptor);
 
     const wrapperOption:IPropertyOptions = Object.assign({}, options, {
         displayName:Support.upperFirstCharacter(propertyName),
         visible(){
             return !this[infoPropertyName];
         }
-    }) as IPropertyOptions
-    const wrapperPropertyNormalized:LegacyPropertyDecorator = property(wrapperOption);
-    wrapperPropertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], wrapperPropertyName, wrapperDescriptor);
+    }) as IPropertyOptions;
+    CCEditor.createEditorProperty(target, wrapperPropertyName, wrapperOption, wrapperDescriptor)
     // ------------------------------------- end Define Wrapper
-
+    
     // Current property ---------------
-    (options as IPropertyOptions).visible = false;
-    (options as IPropertyOptions).serializable = false;
-    const propertyNormalized:LegacyPropertyDecorator = property(options);    
-    propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyName, descriptorOrInitializer);
+    if(!!options){
+        (options as IPropertyOptions).visible = false;
+        (options as IPropertyOptions).serializable = false;    
+    }
+    CCEditor.createEditorProperty(target, propertyName, options, descriptorOrInitializer);
+    
 }
 
 /**
  * 
  * @param classTypes 
  */
-function detechBaseCCObject(classTypes:CCObject|CCObject[]):BaseCCObject{
-    if(!classTypes) return null;
-    const classType:CCObject = Array.isArray(classTypes) ? classTypes[0] : classTypes;
-    if(!classType) error('Type is empty !');
-    switch(true){
-        case js.isChildClassOf(classType, Prefab): return BaseCCObject.PREFAB;
-        case js.isChildClassOf(classType, Asset): return BaseCCObject.ASSET;
-        case js.isChildClassOf(classType, Component): return BaseCCObject.COMPONENT;
-        case js.isChildClassOf(classType, Node): return BaseCCObject.NODE;
+function detechBaseCCObject(classTypes:Constructor<any>|Constructor<any>[]):ClassType{    
+    const classType:Constructor<any> = getClassType(classTypes)    
+    if(classType){
+        switch(true){            
+            case js.isChildClassOf(classType, Asset): return ClassType.ASSET;
+            case js.isChildClassOf(classType, Component): return ClassType.COMPONENT;
+            case js.isChildClassOf(classType, Node): return ClassType.NODE;
+        }
     }
     return null;
+}
+
+// type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+
+/**
+ * 
+ * @param classTypes 
+ * @returns 
+ */
+function getClassType(classTypes:Constructor<any>|Constructor<any>[]):Constructor<any>{
+    if(!classTypes) return null;
+    const classType:Constructor<any> = Array.isArray(classTypes) ? classTypes[0] : classTypes;
+    if(!classType) error('Type is empty !');
+    return classType;
+}
+
+/**
+ * 
+ * @param classTypes 
+ * @returns 
+ */
+function getClassName(classTypes:Constructor<any>|Constructor<any>[]):string{
+    const classType:Constructor<any> = getClassType(classTypes)
+    return js.getClassName(classType);
+}
+
+
+async function loadAsset(assetInfo:SimpleAssetInfo, classType:any):Promise<Asset>{
+    if(!assetInfo) return null
+    if(!assetInfo.bundle?.length) error('Asset no bundle !!');
+    if(!EDITOR){
+        const bundleName:string = assetInfo.bundle;
+        let bundle:AssetManager.Bundle = assetManager.getBundle(bundleName);
+        if(!bundle){
+            bundle = await new Promise<AssetManager.Bundle>((resolve:Function)=>{
+                assetManager.loadBundle(bundleName,(err:Error, downloadBundle:AssetManager.Bundle)=>{                   
+                    if(!err){                               
+                        resolve(downloadBundle);
+                    }else{
+                        DEV && error('Bundle Loading Error ' + err + ' bundle name: ' + bundleName);
+                        resolve(null)
+                    }                    
+                }) 
+            })
+        }
+        if(!bundle){
+            error('Bundle ' + bundleName + ' is not found !');
+            return null
+        }
+        const assetPath:string = assetInfo.url;
+        let remoteAsset:Asset = bundle.get(assetPath, classType);
+        if(!remoteAsset){
+            remoteAsset = await new Promise((resolve:Function)=>{
+                bundle.load(assetPath, classType, (err:Error, prefab:Asset ) =>{                
+                    if(!err){                                               
+                        // this.instantiateLoadedPrefab(prefab);
+                        resolve(prefab)
+                    }else{
+                        DEV && error('Prefab Loading Error: ' + assetPath + ' with bundle: ' + bundle.name + ' -node ' + this.node.getPathInHierarchy() )       
+                        resolve(null);
+                    }     
+                    
+                })
+            })
+        }
+        if(!remoteAsset) {
+            error('Asset ' + assetPath + ' in bundle '+ bundleName + ' is not found !');
+            return null
+        }
+
+        DEV && warn('---- load success:: ' + assetInfo.name);
+        return remoteAsset
+    }else{
+
+    }
+    return
 }
