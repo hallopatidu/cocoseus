@@ -224,10 +224,9 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * 
          */
         public get internalOnLoad (): (() => void) | undefined {
-            Referencified.register(this); 
-            this.startLoadingAssets();
+            Referencified.register(this);             
             return async ()=>{
-                await (this as unknown as IAsyncProcessified).wait(-1);
+                await this.startLoadingAssets();
                 super['internalOnLoad'] && super['internalOnLoad']()
             }
             // return super['internalOnLoad']

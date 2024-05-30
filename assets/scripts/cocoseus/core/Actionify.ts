@@ -118,7 +118,10 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
             }
             // 
             const waitToken:number = this.getTokenFrom(target);
-            if(waitToken == -1) error('Unknow validate \'target\' agrument pass to the \'wait\' method.');
+            if(waitToken == -1){
+                error('Unknow validate \'target\' agrument pass to the \'wait\' method.');
+                return null;
+            }
             // 
             const taskInfo:ActionTaskInfo = ActionTaskDB[actionToken];
             if(taskInfo){
