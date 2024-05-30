@@ -12,15 +12,21 @@ export class TestReferencify extends Referencify(Component) {
 
     protected onLoad(): void {
         // 
-        if(!this.abc) error('unload asset !!')
-        const node:Node = instantiate(this.abc);
-        node.setPosition(new Vec3);
-        this.node.addChild(node)
+        // if(!this.abc) error('unload asset !!')
+        // const node:Node = instantiate(this.abc);
+        // node.setPosition(new Vec3);
+        // this.node.addChild(node)
         
     }
 
+    
+
     start() {
         // log('TestReferencify ' + Decoratify(this).keys())
+        if(!this.abc) error('unload asset !!')
+            const node:Node = instantiate(this.abc);
+            node.setPosition(new Vec3);
+            this.node.addChild(node)
     }
 
     update(deltaTime: number) {

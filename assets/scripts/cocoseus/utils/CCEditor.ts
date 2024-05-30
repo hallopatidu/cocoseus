@@ -6,6 +6,7 @@ const { ccclass, property } = _decorator;
 
 export type SimpleAssetInfo = {
     name?:string,
+    type?:string,
     uuid?: string;
     url?: string;
     bundle?: string    
@@ -61,6 +62,9 @@ export class CCEditor {
                 const assetURL:string = assetInfo.url.slice();
                 const info:SimpleAssetInfo = await this.generateSimpleAssetInfoFromUrl_Editor(assetURL);
                 if(info){
+                    if(assetInfo.type){
+                        info.type = assetInfo.type;
+                    }
                     info.uuid = uuid;
                     info.name = assetInfo.name;
                     // info.url = assetInfo.path
@@ -141,6 +145,8 @@ export class CCEditor {
     }
     // 
 
+
+    // 
     /**
      * 
      * @param target 
@@ -148,7 +154,7 @@ export class CCEditor {
      * @param option 
      * @param propertyDescriptor 
      */
-    static createEditorProperty(target:Record<string, any>, propertyName:string, option:IPropertyOptions, propertyDescriptor:PropertyDescriptor){   
+    static createEditorClassProperty(target:Record<string, any>, propertyName:string, option:IPropertyOptions, propertyDescriptor:PropertyDescriptor){   
         if(!Object.prototype.hasOwnProperty.call(target, propertyName)){
             Object.defineProperty(target, propertyName, propertyDescriptor);
         }

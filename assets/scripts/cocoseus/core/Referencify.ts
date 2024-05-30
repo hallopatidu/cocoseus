@@ -1,6 +1,6 @@
 // Referencify
 
-import { _decorator, Asset, assetManager, AssetManager, CCObject, Component, Constructor, director, Enum, error, find, js, log, Prefab, warn} from "cc";
+import { _decorator, Asset, assetManager, AssetManager, CCObject, Component, Constructor, director, Enum, error, find, js, Script, warn} from "cc";
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified, IAsyncProcessified } from "../types/CoreType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
@@ -9,7 +9,8 @@ import Storagify from "./Storagify";
 import { DEV, EDITOR } from "cc/env";
 import { CCEditor, SimpleAssetInfo } from "../utils/CCEditor";
 import AsyncProcessify from "./AsyncProcessify";
-const { property } = _decorator;
+
+const { ccclass, property } = _decorator;
 // const {Editor} = globalThis
 let ReferenceEnum = Enum({Default:-1});
 
@@ -25,6 +26,11 @@ enum ClassType {
     ASSET,
     COMPONENT,
     NODE
+}
+
+@ccclass('ReferenceProperty')
+class ReferenceProperty{
+
 }
 
 /**
@@ -108,6 +114,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             // const map:Map<any,any> = new Map(JSON.parse(json));
             // scene:component-removed
             // log('All:: ' + json) ;
+            
         }
         
         /**
@@ -213,23 +220,23 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * 
          */
         public get internalOnStart (): (() => void) | undefined {
+            // const superInternalOnStart:Function = super['internalOnStart'];
             return async ()=>{
                 await (this as unknown as IAsyncProcessified).wait(-1);
-                super['internalOnStart'] && super['internalOnStart']()
-            }
-            // return super['internalOnStart']
+                super['internalOnStart'] && super['internalOnStart']();
+            }            
         }
 
         /**
          * 
          */
         public get internalOnLoad (): (() => void) | undefined {
-            Referencified.register(this);             
+            Referencified.register(this);            
+            // const superInternalOnLoad:Function = super['internalOnLoad'];
             return async ()=>{
                 await this.startLoadingAssets();
-                super['internalOnLoad'] && super['internalOnLoad']()
-            }
-            // return super['internalOnLoad']
+                super['internalOnLoad'] && super['internalOnLoad']();
+            }            
         }
 
         /**
@@ -329,7 +336,7 @@ export function reference(
             //     CCEditor.createEditorProperty(target, propertyName, options, descriptorOrInitializer);
             //     break;
             default:
-                CCEditor.createEditorProperty(target, propertyName, options, descriptorOrInitializer);
+                CCEditor.createEditorClassProperty(target, propertyName, options, descriptorOrInitializer);
                 break;
         }   
         Decoratify(target).record(propertyName, '@reference');
@@ -367,7 +374,7 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
     // Record info -------------
     const infoPropertyDescriptor:PropertyDescriptor = {value:null, writable:true}    
     const infoOption:IPropertyOptions = {serializable:true, visible:false};
-    CCEditor.createEditorProperty(target, infoPropertyName,infoOption, infoPropertyDescriptor);
+    CCEditor.createEditorClassProperty(target, infoPropertyName,infoOption, infoPropertyDescriptor);
     // -------------------------- End info
 
     // Define Enum ------------------------------
@@ -390,7 +397,7 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
             return !!this[infoPropertyName]
         }
     }
-    CCEditor.createEditorProperty(target, enumPropertyName, enumOption, enumPropetyDescriptor);
+    CCEditor.createEditorClassProperty(target, enumPropertyName, enumOption, enumPropetyDescriptor);
     // ------------------------------ end Define Enum
 
     
@@ -398,7 +405,7 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
     const wrapperDescriptor:PropertyDescriptor = {
         get():Asset{                
             if(this[infoPropertyName]){
-                const assetPath:string = '[' + this[infoPropertyName]?.bundle + '] ' + this[infoPropertyName]?.url
+                const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
                 CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]))
             }
             return this[propertyName];
@@ -407,18 +414,20 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
             if(EDITOR && !!asset){
                 const assetInfo:SimpleAssetInfo = await CCEditor.getAssetInfo(asset);
                 const bundleName:string = assetInfo.bundle;
-                log('bundle name ' + bundleName)            
+                //       
                 if( !!bundleName &&
                     bundleName !== AssetManager.BuiltinBundleName.INTERNAL &&
                     bundleName !== AssetManager.BuiltinBundleName.MAIN  &&
                     bundleName !== AssetManager.BuiltinBundleName.START_SCENE){
                     // 
                     this[infoPropertyName] = assetInfo;
-                    const assetPath:string = '[' + this[infoPropertyName]?.bundle + '] ' + this[infoPropertyName]?.url;
+                    const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
                     CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]))
                     // 
                 }
-            }     
+                // 
+            }
+            // 
             this[propertyName] = asset;       
         },
         configurable: descriptorOrInitializer.configurable,
@@ -432,7 +441,7 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
             return !this[infoPropertyName];
         }
     }) as IPropertyOptions;
-    CCEditor.createEditorProperty(target, wrapperPropertyName, wrapperOption, wrapperDescriptor)
+    CCEditor.createEditorClassProperty(target, wrapperPropertyName, wrapperOption, wrapperDescriptor)
     // ------------------------------------- end Define Wrapper
     
     // Current property ---------------
@@ -440,7 +449,7 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
         (options as IPropertyOptions).visible = false;
         (options as IPropertyOptions).serializable = false;    
     }
-    CCEditor.createEditorProperty(target, propertyName, options, descriptorOrInitializer);
+    CCEditor.createEditorClassProperty(target, propertyName, options, descriptorOrInitializer);
     
 }
 
