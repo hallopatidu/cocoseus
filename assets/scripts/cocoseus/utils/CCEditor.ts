@@ -90,8 +90,7 @@ export class CCEditor {
             if(pathInfos && pathInfos.length){         
                 const path:string = pathInfos[0];
                 const assetName:string = pathInfos[1]
-                if(path && path.length){
-                    
+                if(path && path.length){                    
                     const meta:AssetMeta = await globalThis.Editor.Message.request('asset-db', 'query-asset-meta', 'db://' + path);
                     if(meta && meta.userData && meta.userData?.isBundle){
                         simpleAssetInfo.bundle = meta.userData?.bundleName || assetName;

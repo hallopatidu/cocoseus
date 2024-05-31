@@ -8,7 +8,7 @@ const { ccclass, property, executeInEditMode } = _decorator;
 @executeInEditMode(true)
 export class TestWaitAction extends Actionify(Component) {
 
-    @property({type:Component})
+    @reference({type:Component})
     waitComp:Component;
 
     // @reference

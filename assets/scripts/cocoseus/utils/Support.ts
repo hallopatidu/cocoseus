@@ -124,15 +124,21 @@ export class Support extends Component {
     * 
     * @param fullPath 
     */
-    static *getPartialPath(fullPath:string):Generator<string[]>{
+    static *getPartialPath(fullPath:string, decreases:boolean = false):Generator<string[]>{
         const partialPaths:string[] = fullPath.replace(/(db|http|https):\/\//g,'').split(/\/|\\/);
         let path:string = '';
         let baseUrl:string = '';
+        // if(decreases){
+        //     // while(partialPaths.length){
+
+        //     // }
+        // }else{
         while(partialPaths.length){
             path = partialPaths.shift();
             baseUrl += (baseUrl.length ? '/' : '') + path;
             yield [baseUrl, path];
         }
+        // }
     }
 
     // ------------- Data Structor -------------------

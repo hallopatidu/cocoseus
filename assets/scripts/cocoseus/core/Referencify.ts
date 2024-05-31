@@ -1,6 +1,6 @@
 // Referencify
 
-import { _decorator, Asset, assetManager, AssetManager, CCObject, Component, Constructor, director, Enum, error, find, js, Script, warn} from "cc";
+import { _decorator, Asset, assetManager, AssetManager, CCObject, Component, Constructor, director, Enum, error, find, js, log, Script, warn} from "cc";
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified, IAsyncProcessified } from "../types/CoreType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
@@ -116,6 +116,15 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             // log('All:: ' + json) ;
             
         }
+
+        /**
+         * 
+         * @param comp 
+         * @returns 
+         */
+        private static hasRegisted(comp:IReferencified):boolean{
+            return this.references.has(comp.token)
+        }
         
         /**
          * 
@@ -182,9 +191,10 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * 
          */
         private async startLoadingAssets(){
+            const thisAsyncLoading:IAsyncProcessified = this as unknown as IAsyncProcessified;
             const propertyNames:string[] = Array.from( Decoratify(this).keys('@reference.load'));
-            if(propertyNames && propertyNames.length){
-                const thisAsyncLoading:IAsyncProcessified = this as unknown as IAsyncProcessified;
+            if(thisAsyncLoading.isProgressing()) { await thisAsyncLoading.wait()}
+            else if(!thisAsyncLoading.isProgressing() && propertyNames && propertyNames.length){                
                 thisAsyncLoading.begin(-1);                
                 // 
                 const promises:Promise<any>[] = []
@@ -216,26 +226,27 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
 
         // ---------------
 
+
+
         /**
          * 
          */
-        public get internalOnStart (): (() => void) | undefined {
-            // const superInternalOnStart:Function = super['internalOnStart'];
-            return async ()=>{
-                await (this as unknown as IAsyncProcessified).wait(-1);
-                super['internalOnStart'] && super['internalOnStart']();
-            }            
-        }
+        // public get internalStart (): (() => void) | undefined {
+        //     return async ()=>{
+        //         await this.startLoadingAssets();
+        //         super['internalStart'] && super['internalStart']();
+        //     } 
+        // }
 
         /**
          * 
          */
         public get internalOnLoad (): (() => void) | undefined {
-            Referencified.register(this);            
-            // const superInternalOnLoad:Function = super['internalOnLoad'];
+            !Referencified.hasRegisted(this) && Referencified.register(this);            
             return async ()=>{
                 await this.startLoadingAssets();
                 super['internalOnLoad'] && super['internalOnLoad']();
+                // log('===========?????==> internalOnLoad !!' + this.node?.name)
             }            
         }
 
@@ -243,7 +254,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * 
          */
         public get internalOnDisable (): (() => void) | undefined {
-            Referencified.remove(this);
+            Referencified.hasRegisted(this) && Referencified.remove(this);
             return super['internalOnDisable']
         }
 
@@ -525,7 +536,7 @@ async function loadAsset(assetInfo:SimpleAssetInfo, classType:any):Promise<Asset
                         // this.instantiateLoadedPrefab(prefab);
                         resolve(prefab)
                     }else{
-                        DEV && error('Prefab Loading Error: ' + assetPath + ' with bundle: ' + bundle.name + ' -node ' + this.node.getPathInHierarchy() )       
+                        DEV && error('Asset Loading Error: ' + assetPath + ' with bundle: ' + bundle.name + ' -node ' + this.node.getPathInHierarchy() )       
                         resolve(null);
                     }     
                     

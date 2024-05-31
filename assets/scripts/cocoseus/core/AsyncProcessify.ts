@@ -28,13 +28,17 @@ export default function AsyncProcessify<TBase>(base:Constructor<TBase>):Construc
              * @returns 
              */
             async wait<TNextData = unknown>(token:number = -1):Promise<TNextData>{   
-                if(token == -1) this.begin();             
+                if(token == -1) this.begin();
                 let waitingHandlers:Function[] = this.waitingTasks.get(token);                
                 if(waitingHandlers){
                     return await new Promise((resolve:Function)=>{
                         waitingHandlers.push(resolve);
                     })
                 }
+            }
+
+            isProgressing(token:number = -1):boolean{
+                return this.waitingTasks.has(token);
             }
 
             /**

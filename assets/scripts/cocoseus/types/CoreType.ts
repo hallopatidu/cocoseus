@@ -2,7 +2,7 @@
 
 import { Component, Constructor, ValueType, __private } from "cc"
 
-// -----------------------
+// --------------- Parasitify --------
 
 export interface IParasitified<TSuper> {
     get super():TSuper
@@ -12,12 +12,22 @@ export interface IStaticParasitified<TSuper> extends Constructor<IParasitified<T
    
 }
 
-// ----------------------
+// -------------- Interfacify --------
+export interface IInterfacified extends Component {
+    
+}
+
+export interface IStaticInterfacified extends Constructor<IInterfacified> {
+    
+}
+
+// -------------- AsyncProcessify --------
 
 export interface IAsyncProcessified {
-    wait<TNextData = unknown>(token:number):Promise<TNextData>
-    begin(token:number):void
-    end(token:number, data?:any):void
+    wait<TNextData = unknown>(token?:number):Promise<TNextData>
+    begin(token?:number):void
+    end(token?:number, data?:any):void
+    isProgressing(token?:number):boolean
 }
 
 export interface IModifierState {
