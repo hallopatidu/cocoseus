@@ -33,6 +33,9 @@ class ReferenceProperty{
 
 }
 
+const ImageFmts = ['.png', '.jpg', '.bmp', '.jpeg', '.gif', '.ico', '.tiff', '.webp', '.image', '.pvr', '.pkm', '.astc'];
+const AudioFmts = ['.mp3', '.ogg', '.wav', '.m4a'];
+const FileExts = ImageFmts.concat(AudioFmts);
 /**
  * 
  * @param base 
@@ -41,6 +44,14 @@ class ReferenceProperty{
 export default Inheritancify<IReferencified, IStaticReferencified>(function Referencify <TBase>(base:Constructor<TBase>):Constructor<TBase & IReferencified>{             
     class Referencified extends Storagify(Decoratify( AsyncProcessify( base as unknown as Constructor<Component>) ) ) implements IReferencified {
         
+        @property({
+            visible(){
+                const propertyNames:string[] = Array.from( Decoratify(this).keys('@reference.load'));
+                return Boolean(propertyNames && propertyNames.length);
+            }
+        })
+        edited:boolean = false
+
         protected _refInfo:ReferenceInfo;
 
         protected _token:number = -1
@@ -187,10 +198,14 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
 
         // --------------- PRIVATE --------------
 
+        protected async preloadingAssets(){
+            
+        }
+
         /**
          * 
          */
-        private async startLoadingAssets(){
+        protected async startLoadingAssets(){
             const thisAsyncLoading:IAsyncProcessified = this as unknown as IAsyncProcessified;
             const propertyNames:string[] = Array.from( Decoratify(this).keys('@reference.load'));
             if(thisAsyncLoading.isProgressing()) { await thisAsyncLoading.wait()}
@@ -224,6 +239,8 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
         }
 
 
+        // private changeSkin
+
         // ---------------
 
 
@@ -244,6 +261,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
         public get internalOnLoad (): (() => void) | undefined {
             !Referencified.hasRegisted(this) && Referencified.register(this);            
             return async ()=>{
+                await this.preloadingAssets();
                 await this.startLoadingAssets();
                 super['internalOnLoad'] && super['internalOnLoad']();
                 // log('===========?????==> internalOnLoad !!' + this.node?.name)
@@ -335,17 +353,10 @@ export function reference(
         const propertyType:ClassType = detechBaseCCObject((options as IPropertyOptions).type);
         switch(propertyType){
             case ClassType.ASSET:
-                defineSmartProperty(target, propertyName, options, descriptorOrInitializer);
-                // 
+                defineSmartProperty(target, propertyName, options, descriptorOrInitializer);                
                 const classType:string = getClassName((options as IPropertyOptions).type);
                 Decoratify(target).record(propertyName + (classType ? "::" + classType : ""), '@reference.load');
                 break;
-            // case ClassType.NODE:
-            //     CCEditor.createEditorProperty(target, propertyName, options, descriptorOrInitializer);
-            //     break;
-            // case ClassType.COMPONENT:
-            //     CCEditor.createEditorProperty(target, propertyName, options, descriptorOrInitializer);
-            //     break;
             default:
                 CCEditor.createEditorClassProperty(target, propertyName, options, descriptorOrInitializer);
                 break;

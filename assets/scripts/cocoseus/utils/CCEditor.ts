@@ -59,8 +59,9 @@ export class CCEditor {
             // Underconstructor
             const assetInfo:AssetInfo = await globalThis.Editor.Message.request('asset-db', 'query-asset-info', uuid) as AssetInfo;
             if(assetInfo){
-                const assetURL:string = assetInfo.url.slice();
-                const info:SimpleAssetInfo = await this.generateSimpleAssetInfoFromUrl_Editor(assetURL);
+                // const assetURL:string = assetInfo.url.slice();
+                const assetPath:string = assetInfo.path.slice();
+                const info:SimpleAssetInfo = await this.generateSimpleAssetInfoFromUrl_Editor(assetPath);
                 if(info){
                     if(assetInfo.type){
                         info.type = assetInfo.type;
@@ -78,12 +79,12 @@ export class CCEditor {
 
     /**
      * 
-     * @param assetUrl 
+     * @param assetPath 
      * @param simpleInfo 
      * @param generator 
      * @returns 
      */
-    private static async generateSimpleAssetInfoFromUrl_Editor(assetUrl:string|null, simpleInfo?:SimpleAssetInfo, generator:Generator<string[]> = Support.getPartialPath(assetUrl)):Promise<SimpleAssetInfo|null>{
+    private static async generateSimpleAssetInfoFromUrl_Editor(assetPath:string|null, simpleInfo?:SimpleAssetInfo, generator:Generator<string[]> = Support.getPartialPath(assetPath)):Promise<SimpleAssetInfo|null>{
         if(EDITOR){
             const simpleAssetInfo:SimpleAssetInfo = simpleInfo || js.createMap();
             const pathInfos:string[] = generator.next()?.value;            
@@ -94,9 +95,9 @@ export class CCEditor {
                     const meta:AssetMeta = await globalThis.Editor.Message.request('asset-db', 'query-asset-meta', 'db://' + path);
                     if(meta && meta.userData && meta.userData?.isBundle){
                         simpleAssetInfo.bundle = meta.userData?.bundleName || assetName;
-                        simpleAssetInfo.url = assetUrl.replace('db://' + path,'').replace(/\.[^/.]+$/, "");                        
+                        simpleAssetInfo.url = assetPath.replace('db://' + path,'').replace(/\.[^/.]+$/, "");                        
                     };            
-                    return await this.generateSimpleAssetInfoFromUrl_Editor(assetUrl, simpleAssetInfo, generator) || simpleAssetInfo
+                    return await this.generateSimpleAssetInfoFromUrl_Editor(assetPath, simpleAssetInfo, generator) || simpleAssetInfo
                 }
             }else{
                 return simpleAssetInfo;
@@ -156,9 +157,10 @@ export class CCEditor {
     static createEditorClassProperty(target:Record<string, any>, propertyName:string, option:IPropertyOptions, propertyDescriptor:PropertyDescriptor){   
         if(!Object.prototype.hasOwnProperty.call(target, propertyName)){
             Object.defineProperty(target, propertyName, propertyDescriptor);
+            const propertyNormalized:LegacyPropertyDecorator = property(option);
+            propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyName, propertyDescriptor);
         }
-        const propertyNormalized:LegacyPropertyDecorator = property(option);
-        propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyName, propertyDescriptor);
+        
     }
     // 
 }
