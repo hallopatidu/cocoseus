@@ -23,8 +23,6 @@ export class TestWaitActionSkin extends Parasitify(Component) {
     //         if(propArr && propArr.length){                    
     //             // const propertyName:string = propArr[0];
     //             // const classTypeName:string = propArr[1];
-
-
     //             // const superPropDescriptor:PropertyDescriptor = js.getPropertyDescriptor(this.super.constructor, propName);
     //             // superPropDescriptor.configurable = true;
     //             // const classA = Referencify(Component)
@@ -33,15 +31,11 @@ export class TestWaitActionSkin extends Parasitify(Component) {
     //         }
     //     })
     //     log('ok on load !!!' + propertyNames)
-        
-
     //     // if(!this.super['isProgressing']()) this.super['onLoad']()
     //     // const classComp:any = js.getClassByName('Abc') || ccclass('Abc')(Referencify(Component));
-
     //     // log('Has component ' + !!this.node.getComponent(Referencify(Component)));
     //     // const comp:Component =  this.node.getComponent(classComp) || this.node.addComponent(classComp);
-    //     // // this.node.addComponent(Referencify(Component))
-        
+    //     // // this.node.addComponent(Referencify(Component))        
     // }
 
     public get internalOnLoad (): (() => void) | undefined {

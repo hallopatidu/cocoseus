@@ -1,9 +1,10 @@
-import { _decorator, CCClass, CCObject, Component, Constructor, Enum, js, log, Node, Script } from 'cc';
+import { _decorator, Asset, CCClass, CCObject, Component, Constructor, Enum, js, log, Node, Prefab, Script } from 'cc';
 import { hadInjectorImplemented } from '../core/Inheritancify';
-import Referencify, { INFO_PROPERTY_PREFIX } from '../core/Referencify';
+import Referencify, { INFO_PROPERTY_PREFIX, reference } from '../core/Referencify';
 import Decoratify from '../core/Decoratify';
 import { EDITOR } from 'cc/env';
 import { CCEditor, SimpleAssetInfo } from '../utils/CCEditor';
+import Parasitify, { override } from '../core/Parasitify';
 const { ccclass, property, executeInEditMode } = _decorator;
 
 // @ccclass('PropertyField')
@@ -12,47 +13,83 @@ const { ccclass, property, executeInEditMode } = _decorator;
 //     key:any = null;
 // }
 
+type PropertyField = {
+    node:string,
+    comp:string,
+    name:string
+}
 
 @ccclass('PropertyComponent')
 @executeInEditMode(true)
-export class PropertyComponent extends Component {
+export class PropertyComponent extends Parasitify(Component) {
     
-    // @property({type:[PropertyField]})
-    // properties:PropertyField[] = []
+    // @reference({
+    //     type:Prefab
+    // })
+    // prefab:Prefab = null
 
-    protected onLoad(): void {
-        // if(EDITOR){
-        //     const comps:Component[] = this.node.getComponents(Component);
-        //     comps.forEach((comp:Component)=>{
-        //         if(hadInjectorImplemented(comp.constructor as Constructor, "Referencify")){                
-        //             const keys:string[] = Decoratify(comp).keys("@reference");
-        //             // class A extends (comp.constructor as unknown as Constructor<Component>) {
-        //             // }
-        //             // this.node.addComponent(A);
-        //             // 
-        //             keys.forEach((propName:string)=>{
-        //                 const assetInfo:SimpleAssetInfo = comp[INFO_PROPERTY_PREFIX + propName];
-        //                 log('========> ' + comp.name + " prop: " + propName + " : " + JSON.stringify(assetInfo));
-        //                 Object.defineProperty(this, propName, {value:null});
-        //                 const enumObj = {};
-        //                 enumObj[assetInfo.url] = 0;
-        //                 // CCClass["Attr"].setClassAttr(this, propName, 'type', assetInfo.type);
-        //             })
-        //         }
-        //     })
-        // }
+    @property({serializable:true, visible:false})
+    __assets:PropertyField[] = [];
+
+    @override
+    protected async referencingAsset(propertyName:string, simpleAssetInfo:SimpleAssetInfo){      
+        if(EDITOR){
+            const assetInfo = await globalThis.Editor.Message.request('asset-db', 'query-asset-info', simpleAssetInfo.uuid);
+            log('--------------' + assetInfo.name)
+        }
+        await this.super['referencingAsset'](propertyName, simpleAssetInfo);
     }
 
-    start() {
-        // this.script.createNode(function(err, node:Node){
-        //     log('node.name:: ' + node.name)
-        // })
-        
-    }
+    @override
+    protected async updateAsset(propertyName:string, asset:Asset){        
+        if(asset && js.isChildClassOf(asset.constructor, Prefab)){
+            log('---------------------');  
+            let allPrefabComponents:Component[] = ((asset as Prefab).data as Node).getComponentsInChildren(Component);
+            allPrefabComponents = allPrefabComponents.map((comp:Component)=>{
+                const isRefComp:boolean = hadInjectorImplemented(comp.constructor as Constructor, 'Referencify');
+                if(isRefComp){
+                    const loadedPropertyNames:string[] = Array.from(Decoratify(comp).keys('@reference.load'));
+                    loadedPropertyNames.forEach((propName:string)=>{
+                        const propArr:string[] = propName?.split("::");
+                        const propertyName:string = propArr[0];
+                        const classTypeName:string = propArr[1];
+                        if(propertyName && classTypeName){
+                            const assetInfo:SimpleAssetInfo = comp[INFO_PROPERTY_PREFIX + propertyName];
+                            
+                        }
+                    })
+                }
+                return isRefComp ? comp : null;
+            })
 
-    update(deltaTime: number) {
-        
+        }
+        return await this.super['updateAsset'](propertyName, asset);
     }
+    
+    // protected onLoad(): void {        
+    //     // if(EDITOR){
+    //     //     let comps:Component[] =  this.node.getComponentsInChildren(Component);
+    //     //     comps = comps.map((comp:Component)=>{
+    //     //         const isRefComp:boolean = hadInjectorImplemented(comp.constructor as Constructor, 'Referencify') ? true : false;
+    //     //         if(isRefComp){
+    //     //             const loadedPropertyNames:string[] = Array.from(Decoratify(comp).keys('@reference.load'));                    
+    //     //             loadedPropertyNames.forEach((propName:string)=>{                        
+    //     //                 const propArr:string[] = propName?.split("::");
+    //     //                 const propertyName:string = propArr[0];
+    //     //                 const classTypeName:string = propArr[1];
+    //     //                 if(propertyName && classTypeName){                            
+    //     //                     const assetInfo:SimpleAssetInfo = comp[INFO_PROPERTY_PREFIX + propertyName]
+    //     //                     if(js.isChildClassOf(js.getClassByName(assetInfo.type), Prefab)){
+    //     //                     }
+    //     //                 }
+    //     //             })
+    //     //         }
+    //     //         return isRefComp ? comp : null
+    //     //     })
+    //     // }
+    // }
+
+    
 }
 
 

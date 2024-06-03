@@ -23,7 +23,7 @@
     "_active": true,
     "_components": [],
     "_prefab": {
-      "__id__": 40
+      "__id__": 39
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -54,7 +54,7 @@
     },
     "autoReleaseAssets": false,
     "_globals": {
-      "__id__": 41
+      "__id__": 40
     },
     "_id": "57bec6ff-bffb-4685-a2b0-f30663ea7906"
   },
@@ -104,13 +104,13 @@
     "_active": true,
     "_components": [
       {
+        "__id__": 36
+      },
+      {
         "__id__": 37
       },
       {
         "__id__": 38
-      },
-      {
-        "__id__": 39
       }
     ],
     "_prefab": null,
@@ -202,7 +202,7 @@
     "_priority": 0,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 360,
+    "_orthoHeight": 376.3113367174281,
     "_near": 0,
     "_far": 1000,
     "_color": {
@@ -681,7 +681,6 @@
     "_duration": 0.1,
     "_zoomScale": 1.2,
     "_target": null,
-    "edited": false,
     "_id": "eahXikZcBBp70HNGJYcSDh"
   },
   {
@@ -749,7 +748,6 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "edited": false,
     "waitComp": null,
     "_id": "b7xik1+6JOP6T4at/xDXwm"
   },
@@ -808,7 +806,6 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "edited": false,
     "_id": "598eX+O1BI7pGA63N5cMoA"
   },
   {
@@ -866,7 +863,6 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "edited": false,
     "waitComp": null,
     "_id": "fdqZKelORAYoeYzZQI1fch"
   },
@@ -925,7 +921,6 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "edited": false,
     "waitComp": null,
     "_id": "69VkQPLqZEQrovJBeE89v0"
   },
@@ -984,7 +979,6 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "edited": false,
     "waitComp": {
       "__id__": 24
     },
@@ -1045,7 +1039,6 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "edited": false,
     "waitComp": {
       "__id__": 22
     },
@@ -1106,7 +1099,6 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "edited": false,
     "waitComp": {
       "__id__": 28
     },
@@ -1134,9 +1126,6 @@
       },
       {
         "__id__": 35
-      },
-      {
-        "__id__": 36
       }
     ],
     "_prefab": null,
@@ -1237,25 +1226,12 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "edited": false,
-    "__$info__abc": {
-      "bundle": "resources",
-      "url": "/prefab/TestWaitAction-003",
-      "type": "cc.Prefab",
-      "uuid": "8dfb9c8a-ed90-494d-90a5-1d6f8687501d",
-      "name": "TestWaitAction-003.prefab"
-    },
-    "__$info__sp": {
-      "bundle": "resources",
-      "url": "/images/sp/spriteFrame",
-      "type": "cc.SpriteFrame",
-      "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@f9941",
-      "name": "spriteFrame"
-    },
+    "__$info__abc": null,
+    "__$info__sp": null,
     "_id": "7cEaB9AXFHpqus2jq+2ZAI"
   },
   {
-    "__type__": "67eb7dDXmJAX7fEALgqCIUz",
+    "__type__": "66fa4vgtndH8IfmtdLfay6X",
     "_name": "",
     "_objFlags": 0,
     "__editorExtras__": {},
@@ -1264,20 +1240,8 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "_id": "32iRmKMR1HJ6mygkLmafst"
-  },
-  {
-    "__type__": "Abc",
-    "_name": "",
-    "_objFlags": 0,
-    "__editorExtras__": {},
-    "node": {
-      "__id__": 31
-    },
-    "_enabled": true,
-    "__prefab": null,
-    "edited": false,
-    "_id": "8f44wjxPRI0aBhKnRRFc7z"
+    "__assets": [],
+    "_id": "f8j+uDiLpHKZ9ZhVByaKsW"
   },
   {
     "__type__": "cc.UITransform",
@@ -1358,28 +1322,28 @@
   {
     "__type__": "cc.SceneGlobals",
     "ambient": {
-      "__id__": 42
+      "__id__": 41
     },
     "shadows": {
-      "__id__": 43
+      "__id__": 42
     },
     "_skybox": {
-      "__id__": 44
+      "__id__": 43
     },
     "fog": {
-      "__id__": 45
+      "__id__": 44
     },
     "octree": {
-      "__id__": 46
+      "__id__": 45
     },
     "skin": {
-      "__id__": 47
+      "__id__": 46
     },
     "lightProbeInfo": {
-      "__id__": 48
+      "__id__": 47
     },
     "postSettings": {
-      "__id__": 49
+      "__id__": 48
     },
     "bakedWithStationaryMainLight": false,
     "bakedWithHighpLightmap": false

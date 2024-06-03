@@ -120,8 +120,7 @@ export class RemotePrefab extends Component {
             return !!this.prefabInfo
         }
     })
-    get enumPrefab():number{
-        
+    get enumPrefab():number{        
         return  !!this.prefabInfo ? 1:0;
     }
 

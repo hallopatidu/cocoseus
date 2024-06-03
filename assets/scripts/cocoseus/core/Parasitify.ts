@@ -72,6 +72,12 @@ export default function Parasitify<TBase,TSuper>(base:Constructor<TBase>, superC
                 excuteHierarchyOverridding(this);
                 return super['internalOnLoad']
             }
+
+            //internalOnDestroy refresh Editor await Editor.Message.request('scene', 'soft-reload');
+            public get internalOnDestroy (): (() => void) | undefined {
+                // EDITOR && globalThis.Editor.Message.request('scene', 'soft-reload')
+                return super['internalOnLoad'];
+            }
         }
 
         return Parasitified as unknown as Constructor<TBase & IParasitified<TSuper>>

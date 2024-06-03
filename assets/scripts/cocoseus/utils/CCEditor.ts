@@ -54,6 +54,12 @@ type AssetInfo = {
 
 @ccclass('CCEditor')
 export class CCEditor {
+
+    /**
+     * await Editor.Message.request('asset-db', 'query-asset-info', urlOrUUIDOrPath);
+     * @param uuid 
+     * @returns 
+     */
     private static async getAssetInfo_Editor(uuid:string):Promise<SimpleAssetInfo>{
         if(EDITOR){
             // Underconstructor

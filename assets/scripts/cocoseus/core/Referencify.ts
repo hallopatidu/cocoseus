@@ -1,10 +1,10 @@
 // Referencify
 
-import { _decorator, Asset, assetManager, AssetManager, CCObject, Component, Constructor, director, Enum, error, find, js, log, Script, warn} from "cc";
+import { _decorator, Asset, assetManager, AssetManager, CCObject, Component, Constructor, director, Enum, error, find, js, log, Node, Prefab, Script, warn} from "cc";
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified, IAsyncProcessified } from "../types/CoreType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
-import { CACHE_KEY, Inheritancify, lastInjector } from "./Inheritancify";
+import { CACHE_KEY, hadInjectorImplemented, Inheritancify, lastInjector } from "./Inheritancify";
 import Storagify from "./Storagify";
 import { DEV, EDITOR } from "cc/env";
 import { CCEditor, SimpleAssetInfo } from "../utils/CCEditor";
@@ -21,6 +21,7 @@ export const INDEX_PROPERTY_PREFIX:string = '__$id__';
 export const STRING_PROPERTY_PREFIX:string = '__$string__';
 export const INFO_PROPERTY_PREFIX:string = '__$info__';
 export const WRAPPER_PROPERTY_PREFIX:string = '__$';
+export const PREFAB_DETAIL_PREFIX:string = '__$prefab__';
 
 enum ClassType {
     ASSET,
@@ -28,14 +29,19 @@ enum ClassType {
     NODE
 }
 
-@ccclass('ReferenceProperty')
-class ReferenceProperty{
 
-}
+// @ccclass('ReferenceProperty')
+// class ReferenceProperty{
+//     @property
+//     component:string
 
-const ImageFmts = ['.png', '.jpg', '.bmp', '.jpeg', '.gif', '.ico', '.tiff', '.webp', '.image', '.pvr', '.pkm', '.astc'];
-const AudioFmts = ['.mp3', '.ogg', '.wav', '.m4a'];
-const FileExts = ImageFmts.concat(AudioFmts);
+//     @property
+//     nodePath:string
+// }
+
+// const ImageFmts = ['.png', '.jpg', '.bmp', '.jpeg', '.gif', '.ico', '.tiff', '.webp', '.image', '.pvr', '.pkm', '.astc'];
+// const AudioFmts = ['.mp3', '.ogg', '.wav', '.m4a'];
+// const FileExts = ImageFmts.concat(AudioFmts);
 /**
  * 
  * @param base 
@@ -44,13 +50,13 @@ const FileExts = ImageFmts.concat(AudioFmts);
 export default Inheritancify<IReferencified, IStaticReferencified>(function Referencify <TBase>(base:Constructor<TBase>):Constructor<TBase & IReferencified>{             
     class Referencified extends Storagify(Decoratify( AsyncProcessify( base as unknown as Constructor<Component>) ) ) implements IReferencified {
         
-        @property({
-            visible(){
-                const propertyNames:string[] = Array.from( Decoratify(this).keys('@reference.load'));
-                return Boolean(propertyNames && propertyNames.length);
-            }
-        })
-        edited:boolean = false
+        // @property({            
+        //     visible(){
+        //         const propertyNames:string[] = Array.from( Decoratify(this).keys('@reference.load'));
+        //         return Boolean(propertyNames && propertyNames.length);
+        //     }
+        // })
+        // edited:boolean = false
 
         protected _refInfo:ReferenceInfo;
 
@@ -108,7 +114,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
         private static register(comp:IReferencified){
             this.references.set(comp.token, comp.refInfo);
             this.keys.set(comp.token, this.genKey(comp.refInfo));
-            // 
+            // List referenced components
             // const refPaths:string[] = [];
             // const comps:IReferencified[] = [];
             // Referencified.keys.forEach((value:string, token:number)=>{
@@ -197,6 +203,14 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
         }
 
         // --------------- PRIVATE --------------
+
+        protected async referencingAsset(propertyName:string, asset:SimpleAssetInfo){            
+            
+        }
+
+        protected async updateAsset<T= Asset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>{            
+            return await CCEditor.getAssetInfo(asset as Asset);
+        }
 
         protected async preloadingAssets(){
             
@@ -390,8 +404,10 @@ export function reference(
  */
 function defineSmartProperty(target:Record<string, any>, propertyName:string, options:IPropertyOptions, descriptorOrInitializer:  BabelPropertyDecoratorDescriptor){
     const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
-    const wrapperPropertyName:any = WRAPPER_PROPERTY_PREFIX + propertyName;
-    const infoPropertyName:any = INFO_PROPERTY_PREFIX + propertyName;   
+    const wrapperPropertyName:any = WRAPPER_PROPERTY_PREFIX + propertyName;    
+    const infoPropertyName:any = INFO_PROPERTY_PREFIX + propertyName;
+    // const prefabPropertyName:any = PREFAB_DETAIL_PREFIX + propertyName;
+    // const propertyType:ClassType = detechBaseCCObject((options as IPropertyOptions).type);
     // 
     // Record info -------------
     const infoPropertyDescriptor:PropertyDescriptor = {value:null, writable:true}    
@@ -421,36 +437,53 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
     }
     CCEditor.createEditorClassProperty(target, enumPropertyName, enumOption, enumPropetyDescriptor);
     // ------------------------------ end Define Enum
-
-    
+   
     // Define Wrapper ------------------------------
     const wrapperDescriptor:PropertyDescriptor = {
         get():Asset{                
             if(this[infoPropertyName]){
                 const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
-                CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]))
+                CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]));
+                this.referencingAsset(propertyName, this[infoPropertyName]);
             }
             return this[propertyName];
         },
         set:async function(asset:Asset){           
-            if(EDITOR && !!asset){
-                const assetInfo:SimpleAssetInfo = await CCEditor.getAssetInfo(asset);
-                const bundleName:string = assetInfo.bundle;
-                //       
-                if( !!bundleName &&
-                    bundleName !== AssetManager.BuiltinBundleName.INTERNAL &&
-                    bundleName !== AssetManager.BuiltinBundleName.MAIN  &&
-                    bundleName !== AssetManager.BuiltinBundleName.START_SCENE){
-                    // 
-                    this[infoPropertyName] = assetInfo;
-                    const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
-                    CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]))
-                    // 
+            if(EDITOR){
+                const assetInfo:SimpleAssetInfo = await this.updateAsset(propertyName, asset);
+                if(!!assetInfo){
+                    // const assetInfo:SimpleAssetInfo = await this.referencingAsset(propertyName, asset)
+                    // const assetInfo:SimpleAssetInfo = await CCEditor.getAssetInfo(asset)
+                    const bundleName:string = assetInfo.bundle;
+                    //       
+                    if( !!bundleName &&
+                        bundleName !== AssetManager.BuiltinBundleName.INTERNAL &&
+                        bundleName !== AssetManager.BuiltinBundleName.MAIN  &&
+                        bundleName !== AssetManager.BuiltinBundleName.START_SCENE){
+                        // 
+                        this[infoPropertyName] = assetInfo;
+                        const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
+                        CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]));
+                        return false
+                        // 
+                    }else{
+                        this[infoPropertyName] = null;
+                    }
+
+                    // Prefab detail component list
+                    // if(js.isChildClassOf(asset.constructor, Prefab)){
+                    //     const prefabAsset:Prefab = asset as Prefab
+                    //     let comps:Component[] = (prefabAsset.data as Node).getComponentsInChildren(Component);
+                    //     comps = comps.map((comp:Component)=> hadInjectorImplemented(comp.constructor as Constructor, 'Referencify') ? comp : null)
+                    //     comps.forEach((comp:Component)=>{ log('comp in prefab :: ' + comp?.node.getPathInHierarchy() + ' [ '+comp.name+']') })
+                    // }
+                    // log('asset is a prefab :: ' + js.isChildClassOf(asset.constructor, Prefab) )                    
+                    // js.isChildClassOf(classType, Asset)
                 }
-                // 
+                
             }
             // 
-            this[propertyName] = asset;       
+            this[propertyName] = asset;
         },
         configurable: descriptorOrInitializer.configurable,
         enumerable: descriptorOrInitializer.enumerable,
@@ -465,6 +498,23 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
     }) as IPropertyOptions;
     CCEditor.createEditorClassProperty(target, wrapperPropertyName, wrapperOption, wrapperDescriptor)
     // ------------------------------------- end Define Wrapper
+
+    // Prefab Reference Component List---------------------
+    // const prefabDetailDescriptor:PropertyDescriptor = {
+    //     get():ReferenceInfo[]{
+    //         return []
+    //     }
+    // }
+
+    // const prefabDetailOption:IPropertyOptions = Object.assign({}, options, {
+    //     type:[ReferenceProperty],
+    //     displayName:'|__',        
+    //     visible(){
+    //         return this['edited'];
+    //     }
+    // }) as IPropertyOptions;
+    // CCEditor.createEditorClassProperty(target, prefabPropertyName, prefabDetailOption, prefabDetailDescriptor);
+    // ------------------------------------- end Prefab Reference Component List
     
     // Current property ---------------
     if(!!options){
