@@ -1226,8 +1226,20 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "__$info__abc": null,
-    "__$info__sp": null,
+    "__$info__abc": {
+      "bundle": "resources",
+      "url": "/prefab/TestWaitAction-003",
+      "type": "cc.Prefab",
+      "uuid": "8dfb9c8a-ed90-494d-90a5-1d6f8687501d",
+      "name": "TestWaitAction-003.prefab"
+    },
+    "__$info__sp": {
+      "bundle": "resources",
+      "url": "/images/sp/spriteFrame",
+      "type": "cc.SpriteFrame",
+      "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@f9941",
+      "name": "spriteFrame"
+    },
     "_id": "7cEaB9AXFHpqus2jq+2ZAI"
   },
   {
@@ -1240,7 +1252,6 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "__assets": [],
     "_id": "f8j+uDiLpHKZ9ZhVByaKsW"
   },
   {

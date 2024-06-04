@@ -443,9 +443,9 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
         get():Asset{                
             if(this[infoPropertyName]){
                 const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
-                CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]));
-                this.referencingAsset(propertyName, this[infoPropertyName]);
+                CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]));                
             }
+            this.referencingAsset(propertyName, this[infoPropertyName]);
             return this[propertyName];
         },
         set:async function(asset:Asset){           
