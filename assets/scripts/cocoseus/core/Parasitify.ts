@@ -50,10 +50,12 @@ export default function Parasitify<TBase,TSuper>(base:Constructor<TBase>, superC
             }
         
             protected _$id:number = 0;
+            protected _$host:Component = null;
             protected _$super:Component = null;
             protected _$superName:string = '';
 
             private _superProxy:any;
+            private __isFirstParasite:boolean = false;
 
             get super():TSuper {      
                 if(!this._$super) error('Do not init super !');
@@ -76,6 +78,15 @@ export default function Parasitify<TBase,TSuper>(base:Constructor<TBase>, superC
             //internalOnDestroy refresh Editor await Editor.Message.request('scene', 'soft-reload');
             public get internalOnDestroy (): (() => void) | undefined {
                 // EDITOR && globalThis.Editor.Message.request('scene', 'soft-reload')
+                if(this.__isFirstParasite){
+                    const listOfOverrideMethods:Set<string> = this[OverrideMethodNameMap];
+                    listOfOverrideMethods && listOfOverrideMethods.forEach((methodName:string)=>{
+                        const originMethodName:string = GetOriginMethodName(methodName);
+                        const hostDesc:PropertyDescriptor = js.getPropertyDescriptor(this, originMethodName);
+                        Object.defineProperty(this._$host, methodName, hostDesc);
+                        delete this[originMethodName]
+                    })
+                }
                 return super['internalOnLoad'];
             }
         }
@@ -132,12 +143,16 @@ function excuteHierarchyOverridding(thisComp:Component){
         //     firstParasite = nextComp && !componentIsParasite ? nextComp : firstParasite;
         // }
         // 
+        
         return eligibleForInheritance && investigateComp && (investigateComp == thisComp);
     })
+    // 
+    thisComp['__isFirstParasite'] = (firstParasite == thisComp);
     // 
     thisComp['_$id'] = previousCompIndex + 1;
     const previousComponent:Component = allNodeComponents[previousCompIndex];
     if(previousComponent){
+        thisComp['_$host'] = hostComp;
         thisComp['_$super'] = previousComponent;
         thisComp['_$superName'] = js.getClassName(previousComponent);
         // Find a final Parasite Component. Do not need at this time.

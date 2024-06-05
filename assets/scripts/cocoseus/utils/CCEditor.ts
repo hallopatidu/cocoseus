@@ -128,7 +128,7 @@ export class CCEditor {
     }
 
     static async getAssetInfo(asset:Asset):Promise<SimpleAssetInfo>{
-        return EDITOR ?  await this.getAssetInfo_Editor(asset.uuid) : null;
+        return EDITOR && asset && asset.uuid ?  await this.getAssetInfo_Editor(asset.uuid) : null;
     }
 
     static enumifyProperty (targetObj:any, propName:string , newEnum:unknown):any {

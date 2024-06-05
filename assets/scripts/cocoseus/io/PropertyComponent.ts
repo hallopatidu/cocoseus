@@ -9,11 +9,17 @@ import { Support } from '../utils/Support';
 import { IReferencified } from '../types/CoreType';
 const { ccclass, property, executeInEditMode } = _decorator;
 
-// @ccclass('PropertyField')
-// class PropertyField {
-//     @property({type:CCObject})
-//     key:any = null;
-// }
+@ccclass('PropertyElement')
+class PropertyElement extends Referencify(CCObject) {
+    @property
+    nodePath:string = '';
+
+    @property
+    comp:string = '';
+
+    @property
+    prop:string = '';    
+}
 
 type PropertyField = {
     node:string,
@@ -36,14 +42,17 @@ export class PropertyComponent extends Parasitify(Component) {
     // prefab:Prefab = null
 
     @property({serializable:true, visible:false, readonly:true})
-    data:Map<string, PropertyData> = new Map();
+    assetStores:Map<string, PropertyData> = new Map();
+
+    // @property
+
 
     @override
     protected async referencingAsset(propertyName:string, simpleAssetInfo:SimpleAssetInfo){      
         if(EDITOR){
             if(!simpleAssetInfo){
                 log('delete !!!')
-                this.data.has(propertyName) && this.data.delete(propertyName);
+                this.assetStores.has(propertyName) && this.assetStores.delete(propertyName);
             }
             // const assetInfo = await globalThis.Editor.Message.request('asset-db', 'query-asset-info', simpleAssetInfo.uuid);
             // log(propertyName + '--------------' + this.data.has(propertyName))
@@ -55,10 +64,10 @@ export class PropertyComponent extends Parasitify(Component) {
     protected async updateAsset(propertyName:string, asset:Asset){        
         if(asset && js.isChildClassOf(asset.constructor, Prefab)){
             // log('---------------------');
-            if(!this.data.has(propertyName)){
-                this.data.set(propertyName, Object.create(null));
+            if(!this.assetStores.has(propertyName)){
+                this.assetStores.set(propertyName, Object.create(null));
             }
-            const propertyData:PropertyData = this.data.get(propertyName);
+            const propertyData:PropertyData = this.assetStores.get(propertyName);
             let allPrefabComponents:Component[] = ((asset as Prefab).data as Node).getComponentsInChildren(Component);
             allPrefabComponents = allPrefabComponents.map((comp:Component)=>{
                 const isRefComp:boolean = hadInjectorImplemented(comp.constructor as Constructor, 'Referencify');
@@ -66,17 +75,19 @@ export class PropertyComponent extends Parasitify(Component) {
                     const nodePath:string = comp.node.getPathInHierarchy();
                     const compName:string = js.getClassName(comp);
                     // 
-                    const loadedPropertyNames:string[] = Array.from(Decoratify(comp).keys('@reference.load'));
-                    loadedPropertyNames.forEach((propName:string)=>{                        
-                        const propArr:string[] = propName?.split("::");
-                        const propertyName:string = propArr[0];
-                        const classTypeName:string = propArr[1];
-                        if(propertyName && classTypeName){                            
+                    const loadedPropertyNames:string[] = Array.from(Decoratify(comp).keys('@reference'));
+                    loadedPropertyNames.forEach((propName:string)=>{
+                        const propertyName:string = propName;
+                        // const propArr:string[] = propName?.split("::");
+                        // const propertyName:string = propArr[0];
+                        // const classTypeName:string = propArr[1];
+                        // if(propertyName && classTypeName){                            
+                        if(propertyName){
                             const propField:PropertyField = Object.create(null);
-                            const assetInfo:SimpleAssetInfo = comp[INFO_PROPERTY_PREFIX + propertyName];
+                            // const assetInfo:SimpleAssetInfo = comp[INFO_PROPERTY_PREFIX + propertyName];
                             propField.comp = compName;
                             propField.property = propertyName;
-                            propField.value = assetInfo;
+                            // propField.value = assetInfo;
                             propField.node = nodePath;
                             const key:string = this.genAssetKey(propField.node, propField.comp, propField.property);
                             propertyData[key] = propField;
@@ -97,6 +108,14 @@ export class PropertyComponent extends Parasitify(Component) {
      */
     protected genAssetKey(...props:string[]):string{        
         return props.reduce((value:string, currentValue:string)=> value + Support.tokenize(currentValue) + '.', '');
+    }
+
+    protected onLoad(): void {
+        // log('Key:: ' + this.assetStores.keys().next().value)
+    }
+
+    protected onDestroy(): void {
+        
     }
 
     // protected onLoad(): void {        
