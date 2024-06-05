@@ -127,7 +127,7 @@ export class CCEditor {
         return null
     }
 
-    static async getAssetInfo(asset:Asset):Promise<SimpleAssetInfo>{
+    static async getSimpleAssetInfo(asset:Asset):Promise<SimpleAssetInfo>{
         return EDITOR && asset && asset.uuid ?  await this.getAssetInfo_Editor(asset.uuid) : null;
     }
 

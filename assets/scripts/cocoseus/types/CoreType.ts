@@ -1,11 +1,13 @@
 // export type Constructor<T> = new (...args: any[]) => T;
 
 import { Component, Constructor, ValueType, __private } from "cc"
+import { SimpleAssetInfo } from "../utils/CCEditor"
 
 // --------------- Parasitify --------
 
 export interface IParasitified<TSuper> {
     get super():TSuper
+    get host():TSuper
 }
 
 export interface IStaticParasitified<TSuper> extends Constructor<IParasitified<TSuper>> {
@@ -74,13 +76,13 @@ export interface IStaticAsyncWaited extends Constructor<IAsyncWaited>{
 }
 
 // ---------------------------
-export interface IOneFlowified extends IInheritancified{
-    dispatch(action:Action, ...receiver:string[]):void
-}
+// export interface IOneFlowified extends IInheritancified{
+//     dispatch(action:Action, ...receiver:string[]):void
+// }
 
-export interface IStaticOneFlowified extends Constructor<IOneFlowified>{
+// export interface IStaticOneFlowified extends Constructor<IOneFlowified>{
     
-}
+// }
 
 
 // ------------ Referencify ------------
@@ -88,7 +90,8 @@ export interface IStaticOneFlowified extends Constructor<IOneFlowified>{
 export interface IReferencified extends IInheritancified{
     get refInfo():ReferenceInfo;
     get token():number;
-    // updateReferenceEnum(enumData:any):void;
+    analysisAsset<T>(propertyName:string, asset:T):Promise<SimpleAssetInfo>
+    referencingAsset(propertyName:string, asset:SimpleAssetInfo)
 }
 
 export interface IStaticReferencified extends Constructor<IReferencified>{
@@ -114,6 +117,7 @@ export interface IStaticStoragified extends Constructor<IStoragified>{
 export type ReferenceInfo = {
     scene?:string,
     node?:string,
+    property?:string,
     comp:string,
     id:number,    
 }

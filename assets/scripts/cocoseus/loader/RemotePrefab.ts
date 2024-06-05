@@ -140,7 +140,7 @@ export class RemotePrefab extends Component {
      */
     private async checkForEmbedingOrLoading(asset:Prefab){
         if(EDITOR && !!asset){
-            const assetInfo:SimpleAssetInfo = await CCEditor.getAssetInfo(asset);
+            const assetInfo:SimpleAssetInfo = await CCEditor.getSimpleAssetInfo(asset);
             const bundleName:string = assetInfo.bundle;            
             if(bundleName == AssetManager.BuiltinBundleName.RESOURCES){                
                 log('asset name: ' + asset.name + ' asset.nativeUrl:  ' + assetInfo.url + ' assetInfo.name: ' + assetInfo.name);                

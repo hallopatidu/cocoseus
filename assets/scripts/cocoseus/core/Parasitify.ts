@@ -50,12 +50,16 @@ export default function Parasitify<TBase,TSuper>(base:Constructor<TBase>, superC
             }
         
             protected _$id:number = 0;
-            protected _$host:Component = null;
-            protected _$super:Component = null;
+            protected _$host:TSuper = null;
+            protected _$super:TSuper = null;
             protected _$superName:string = '';
 
             private _superProxy:any;
             private __isFirstParasite:boolean = false;
+
+            get host():TSuper{
+                return this._$host;
+            }
 
             get super():TSuper {      
                 if(!this._$super) error('Do not init super !');

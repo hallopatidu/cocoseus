@@ -1,6 +1,6 @@
 // Referencify
 
-import { _decorator, Asset, assetManager, AssetManager, CCObject, Component, Constructor, director, Enum, error, find, js, log, Node, Prefab, Script, warn} from "cc";
+import { _decorator, Asset, assetManager, AssetManager, CCObject, Component, Constructor, director, Enum, error, find, js, log, Node, Prefab, PrefabLink, Script, warn} from "cc";
 import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified, IAsyncProcessified } from "../types/CoreType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
@@ -29,7 +29,9 @@ enum ClassType {
     NODE
 }
 
-
+export type PrefabInfo = SimpleAssetInfo & {
+    references?:ReferenceInfo[]
+}
 // @ccclass('ReferenceProperty')
 // class ReferenceProperty{
 //     @property
@@ -204,12 +206,40 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
 
         // --------------- PRIVATE --------------
 
-        protected async referencingAsset(propertyName:string, asset:SimpleAssetInfo){            
+        async referencingAsset(propertyName:string, asset:SimpleAssetInfo){            
             
         }
 
-        protected async updateAsset<T= Asset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>{            
-            return await CCEditor.getAssetInfo(asset as Asset);
+        /**
+         * Phân tích asset khi là Prefab. Lưu thêm thông tin về các ReferenceInfo. Phục vụ viec skinable and rechange properties.
+         * @param propertyName 
+         * @param asset 
+         * @returns 
+         */
+        async analysisAsset<T= Asset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>{
+            let simpleAssetInfo:SimpleAssetInfo = await CCEditor.getSimpleAssetInfo(asset as Asset);
+            if(asset && js.isChildClassOf(asset.constructor, Prefab)){
+                const prefabInfo:PrefabInfo = simpleAssetInfo;                
+                let allPrefabComponents:Component[] = ((asset as Prefab).data as Node).getComponentsInChildren(Component);
+                allPrefabComponents.forEach((comp:Component)=>{
+                    if(hadInjectorImplemented(comp.constructor as Constructor, Referencify.name)){
+                        const classType:string = js.getClassName(comp);
+                        const localNodePath:string = comp.node.getPathInHierarchy();
+                        const loadedPropertyNames:string[] = Array.from(Decoratify(comp).keys('@reference'));
+                        if(loadedPropertyNames.length) {prefabInfo.references = [];}
+                        loadedPropertyNames.forEach((propName:string)=>{                      
+                            if(propertyName){
+                                const tempRefInfo:ReferenceInfo = Object.create(null);
+                                tempRefInfo.comp = classType;
+                                tempRefInfo.node = localNodePath;
+                                tempRefInfo.property = propName;
+                                prefabInfo.references.push(tempRefInfo);
+                            }
+                        })
+                    }
+                })
+            }
+            return simpleAssetInfo;
         }
 
         protected async preloadingAssets(){
@@ -364,7 +394,7 @@ export function reference(
         if(!options){
             options = {type:Asset};
         };
-        const propertyType:ClassType = detechBaseCCObject((options as IPropertyOptions).type);
+        const propertyType:ClassType = detechBaseCCObject((options as IPropertyOptions)?.type);
         switch(propertyType){
             case ClassType.ASSET:
                 defineSmartProperty(target, propertyName, options, descriptorOrInitializer);                
@@ -450,7 +480,7 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
         },
         set:async function(asset:Asset){           
             if(EDITOR){
-                const assetInfo:SimpleAssetInfo = await this.updateAsset(propertyName, asset);
+                const assetInfo:SimpleAssetInfo = await this.analysisAsset(propertyName, asset);
                 if(!!assetInfo){
                     // const assetInfo:SimpleAssetInfo = await this.referencingAsset(propertyName, asset)
                     // const assetInfo:SimpleAssetInfo = await CCEditor.getAssetInfo(asset)
@@ -542,6 +572,9 @@ function detechBaseCCObject(classTypes:Constructor<any>|Constructor<any>[]):Clas
 }
 
 // type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+
+
+function prefabDetailInfo(prefab:Prefab){}
 
 /**
  * 
