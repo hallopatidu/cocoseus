@@ -76,6 +76,20 @@ export default function Parasitify<TBase,TSuper>(base:Constructor<TBase>, superC
 
             public get internalOnLoad (): (() => void) | undefined {
                 excuteHierarchyOverridding(this);
+                // 
+                // const internalOnDestroyFuncName:string = 'internalOnDestroy';
+                // const hostDesc:PropertyDescriptor = js.getPropertyDescriptor(this.host, internalOnDestroyFuncName);
+                // js.get(this.host, 
+                //     internalOnDestroyFuncName, 
+                //     ():(() => void) | undefined =>{
+                //         EDITOR && globalThis.Editor.Message.request('scene', 'remove-component', { 
+                //             uuid: this.uuid,
+                //         });
+                //         return hostDesc.get.bind(this.host)
+                //     }, 
+                //     hostDesc.enumerable, 
+                //     hostDesc.configurable);
+                // 
                 return super['internalOnLoad']
             }
 
@@ -93,6 +107,13 @@ export default function Parasitify<TBase,TSuper>(base:Constructor<TBase>, superC
                 }
                 return super['internalOnLoad'];
             }
+
+            // @override
+            // protected onDestroy(): void {
+            //     EDITOR && globalThis.Editor.Message.request('scene', 'remove-component', { 
+            //         uuid: this.uuid,
+            //     });
+            // }
         }
 
         return Parasitified as unknown as Constructor<TBase & IParasitified<TSuper>>
@@ -225,7 +246,23 @@ function excuteHierarchyOverridding(thisComp:Component){
         })
         // 
     }      
-    //   
+    //     
+
+    // Remove Parasite Component when remove Host Component
+    // const internalOnDestroyFuncName:string = 'internalOnDestroy';
+    // const hostDesc:PropertyDescriptor = js.getPropertyDescriptor(hostComp, internalOnDestroyFuncName);
+    // js.get(hostComp, 
+    //     internalOnDestroyFuncName, 
+    //     ():(() => void) | undefined =>{            
+    //         if(!hostComp.isValid && EDITOR) {
+    //             globalThis.Editor.Message.request('scene', 'remove-component', { uuid: thisComp.uuid,});
+    //         }
+    //         return hostDesc.get.bind(hostComp)
+    //     }, 
+    //     hostDesc.enumerable,
+    //     hostDesc.configurable);
+    //  
+    // 
 }
 
 // ------- Super -----------

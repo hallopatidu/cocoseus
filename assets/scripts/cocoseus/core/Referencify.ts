@@ -210,7 +210,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
 
         // --------------- PRIVATE --------------
 
-        async referencingAsset(propertyName:string, asset:SimpleAssetInfo){            
+        async referencingAsset(propertyName:string, asset:Asset){            
             
         }
 
@@ -226,29 +226,38 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
                 const prefabInfo:PrefabInfo = simpleAssetInfo;                
                 let allPrefabComponents:Component[] = ((asset as Prefab).data as Node).getComponentsInChildren(Component);
                 allPrefabComponents.forEach((comp:Component)=>{
-                    if(hadInjectorImplemented(comp.constructor as Constructor, Referencify.name)){
-                        const classType:string = js.getClassName(comp);
-                        const localNodePath:string = comp.node.getPathInHierarchy();
-                        const loadedPropertyNames:string[] = Array.from(Decoratify(comp).keys('@reference'));
-                        if(loadedPropertyNames.length) {prefabInfo.references = [];}
-                        // 
-                        loadedPropertyNames.forEach((propName:string)=>{  
-                            // const propArr:string[] = propName?.split("::");                                       
-                            if(propName){
-                            // if(propArr && propArr.length){
-                                // const childPropertyName:string = propArr[0];
-                                // const classType:string = propArr[1]; 
-                                const tempRefInfo:ReferenceInfo = Object.create(null);
-                                tempRefInfo.comp = classType;
-                                tempRefInfo.node = localNodePath;
-                                tempRefInfo.property = propName;
-                                prefabInfo.references.push(tempRefInfo);
-                            }
-                        })
-                    }
+                    if(!prefabInfo.references) prefabInfo.references = [];
+                    const refInfos:ReferenceInfo[] = this.getChildReferenceInfo(comp)
+                    prefabInfo.references = prefabInfo.references.concat(refInfos);
                 })
             }
             return simpleAssetInfo;
+        }
+
+
+        /**
+         * 
+         * @param fromComponent 
+         * @returns 
+         */
+        protected getChildReferenceInfo(fromComponent:Component):ReferenceInfo[]{   
+            const refInfos:ReferenceInfo[] = [];         
+            if(hadInjectorImplemented(fromComponent.constructor as Constructor, Referencify.name)){
+                const classType:string = js.getClassName(fromComponent);
+                const localNodePath:string = fromComponent?.node?.getPathInHierarchy();
+                const loadedPropertyNames:string[] = Array.from(Decoratify(fromComponent).keys('@reference'));
+                loadedPropertyNames.forEach((propName:string)=>{                                                          
+                    if(propName){
+                        const tempRefInfo:ReferenceInfo = Object.create(null);
+                        tempRefInfo.comp = classType;
+                        tempRefInfo.node = localNodePath;
+                        tempRefInfo.property = propName;
+                        refInfos.push(tempRefInfo);
+                    }
+                })
+                return refInfos;
+            }
+            return refInfos
         }
 
 
@@ -285,6 +294,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
                                 // const asset:Asset = await loadAsset(assetInfo, classType);
                                 const asset:Asset = await this.loadEachAsset(recordContent, assetInfo);
                                 this[propertyName] = asset;
+                                this.referencingAsset(propertyName, asset);
                                 resolve(asset);
                             }) )
 
@@ -491,15 +501,13 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
                 const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
                 CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]));                
             }
-            this.referencingAsset(propertyName, this[infoPropertyName]);
+            // this.referencingAsset(propertyName, this[propertyName]);
             return this[propertyName];
         },
         set:async function(asset:Asset){           
             if(EDITOR){
                 const assetInfo:SimpleAssetInfo = await this.analysisAsset(propertyName, asset);
                 if(!!assetInfo){
-                    // const assetInfo:SimpleAssetInfo = await this.referencingAsset(propertyName, asset)
-                    // const assetInfo:SimpleAssetInfo = await CCEditor.getAssetInfo(asset)
                     const bundleName:string = assetInfo.bundle;
                     //       
                     if( !!bundleName &&
@@ -510,21 +518,12 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
                         this[infoPropertyName] = assetInfo;
                         const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
                         CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]));
+                        this[propertyName] = null
                         return false
                         // 
                     }else{
                         this[infoPropertyName] = null;
                     }
-
-                    // Prefab detail component list
-                    // if(js.isChildClassOf(asset.constructor, Prefab)){
-                    //     const prefabAsset:Prefab = asset as Prefab
-                    //     let comps:Component[] = (prefabAsset.data as Node).getComponentsInChildren(Component);
-                    //     comps = comps.map((comp:Component)=> hadInjectorImplemented(comp.constructor as Constructor, 'Referencify') ? comp : null)
-                    //     comps.forEach((comp:Component)=>{ log('comp in prefab :: ' + comp?.node.getPathInHierarchy() + ' [ '+comp.name+']') })
-                    // }
-                    // log('asset is a prefab :: ' + js.isChildClassOf(asset.constructor, Prefab) )                    
-                    // js.isChildClassOf(classType, Asset)
                 }
                 
             }
@@ -545,27 +544,10 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
     CCEditor.createEditorClassProperty(target, wrapperPropertyName, wrapperOption, wrapperDescriptor)
     // ------------------------------------- end Define Wrapper
 
-    // Prefab Reference Component List---------------------
-    // const prefabDetailDescriptor:PropertyDescriptor = {
-    //     get():ReferenceInfo[]{
-    //         return []
-    //     }
-    // }
-
-    // const prefabDetailOption:IPropertyOptions = Object.assign({}, options, {
-    //     type:[ReferenceProperty],
-    //     displayName:'|__',        
-    //     visible(){
-    //         return this['edited'];
-    //     }
-    // }) as IPropertyOptions;
-    // CCEditor.createEditorClassProperty(target, prefabPropertyName, prefabDetailOption, prefabDetailDescriptor);
-    // ------------------------------------- end Prefab Reference Component List
-    
     // Current property ---------------
     if(!!options){
         (options as IPropertyOptions).visible = false;
-        (options as IPropertyOptions).serializable = false;    
+        (options as IPropertyOptions).serializable = true;    
     }
     CCEditor.createEditorClassProperty(target, propertyName, options, descriptorOrInitializer);
     
@@ -646,7 +628,7 @@ async function loadAsset(assetInfo:SimpleAssetInfo, classType:any):Promise<Asset
                         // this.instantiateLoadedPrefab(prefab);
                         resolve(prefab)
                     }else{
-                        DEV && error('Asset Loading Error: ' + assetPath + ' with bundle: ' + bundle.name + ' -node ' + this.node.getPathInHierarchy() )       
+                        DEV && error('Asset Loading Error: ' + assetPath + ' with bundle: ' + bundle.name + ' -node ' + this?.node?.getPathInHierarchy() )       
                         resolve(null);
                     }     
                     

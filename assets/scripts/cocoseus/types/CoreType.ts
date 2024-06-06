@@ -103,6 +103,8 @@ export interface IStaticReferencified extends Constructor<IReferencified>{
     genToken(info:ReferenceInfo):number
 }
 
+// __private._cocos_core_event_eventify__IEventified
+
 // ---------------- Storagify -----------
 
 export interface IStoragified extends IInheritancified{

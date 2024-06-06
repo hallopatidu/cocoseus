@@ -78,7 +78,8 @@ export function mixinClass(base:Constructor, invokerCtor:Constructor):Constructo
 export function hadInjectorImplemented(baseCtor:Constructor, injectorName:string):boolean{
     if(!injectorName || !injectorName.length) return false;    
     if(!baseCtor) return false;    
-    return (baseCtor.name.indexOf(injectorName) !== -1) || (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? true : hadInjectorImplemented(js.getSuper(baseCtor), injectorName);    
+    return (baseCtor.name.indexOf(injectorName) !== -1) 
+            || (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? true : hadInjectorImplemented(js.getSuper(baseCtor), injectorName);    
 }
 
 export function getInjector(injectorName:string, baseCtor:Constructor, currentBaseCtorName:string = baseCtor.name):Constructor{
