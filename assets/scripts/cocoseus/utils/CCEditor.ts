@@ -96,12 +96,12 @@ export class CCEditor {
             const pathInfos:string[] = generator.next()?.value;            
             if(pathInfos && pathInfos.length){         
                 const path:string = pathInfos[0];
-                const assetName:string = pathInfos[1]
+                const assetName:string = pathInfos[1];
                 if(path && path.length){                    
                     const meta:AssetMeta = await globalThis.Editor.Message.request('asset-db', 'query-asset-meta', 'db://' + path);
                     if(meta && meta.userData && meta.userData?.isBundle){
                         simpleAssetInfo.bundle = meta.userData?.bundleName || assetName;
-                        simpleAssetInfo.url = assetPath.replace('db://' + path,'').replace(/\.[^/.]+$/, "");                        
+                        simpleAssetInfo.url = assetPath.replace('db://' + path,'').replace(/\.[^/.]+$/, "");
                     };            
                     return await this.generateSimpleAssetInfoFromUrl_Editor(assetPath, simpleAssetInfo, generator) || simpleAssetInfo
                 }
@@ -136,7 +136,7 @@ export class CCEditor {
         Enum['update'](defaultEnum);
         CCClass["Attr"].setClassAttr(targetObj, propName, 'type', 'Enum');
         CCClass["Attr"].setClassAttr(targetObj, propName, 'enumList', Enum["getList"](defaultEnum));
-        return defaultEnum
+        return defaultEnum;
     }
 
     /**
@@ -165,8 +165,7 @@ export class CCEditor {
             Object.defineProperty(target, propertyName, propertyDescriptor);
             const propertyNormalized:LegacyPropertyDecorator = property(option);
             propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyName, propertyDescriptor);
-        }
-        
+        }        
     }
     // 
 }

@@ -23,7 +23,7 @@
     "_active": true,
     "_components": [],
     "_prefab": {
-      "__id__": 40
+      "__id__": 41
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -54,7 +54,7 @@
     },
     "autoReleaseAssets": false,
     "_globals": {
-      "__id__": 41
+      "__id__": 42
     },
     "_id": "57bec6ff-bffb-4685-a2b0-f30663ea7906"
   },
@@ -104,13 +104,13 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 37
-      },
-      {
         "__id__": 38
       },
       {
         "__id__": 39
+      },
+      {
+        "__id__": 40
       }
     ],
     "_prefab": null,
@@ -1228,15 +1228,22 @@
     "__prefab": null,
     "__$info__abc": {
       "bundle": "resources",
-      "url": "/prefab/TestWaitAction-003",
+      "url": "db://assets/resources/prefab/TestLayout",
       "type": "cc.Prefab",
-      "uuid": "8dfb9c8a-ed90-494d-90a5-1d6f8687501d",
-      "name": "TestWaitAction-003.prefab",
+      "uuid": "a591f020-2e36-40a4-a13b-4a280f69581b",
+      "name": "TestLayout.prefab",
       "references": [
         {
-          "comp": "TestWaitAction",
-          "node": "TestWaitAction-003",
-          "property": "waitComp"
+          "comp": "TestLayoutReference",
+          "node": "TestLayout",
+          "property": "leftSF::cc.SpriteFrame",
+          "root": "176885681.193415941"
+        },
+        {
+          "comp": "TestLayoutReference",
+          "node": "TestLayout",
+          "property": "rightSF::cc.SpriteFrame",
+          "root": "176885681.193415941"
         }
       ]
     },
@@ -1259,12 +1266,30 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "references": [
+    "referenceViews": [
       {
         "__id__": 36
+      },
+      {
+        "__id__": 37
       }
     ],
-    "test": "",
+    "assetInfos": {
+      "341616122": {
+        "bundle": "resources",
+        "url": "/images/sp/texture",
+        "type": "cc.Texture2D",
+        "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@6c48a",
+        "name": "texture"
+      },
+      "2503865294": {
+        "bundle": "resources",
+        "url": "/images/fp/texture",
+        "type": "cc.Texture2D",
+        "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@6c48a",
+        "name": "texture"
+      }
+    },
     "_id": "c3XV7a0TRA5rF0+SQ4hpao"
   },
   {
@@ -1272,10 +1297,28 @@
     "_name": "",
     "_objFlags": 0,
     "__editorExtras__": {},
-    "nodePath": "TestWaitAction-003",
-    "component": "TestWaitAction",
-    "key": "waitComp",
-    "__$info__value": null
+    "component": "TestLayoutReference<TestLayout>",
+    "__$info__value": {
+      "bundle": "resources",
+      "url": "/images/sp/texture",
+      "type": "cc.Texture2D",
+      "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@6c48a",
+      "name": "texture"
+    }
+  },
+  {
+    "__type__": "ReferenceInfoView",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "component": "TestLayoutReference<TestLayout>",
+    "__$info__value": {
+      "bundle": "resources",
+      "url": "/images/fp/texture",
+      "type": "cc.Texture2D",
+      "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@6c48a",
+      "name": "texture"
+    }
   },
   {
     "__type__": "cc.UITransform",
@@ -1356,28 +1399,28 @@
   {
     "__type__": "cc.SceneGlobals",
     "ambient": {
-      "__id__": 42
-    },
-    "shadows": {
       "__id__": 43
     },
-    "_skybox": {
+    "shadows": {
       "__id__": 44
     },
-    "fog": {
+    "_skybox": {
       "__id__": 45
     },
-    "octree": {
+    "fog": {
       "__id__": 46
     },
-    "skin": {
+    "octree": {
       "__id__": 47
     },
-    "lightProbeInfo": {
+    "skin": {
       "__id__": 48
     },
-    "postSettings": {
+    "lightProbeInfo": {
       "__id__": 49
+    },
+    "postSettings": {
+      "__id__": 50
     },
     "bakedWithStationaryMainLight": false,
     "bakedWithHighpLightmap": false

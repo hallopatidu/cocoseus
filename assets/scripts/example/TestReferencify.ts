@@ -25,12 +25,12 @@ export class TestReferencify extends Referencify(Component) {
             this.node.addChild(node)
         }
         // 
-        if(!this.sp) error('sp unload asset !!')
-        else {
-            const sprite:Sprite = this.node.getComponent(Sprite)
-            sprite.spriteFrame = this.sp;
+        // if(!this.sp) error('sp unload asset !!')
+        // else {
+        //     const sprite:Sprite = this.node.getComponent(Sprite)
+        //     sprite.spriteFrame = this.sp;
             
-        }
+        // }
 
     }
 

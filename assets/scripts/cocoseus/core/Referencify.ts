@@ -75,7 +75,11 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          * @returns 
          */
         private static genKey(info:ReferenceInfo):string{            
-            return (info.scene ? Support.tokenize(info.scene) + '.' : '') + Support.pathToToken(info.node) + '.' + Support.tokenize(info.comp) + '.' + Support.tokenize(info.id.toString())
+            return (info?.root ? Support.tokenize(info.root) + '.' : '') + 
+                    (info?.node ? Support.pathToToken(info?.node) + '.' : '') +
+                    (info?.comp ? Support.tokenize(info?.comp) + '.'  : '') + 
+                    (info?.id ? Support.tokenize(info?.id?.toString()) : '0')+
+                    (info?.property ? Support.tokenize(info?.property?.toString()) : '')
         }
 
         /**
@@ -162,7 +166,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          */
         static getRefPath(token:number):string{
             const refInfo:ReferenceInfo = this.getRefInfo(token);
-            return '[' + refInfo?.comp + ']' + (refInfo.id ? '(' +refInfo.id+')' : '' ) + '<' + refInfo?.node + '>' + '%' + refInfo.scene + '%';
+            return '[' + refInfo?.comp + ']' + (refInfo.id ? '(' +refInfo.id+')' : '' ) + '<' + refInfo?.node + '>' + '%' + refInfo.root + '%';
         }
 
         /**
@@ -227,8 +231,13 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
                         const localNodePath:string = comp.node.getPathInHierarchy();
                         const loadedPropertyNames:string[] = Array.from(Decoratify(comp).keys('@reference'));
                         if(loadedPropertyNames.length) {prefabInfo.references = [];}
-                        loadedPropertyNames.forEach((propName:string)=>{                      
-                            if(propertyName){
+                        // 
+                        loadedPropertyNames.forEach((propName:string)=>{  
+                            // const propArr:string[] = propName?.split("::");                                       
+                            if(propName){
+                            // if(propArr && propArr.length){
+                                // const childPropertyName:string = propArr[0];
+                                // const classType:string = propArr[1]; 
                                 const tempRefInfo:ReferenceInfo = Object.create(null);
                                 tempRefInfo.comp = classType;
                                 tempRefInfo.node = localNodePath;
@@ -242,6 +251,13 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             return simpleAssetInfo;
         }
 
+
+        async loadEachAsset(propertyRecord:string, assetInfo:SimpleAssetInfo):Promise<Asset>{
+            return await loadAsset(assetInfo, js.getClassByName(assetInfo.type));
+        }
+
+        // -------------
+
         protected async preloadingAssets(){
             
         }
@@ -251,14 +267,14 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
          */
         protected async startLoadingAssets(){
             const thisAsyncLoading:IAsyncProcessified = this as unknown as IAsyncProcessified;
-            const propertyNames:string[] = Array.from( Decoratify(this).keys('@reference.load'));
+            const propertyRecord:string[] = Array.from( Decoratify(this).keys('@reference.load'));
             if(thisAsyncLoading.isProgressing()) { await thisAsyncLoading.wait()}
-            else if(!thisAsyncLoading.isProgressing() && propertyNames && propertyNames.length){                
+            else if(!thisAsyncLoading.isProgressing() && propertyRecord && propertyRecord.length){                
                 thisAsyncLoading.begin(-1);                
                 // 
                 const promises:Promise<any>[] = []
-                propertyNames.forEach((propName:string)=>{
-                    const propArr:string[] = propName?.split("::");
+                propertyRecord.forEach((recordContent:string)=>{
+                    const propArr:string[] = recordContent?.split("::");
                     if(propArr && propArr.length){                    
                         const propertyName:string = propArr[0];
                         const classTypeName:string = propArr[1];
@@ -266,7 +282,8 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
                         const assetInfo:SimpleAssetInfo = this[INFO_PROPERTY_PREFIX + propertyName];
                         if(propertyName && classType && assetInfo){                            
                             promises.push(new Promise(async (resolve:Function)=>{
-                                const asset:Asset = await loadAsset(assetInfo, classType);
+                                // const asset:Asset = await loadAsset(assetInfo, classType);
+                                const asset:Asset = await this.loadEachAsset(recordContent, assetInfo);
                                 this[propertyName] = asset;
                                 resolve(asset);
                             }) )
@@ -282,9 +299,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             }
         }
 
-
-        // private changeSkin
-
+                
         // ---------------
 
 
@@ -339,7 +354,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
                 const compName:string = this.constructor.name;
                 const orderIndex:number = this.node.getComponents(compName).findIndex((_comp:Component)=>_comp === this)||0;                
                 this._refInfo = {
-                    scene:director.getScene().name,
+                    root:director.getScene().name,
                     node:hierachyPath,
                     comp:compName,
                     id:orderIndex
@@ -395,17 +410,18 @@ export function reference(
             options = {type:Asset};
         };
         const propertyType:ClassType = detechBaseCCObject((options as IPropertyOptions)?.type);
+        const classType:string = getClassName((options as IPropertyOptions).type);
+        const recordContent:string = propertyName + (classType ? "::" + classType : "");
         switch(propertyType){
             case ClassType.ASSET:
                 defineSmartProperty(target, propertyName, options, descriptorOrInitializer);                
-                const classType:string = getClassName((options as IPropertyOptions).type);
-                Decoratify(target).record(propertyName + (classType ? "::" + classType : ""), '@reference.load');
+                Decoratify(target).record(recordContent, '@reference.load');
                 break;
             default:
                 CCEditor.createEditorClassProperty(target, propertyName, options, descriptorOrInitializer);
                 break;
         }   
-        Decoratify(target).record(propertyName, '@reference');
+        Decoratify(target).record(recordContent, '@reference');
         return descriptorOrInitializer
     }
     

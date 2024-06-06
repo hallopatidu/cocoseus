@@ -100,6 +100,7 @@ export interface IStaticReferencified extends Constructor<IReferencified>{
     getComponent<T>(token:number):T;
     validToken(token:number):boolean;
     findToken(searchValue:string):number;
+    genToken(info:ReferenceInfo):number
 }
 
 // ---------------- Storagify -----------
@@ -115,7 +116,7 @@ export interface IStaticStoragified extends Constructor<IStoragified>{
 // -------------
 
 export type ReferenceInfo = {
-    scene?:string,
+    root?:string,
     node?:string,
     property?:string,
     comp:string,
