@@ -68,7 +68,7 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
     updateAsset(assetInfo:SimpleAssetInfo){
         this[INFO_PROPERTY_PREFIX + 'value'] = assetInfo;
         this[WRAPPER_PROPERTY_PREFIX + 'value'];
-        (this as unknown as __private._cocos_core_event_eventify__IEventified).emit(ReferenceInfoView.EVENT.UPDATE, this.token, assetInfo);
+        // (this as unknown as __private._cocos_core_event_eventify__IEventified).emit(ReferenceInfoView.EVENT.UPDATE, this.token, assetInfo);
     }
 
     // async referencingAsset<T= Asset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>{
@@ -80,7 +80,7 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
 
     async analysisAsset<T= Asset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>{
         const simpleAssetInfo:SimpleAssetInfo = await super.analysisAsset(propertyName, asset);
-        // (this as unknown as __private._cocos_core_event_eventify__IEventified).emit(ReferenceInfoView.EVENT.UPDATE, this.token, simpleAssetInfo);
+        (this as unknown as __private._cocos_core_event_eventify__IEventified).emit(ReferenceInfoView.EVENT.UPDATE, this.token, simpleAssetInfo);
         return simpleAssetInfo
     }
 
@@ -109,9 +109,12 @@ export class ReferenceComponent extends Parasitify(Component) {
 
 
     @property({serializable:true, visible:false})
-    assetInfos:AssetInfoValue = {};
+    savedAssetInfos:AssetInfoValue = {};
 
     private editedAsset:Set<string> = new Set();
+
+    @property({serializable:true, visible:false})
+    private propertyAsset:{[n:string]:number[]} = js.createMap(null);
     
 
     @override
@@ -129,20 +132,25 @@ export class ReferenceComponent extends Parasitify(Component) {
                 if(hasInjector){
                     let childRefInfos:ReferenceInfo[] = this.super['getChildReferenceInfo'](comp);
                     childRefInfos.forEach((refInfo:ReferenceInfo)=>{
+                        const propName:string = refInfo.property;                         
+                        const propArr:string[] = propName?.split("::");    
+                        const childPropertyName:string = propArr[0];
                         const token:number = ReferenceInfoView.getTokenFrom(parentKey, refInfo);
-                        const newAssetInfo:SimpleAssetInfo = this.assetInfos[token];
-                        comp[INFO_PROPERTY_PREFIX + propertyName] = newAssetInfo;
-                        log('---------')
+                        const newAssetInfo:SimpleAssetInfo = this.savedAssetInfos[token];
+                        comp[INFO_PROPERTY_PREFIX + childPropertyName] = newAssetInfo;
+                        log(token + '---------' + JSON.stringify(this.savedAssetInfos))
                     })
                 }
             })
-
-
             this.editedAsset.add(propertyName);
         }
     }
 
-    // @override
+    @override
+    async analysisAsset<T= Asset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>{
+        EDITOR && this.updateReferenceView()
+        return await this.super['analysisAsset'](propertyName, asset);
+    }
     // async loadEachAsset(propertyRecord:string, assetInfo:SimpleAssetInfo):Promise<Asset>{        
     //     const loadedAsset:Asset = await this.super['loadEachAsset'](propertyRecord, assetInfo) as Asset;
     //     if(!EDITOR && loadedAsset && js.isChildClassOf(loadedAsset.constructor, Prefab)){
@@ -188,34 +196,7 @@ export class ReferenceComponent extends Parasitify(Component) {
      */
     protected onLoad(): void {
         if(EDITOR){
-            if(hadInjectorImplemented(this.host.constructor as Constructor, 'Referencify')){
-                this.referenceViews = [];
-                const hostToken:number = (this.host as IReferencified).token;
-                const loadedPropertyNames:string[] = Array.from(Decoratify(this.host).keys('@reference'));            
-                loadedPropertyNames.forEach((propName:string)=>{    
-                    const propArr:string[] = propName?.split("::");                                       
-                    if(propArr && propArr.length){
-                        const propertyName:string = propArr[0];
-                        const classType:string = propArr[1];
-                        if(propertyName){
-                            // 
-                            const assetInfo:SimpleAssetInfo = this.host[INFO_PROPERTY_PREFIX + propertyName];
-                            const parentKey:string = hostToken + '.' + Support.tokenize(propertyName);
-                            if(!!assetInfo && js.isChildClassOf(js.getClassByName(assetInfo.type), Prefab) && (assetInfo as PrefabInfo).references && (assetInfo as PrefabInfo).references.length){
-                                const prefabInfo:PrefabInfo = assetInfo as PrefabInfo;
-                                prefabInfo.references && prefabInfo.references.forEach((refInfo:ReferenceInfo)=>{                                
-                                    const refInfoView:ReferenceInfoView = new ReferenceInfoView(parentKey, refInfo);
-                                    this.referenceViews.push(refInfoView);
-                                    (refInfoView as unknown as __private._cocos_core_event_eventify__IEventified).on(ReferenceInfoView.EVENT.UPDATE, this.updateAsset.bind(this));   
-                                    if(this.assetInfos[refInfoView.token]){
-                                        refInfoView.updateAsset(this.assetInfos[refInfoView.token]);
-                                    }
-                                })
-                            }
-                        }
-                    }                    
-                })
-            }
+            this.updateReferenceView()
         }else{
 
         }
@@ -223,13 +204,77 @@ export class ReferenceComponent extends Parasitify(Component) {
 
     /**
      * 
+     */
+    private updateReferenceView(){
+        if(EDITOR){
+            if(hadInjectorImplemented(this.host.constructor as Constructor, 'Referencify')){
+                this.referenceViews = [];
+                const hostToken:number = (this.host as IReferencified).token;
+                const loadedPropertyNames:string[] = Array.from(Decoratify(this.host).keys('@reference'));            
+                loadedPropertyNames.forEach((propName:string)=>{    
+                    const propArr:string[] = propName?.split("::");                                       
+                    if(propArr && propArr.length){
+                        const propertyName:string = propArr[0];                        
+                        if(propertyName){
+                            const assetInfo:SimpleAssetInfo = this.host[INFO_PROPERTY_PREFIX + propertyName];
+                            const parentKey:string = hostToken + '.' + Support.tokenize(propertyName);
+                            if(!!assetInfo && js.isChildClassOf(js.getClassByName(assetInfo.type), Prefab) && (assetInfo as PrefabInfo).references && (assetInfo as PrefabInfo).references.length){
+                                const prefabInfo:PrefabInfo = assetInfo as PrefabInfo;
+                                prefabInfo.references && prefabInfo.references.forEach((refInfo:ReferenceInfo)=>{                                
+                                    const refInfoView:ReferenceInfoView = new ReferenceInfoView(parentKey, refInfo);
+                                    const token:number = refInfoView.token;
+                                    this.referenceViews.push(refInfoView);
+                                    this.addRefToken(propertyName, token);
+                                    (refInfoView as unknown as __private._cocos_core_event_eventify__IEventified).on(ReferenceInfoView.EVENT.UPDATE, this.updateAsset.bind(this, propertyName));
+                                    // 
+                                    if(this.savedAssetInfos[token]){
+                                        refInfoView.updateAsset(this.savedAssetInfos[token]);
+                                    }
+                                    // 
+                                })
+                            }
+                        }
+                    }
+                })
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param propertyName 
+     * @param token 
+     */
+    private addRefToken(propertyName:string, token:number){
+        const refTokens:number[] = (this.propertyAsset[propertyName] ??= []);
+        (refTokens.indexOf(token) == -1) && refTokens.push(token);
+    }
+
+    /**
+     * 
+     * @param propertyName 
+     */
+    private deleteProperty(propertyName:string){
+        const refTokens:number[] = (this.propertyAsset[propertyName] ??= []);
+        refTokens.forEach((token:number)=>{
+            delete this.savedAssetInfos[token];
+        })
+        delete this.propertyAsset[propertyName];
+    }
+
+    /**
+     * 
      * @param assetInfo 
      */
-    protected updateAsset(token:number, assetInfo:SimpleAssetInfo){
-        this.assetInfos[token] = assetInfo;
+    protected updateAsset(propertyName:string, token:number, assetInfo:SimpleAssetInfo){
+        this.savedAssetInfos[token] = assetInfo;
+        this.addRefToken(propertyName, token);
     }
 
 
+    /**
+     * 
+     */
     protected onDestroy(): void {
         if(this.referenceViews && this.referenceViews.length){
             this.referenceViews.forEach((refInfoView:ReferenceInfoView)=>{
