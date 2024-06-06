@@ -171,10 +171,12 @@ function excuteHierarchyOverridding(thisComp:Component){
     if(thisComp['_$super']){
         const listOfOverrideMethods:Set<string> = thisComp[OverrideMethodNameMap];
         listOfOverrideMethods && listOfOverrideMethods.forEach((methodName:string)=>{
-            const hostDesc:PropertyDescriptor = js.getPropertyDescriptor(hostComp, methodName);
+            const hostMethodName:string = methodName;
+            const thisMethodName:string = methodName;
+            const hostDesc:PropertyDescriptor = js.getPropertyDescriptor(hostComp, hostMethodName);
             if(hostDesc){
-                const originMethodName:string = GetOriginMethodName(methodName);
-                const thisDesc:PropertyDescriptor = js.getPropertyDescriptor(thisComp, methodName);
+                const originMethodName:string = GetOriginMethodName(hostMethodName);
+                const thisDesc:PropertyDescriptor = js.getPropertyDescriptor(thisComp, thisMethodName);
                 if(firstParasite && !Object.prototype.hasOwnProperty.call(firstParasite, originMethodName)){    
                     // the first parasite saved all origin method.                
                     Object.defineProperty(firstParasite, originMethodName, hostDesc);
@@ -182,9 +184,9 @@ function excuteHierarchyOverridding(thisComp:Component){
                 // 
                 if(thisDesc && firstParasite){
                     if(hostDesc.get || hostDesc.set){                          
-                        delete hostComp[methodName];
+                        delete hostComp[hostMethodName];
                         js.getset(hostComp, 
-                            methodName, 
+                            hostMethodName, 
                             thisDesc.get ? thisDesc.get.bind(thisComp) : hostDesc.get.bind(hostComp), 
                             thisDesc.set ? thisDesc.set.bind(thisComp) : hostDesc.set.bind(hostComp),
                             thisDesc.enumerable, 
@@ -192,7 +194,7 @@ function excuteHierarchyOverridding(thisComp:Component){
 
                     }else if(hostDesc.value !== undefined && typeof hostDesc.value == 'function'){
                         js.value(hostComp,
-                            methodName,
+                            hostMethodName,
                             thisDesc.value ? thisDesc.value.bind(thisComp) : hostDesc.value.bind(hostComp), 
                             thisDesc.writable || hostDesc.writable,
                             thisDesc.enumerable || hostDesc.enumerable);
@@ -201,7 +203,7 @@ function excuteHierarchyOverridding(thisComp:Component){
                         // If method is a normal attribute of host's class but you want to convert it to be a get/set method.                            
                         if(thisDesc.get || thisDesc.set){                                
                             js.getset(hostComp, 
-                                methodName, 
+                                hostMethodName, 
                                 thisDesc.get ? thisDesc.get.bind(thisComp) : ()=>{
                                     return firstParasite[originMethodName]
                                 } ,         
