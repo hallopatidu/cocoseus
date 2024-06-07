@@ -23,7 +23,7 @@
     "_active": true,
     "_components": [],
     "_prefab": {
-      "__id__": 38
+      "__id__": 40
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -54,7 +54,7 @@
     },
     "autoReleaseAssets": false,
     "_globals": {
-      "__id__": 39
+      "__id__": 41
     },
     "_id": "57bec6ff-bffb-4685-a2b0-f30663ea7906"
   },
@@ -104,13 +104,13 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 35
-      },
-      {
-        "__id__": 36
-      },
-      {
         "__id__": 37
+      },
+      {
+        "__id__": 38
+      },
+      {
+        "__id__": 39
       }
     ],
     "_prefab": null,
@@ -202,7 +202,7 @@
     "_priority": 0,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 376.3113367174281,
+    "_orthoHeight": 384.3713733075435,
     "_near": 0,
     "_far": 1000,
     "_color": {
@@ -1221,7 +1221,8 @@
         {
           "comp": "TestLayoutReference",
           "node": "TestLayout",
-          "property": "leftSF::cc.SpriteFrame"
+          "property": "leftSF::cc.SpriteFrame",
+          "root": "176885681.193415941"
         },
         {
           "comp": "TestLayoutReference",
@@ -1245,15 +1246,39 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "referenceViews": [],
-    "savedAssetInfos": {},
+    "referenceViews": [
+      {
+        "__id__": 35
+      },
+      {
+        "__id__": 36
+      }
+    ],
+    "savedAssetInfos": {
+      "341616122": {
+        "bundle": "resources",
+        "url": "/images/fp/texture",
+        "type": "cc.Texture2D",
+        "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@6c48a",
+        "name": "texture"
+      },
+      "2503865294": {
+        "bundle": "resources",
+        "url": "/images/sp/texture",
+        "type": "cc.Texture2D",
+        "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@6c48a",
+        "name": "texture"
+      }
+    },
     "propertyAsset": {
       "abc": [
         "abc",
         "abc",
         "abc",
         "abc",
-        "abc"
+        "abc",
+        341616122,
+        2503865294
       ],
       "sp": [
         "sp",
@@ -1261,9 +1286,42 @@
         "sp",
         "sp",
         "sp"
+      ],
+      "value": [
+        341616122
       ]
     },
     "_id": "61itXhmkhOEYCTG7vdC6MJ"
+  },
+  {
+    "__type__": "ReferenceInfoView",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "component": "TestLayoutReference<TestLayout>",
+    "__$info__value": {
+      "bundle": "resources",
+      "url": "/images/fp/texture",
+      "type": "cc.Texture2D",
+      "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@6c48a",
+      "name": "texture"
+    },
+    "value": null
+  },
+  {
+    "__type__": "ReferenceInfoView",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "component": "TestLayoutReference<TestLayout>",
+    "__$info__value": {
+      "bundle": "resources",
+      "url": "/images/sp/texture",
+      "type": "cc.Texture2D",
+      "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@6c48a",
+      "name": "texture"
+    },
+    "value": null
   },
   {
     "__type__": "cc.UITransform",
@@ -1344,28 +1402,28 @@
   {
     "__type__": "cc.SceneGlobals",
     "ambient": {
-      "__id__": 40
-    },
-    "shadows": {
-      "__id__": 41
-    },
-    "_skybox": {
       "__id__": 42
     },
-    "fog": {
+    "shadows": {
       "__id__": 43
     },
-    "octree": {
+    "_skybox": {
       "__id__": 44
     },
-    "skin": {
+    "fog": {
       "__id__": 45
     },
-    "lightProbeInfo": {
+    "octree": {
       "__id__": 46
     },
-    "postSettings": {
+    "skin": {
       "__id__": 47
+    },
+    "lightProbeInfo": {
+      "__id__": 48
+    },
+    "postSettings": {
+      "__id__": 49
     },
     "bakedWithStationaryMainLight": false,
     "bakedWithHighpLightmap": false

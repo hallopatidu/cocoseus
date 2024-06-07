@@ -210,8 +210,21 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
 
         // --------------- PRIVATE --------------
 
-        async referencingAsset(propertyName:string, asset:Asset){            
+        /**
+         * Called when the particular asset is loaded.
+         * @param propertyName 
+         * @param asset 
+         */
+        async onLoadedAsset(propertyName:string, asset:Asset){            
             
+        }
+
+        /**
+         * Run on Editor. When the particular asset is changed.
+         * @param propertyName 
+         */
+        async onEditorAssetChanged(propertyName:string){
+
         }
 
         /**
@@ -261,9 +274,9 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
         }
 
 
-        async loadEachAsset(propertyRecord:string, assetInfo:SimpleAssetInfo):Promise<Asset>{
-            return await loadAsset(assetInfo, js.getClassByName(assetInfo.type));
-        }
+        // async loadEachAsset(propertyRecord:string, assetInfo:SimpleAssetInfo):Promise<Asset>{
+        //     return await loadAsset(assetInfo, js.getClassByName(assetInfo.type));
+        // }
 
         // -------------
 
@@ -292,9 +305,8 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
                         if(propertyName && classType && assetInfo){                            
                             promises.push(new Promise(async (resolve:Function)=>{
                                 // const asset:Asset = await loadAsset(assetInfo, classType);
-                                const asset:Asset = await this.loadEachAsset(recordContent, assetInfo);
+                                const asset:Asset = await loadAsset(assetInfo, js.getClassByName(assetInfo.type));
                                 this[propertyName] = asset;
-                                this.referencingAsset(propertyName, asset);
                                 resolve(asset);
                             }) )
 
@@ -307,6 +319,20 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
                 // 
                 thisAsyncLoading.end(-1);
             }
+            // 
+            const promises:Promise<any>[] = [];
+            const loadedPropertyRecord:string[] = Array.from( Decoratify(this).keys('@reference'));
+            loadedPropertyRecord.forEach((recordContent:string)=>{
+                const propArr:string[] = recordContent?.split("::");
+                if(propArr && propArr.length){                    
+                    const propertyName:string = propArr[0];
+                    if(!!this[propertyName]){ 
+                        promises.push(this.onLoadedAsset(propertyName, this[propertyName]));
+                    }
+                }
+            })
+            await Promise.all(promises);
+            // 
         }
 
                 
@@ -480,6 +506,8 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
             if(val == 0){
                 this[wrapperPropertyName] = null;
                 this[infoPropertyName] = null;
+                this[propertyName] = null;
+                EDITOR && this.onEditorAssetChanged(propertyName);
             }
         }
     }
@@ -500,8 +528,7 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
             if(this[infoPropertyName]){
                 const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
                 CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]));                
-            }
-            // this.referencingAsset(propertyName, this[propertyName]);
+            }            
             return this[propertyName];
         },
         set:async function(asset:Asset){           
@@ -519,6 +546,7 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
                         const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
                         CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]));
                         this[propertyName] = null
+                        this.onEditorAssetChanged(propertyName);
                         return false
                         // 
                     }else{
@@ -529,6 +557,7 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
             }
             // 
             this[propertyName] = asset;
+            EDITOR && this.onEditorAssetChanged(propertyName);
         },
         configurable: descriptorOrInitializer.configurable,
         enumerable: descriptorOrInitializer.enumerable,

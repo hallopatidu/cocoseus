@@ -76,24 +76,10 @@ export default function Parasitify<TBase,TSuper>(base:Constructor<TBase>, superC
 
             public get internalOnLoad (): (() => void) | undefined {
                 excuteHierarchyOverridding(this);
-                // 
-                // const internalOnDestroyFuncName:string = 'internalOnDestroy';
-                // const hostDesc:PropertyDescriptor = js.getPropertyDescriptor(this.host, internalOnDestroyFuncName);
-                // js.get(this.host, 
-                //     internalOnDestroyFuncName, 
-                //     ():(() => void) | undefined =>{
-                //         EDITOR && globalThis.Editor.Message.request('scene', 'remove-component', { 
-                //             uuid: this.uuid,
-                //         });
-                //         return hostDesc.get.bind(this.host)
-                //     }, 
-                //     hostDesc.enumerable, 
-                //     hostDesc.configurable);
-                // 
                 return super['internalOnLoad']
             }
 
-            //internalOnDestroy refresh Editor await Editor.Message.request('scene', 'soft-reload');
+            
             public get internalOnDestroy (): (() => void) | undefined {
                 // EDITOR && globalThis.Editor.Message.request('scene', 'soft-reload')
                 if(this.__isFirstParasite){

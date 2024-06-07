@@ -91,7 +91,7 @@ export interface IReferencified extends IInheritancified{
     get refInfo():ReferenceInfo;
     get token():number;
     analysisAsset<T>(propertyName:string, asset:T):Promise<SimpleAssetInfo>
-    referencingAsset(propertyName:string, asset:SimpleAssetInfo)
+    onLoadedAsset(propertyName:string, asset:SimpleAssetInfo)
 }
 
 export interface IStaticReferencified extends Constructor<IReferencified>{
