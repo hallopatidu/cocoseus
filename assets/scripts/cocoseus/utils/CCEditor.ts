@@ -146,8 +146,10 @@ export class CCEditor {
      * @param propType 
      * @param value 
      */
-    static changeEditorProperty(targetObj:any, propName:string , propType:string, value:any):any {
-        CCClass["Attr"].setClassAttr(targetObj, propName, propType, value);
+    static changeEditorProperty(targetObj:any, propName:string , displayName:string, classTypeName:string):any {        
+        CCClass["Attr"].setClassAttr(targetObj, propName, 'type', 'Object');      
+        CCClass["Attr"].setClassAttr(targetObj, propName, 'ctor', js.getClassByName(classTypeName));  
+        CCClass["Attr"].setClassAttr(targetObj, propName, 'displayName', displayName);
     }
     // 
 

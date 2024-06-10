@@ -4,7 +4,7 @@ import { hadInjectorImplemented } from '../core/Inheritancify';
 import Decoratify from '../core/Decoratify';
 import Referencify, { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PrefabInfo, reference, WRAPPER_PROPERTY_PREFIX } from '../core/Referencify';
 import { CCEditor, SimpleAssetInfo } from '../utils/CCEditor';
-import { IReferencified, ReferenceInfo } from '../types/CoreType';
+import { EmbedAsset, IReferencified, ReferenceInfo } from '../types/CoreType';
 import { EDITOR } from 'cc/env';
 import { Support } from '../utils/Support';
 const { ccclass, property, executeInEditMode } = _decorator;
@@ -33,6 +33,15 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
                 (info?.property ? Support.tokenize(info?.property?.toString()) : ''));        
     }
 
+    /**
+     * 
+     * @param asset 
+     * @returns 
+     */
+    static isEmbedAsset(asset:EmbedAsset):Boolean{
+        return js.isChildClassOf(asset, Asset) || js.isChildClassOf(asset, Node) || js.isChildClassOf(asset, Component);
+    }
+
     // @property({readonly:true})
     // nodePath:string = '';
 
@@ -43,7 +52,6 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
     // key:string = ''
 
     @reference({
-        displayName:'__',
         type:Asset
     })
     value:Asset|Node|Component = null;
@@ -78,7 +86,13 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
             classType && CCClass["Attr"].setClassAttr(this, WRAPPER_PROPERTY_PREFIX + 'value', 'type', 'Object');      
             classType && CCClass["Attr"].setClassAttr(this, WRAPPER_PROPERTY_PREFIX + 'value', 'ctor', js.getClassByName(classType));  
             propertyName && CCClass["Attr"].setClassAttr(this, WRAPPER_PROPERTY_PREFIX + 'value', 'displayName', propertyName);    
-            propertyName && CCClass["Attr"].setClassAttr(this, ENUM_PROPERTY_PREFIX + 'value', 'displayName', propertyName);    
+            propertyName && CCClass["Attr"].setClassAttr(this, ENUM_PROPERTY_PREFIX + 'value', 'displayName', propertyName);
+            // Test
+            // Object.defineProperty(this,this.info.property, {value:null})
+            // CCClass["Attr"].setClassAttr(this, this.info.property, 'type', 'Object');
+            // CCClass["Attr"].setClassAttr(this, this.info.property, 'ctor', Component);
+            // CCClass["Attr"].createAttrsSingle(this,)
+            // log(':: ' + JSON.stringify( CCClass["Attr"].getClassAttrs(this.constructor)))
         }
     }
 
@@ -86,11 +100,9 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
      * 
      * @param assetOrInfo 
      */
-    recordAssetInfo(assetOrInfo:SimpleAssetInfo|Asset|Component|Node){
-        if(js.isChildClassOf(assetOrInfo, Asset) ||
-        js.isChildClassOf(assetOrInfo, Node) ||
-        js.isChildClassOf(assetOrInfo, Component)){
-            this[WRAPPER_PROPERTY_PREFIX + 'value'] = assetOrInfo as unknown as Asset|Component|Node;
+    recordAssetInfo(assetOrInfo:SimpleAssetInfo|EmbedAsset){
+        if(ReferenceInfoView.isEmbedAsset(assetOrInfo as EmbedAsset)){
+            this[WRAPPER_PROPERTY_PREFIX + 'value'] = assetOrInfo as unknown as EmbedAsset;
         }else{
             this[INFO_PROPERTY_PREFIX + 'value'] = assetOrInfo;
             this[WRAPPER_PROPERTY_PREFIX + 'value'];    // Call to update view.  
@@ -109,11 +121,15 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
      * @param asset 
      * @returns 
      */
-    async analysisAsset<T= Asset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>{
-        const simpleAssetInfo:SimpleAssetInfo = await super.analysisAsset(propertyName, asset);
-        const boardcastAsset:SimpleAssetInfo|Asset = simpleAssetInfo ? simpleAssetInfo : asset;
-        (this as unknown as __private._cocos_core_event_eventify__IEventified).emit(ReferenceInfoView.EVENT.UPDATE, propertyName, this.token, boardcastAsset);
-        return simpleAssetInfo;
+    async analysisAsset<T=EmbedAsset>(propertyName:string, asset:T):Promise<SimpleAssetInfo|null>{
+        if(!ReferenceInfoView.isEmbedAsset(asset as EmbedAsset)){
+            const simpleAssetInfo:SimpleAssetInfo = await super.analysisAsset(propertyName, asset);            
+            (this as unknown as __private._cocos_core_event_eventify__IEventified).emit(ReferenceInfoView.EVENT.UPDATE, propertyName, this.token, simpleAssetInfo);
+            return simpleAssetInfo;
+        }else{
+            (this as unknown as __private._cocos_core_event_eventify__IEventified).emit(ReferenceInfoView.EVENT.UPDATE, propertyName, this.token, asset);
+        }
+        return null
     }
 
     get refInfo():ReferenceInfo{

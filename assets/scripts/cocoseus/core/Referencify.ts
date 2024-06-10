@@ -1,7 +1,7 @@
 // Referencify
 
 import { _decorator, Asset, assetManager, AssetManager, CCObject, Component, Constructor, director, Enum, error, find, js, log, Node, Prefab, PrefabLink, Script, warn} from "cc";
-import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified, IAsyncProcessified } from "../types/CoreType";
+import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified, IAsyncProcessified, EmbedAsset } from "../types/CoreType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
 import { CACHE_KEY, hadInjectorImplemented, Inheritancify, lastInjector } from "./Inheritancify";
@@ -33,14 +33,8 @@ enum ClassType {
 export type PrefabInfo = SimpleAssetInfo & {
     references?:ReferenceInfo[]
 }
-// @ccclass('ReferenceProperty')
-// class ReferenceProperty{
-//     @property
-//     component:string
 
-//     @property
-//     nodePath:string
-// }
+
 
 // const ImageFmts = ['.png', '.jpg', '.bmp', '.jpeg', '.gif', '.ico', '.tiff', '.webp', '.image', '.pvr', '.pkm', '.astc'];
 // const AudioFmts = ['.mp3', '.ogg', '.wav', '.m4a'];
@@ -525,14 +519,14 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
    
     // Define Wrapper ------------------------------
     const wrapperDescriptor:PropertyDescriptor = {
-        get():Asset{                
+        get():EmbedAsset{                
             if(this[infoPropertyName]){
                 const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
                 CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]));                
             }            
             return this[propertyName];
         },
-        set:async function(asset:Asset){           
+        set:async function(asset:EmbedAsset){
             if(EDITOR){
                 const assetInfo:SimpleAssetInfo = await this.analysisAsset(propertyName, asset);
                 if(!!assetInfo){

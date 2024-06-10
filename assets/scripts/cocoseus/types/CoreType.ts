@@ -1,7 +1,11 @@
 // export type Constructor<T> = new (...args: any[]) => T;
 
-import { Component, Constructor, ValueType, __private } from "cc"
-import { SimpleAssetInfo } from "../utils/CCEditor"
+import { Asset, Component, Constructor, ValueType, __private } from "cc"
+import { SimpleAssetInfo } from "../utils/CCEditor";
+
+
+// TYPE
+export type EmbedAsset = Asset|Node|Component
 
 // --------------- Parasitify --------
 
@@ -90,7 +94,7 @@ export interface IStaticAsyncWaited extends Constructor<IAsyncWaited>{
 export interface IReferencified extends IInheritancified{
     get refInfo():ReferenceInfo;
     get token():number;
-    analysisAsset<T>(propertyName:string, asset:T):Promise<SimpleAssetInfo>
+    analysisAsset<T=EmbedAsset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>
     onLoadedAsset(propertyName:string, asset:SimpleAssetInfo)
 }
 

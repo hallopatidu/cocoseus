@@ -11,7 +11,9 @@ export class TestWaitAction extends Actionify(Component) {
     @reference({type:Component})
     waitComp:Component;
 
-    @property({type:SpriteFrame})
+    @property({
+        type:SpriteFrame
+    })
     spriteFrame:SpriteFrame = null;
     // @reference
     // secondComp:Component;

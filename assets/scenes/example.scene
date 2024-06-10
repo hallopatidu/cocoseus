@@ -1268,13 +1268,6 @@
       }
     ],
     "savedAssetInfos": {
-      "341616122": {
-        "bundle": "resources",
-        "url": "/images/fp/spriteFrame",
-        "type": "cc.SpriteFrame",
-        "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@f9941",
-        "name": "spriteFrame"
-      },
       "2503865294": {
         "bundle": "resources",
         "url": "/images/sp/spriteFrame",
@@ -1312,7 +1305,7 @@
         2503865294,
         null,
         null,
-        341616122
+        null
       ]
     },
     "_id": "61itXhmkhOEYCTG7vdC6MJ"
@@ -1323,13 +1316,7 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "component": "TestLayoutReference<TestLayout>",
-    "__$info__value": {
-      "bundle": "resources",
-      "url": "/images/fp/spriteFrame",
-      "type": "cc.SpriteFrame",
-      "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@f9941",
-      "name": "spriteFrame"
-    },
+    "__$info__value": null,
     "value": null
   },
   {
