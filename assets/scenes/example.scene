@@ -734,6 +734,7 @@
     "_enabled": true,
     "__prefab": null,
     "waitComp": null,
+    "spriteFrame": null,
     "_id": "b7xik1+6JOP6T4at/xDXwm"
   },
   {
@@ -849,6 +850,7 @@
     "_enabled": true,
     "__prefab": null,
     "waitComp": null,
+    "spriteFrame": null,
     "_id": "fdqZKelORAYoeYzZQI1fch"
   },
   {
@@ -907,6 +909,7 @@
     "_enabled": true,
     "__prefab": null,
     "waitComp": null,
+    "spriteFrame": null,
     "_id": "69VkQPLqZEQrovJBeE89v0"
   },
   {
@@ -967,6 +970,7 @@
     "waitComp": {
       "__id__": 23
     },
+    "spriteFrame": null,
     "_id": "b7ExfsNRBKgLKd0Lkjpsyh"
   },
   {
@@ -1027,6 +1031,7 @@
     "waitComp": {
       "__id__": 21
     },
+    "spriteFrame": null,
     "_id": "52xy/DuqBE851K/64PK/uK"
   },
   {
@@ -1087,6 +1092,7 @@
     "waitComp": {
       "__id__": 27
     },
+    "spriteFrame": null,
     "_id": "46rzu1N/9Dv67rvmOCj+v0"
   },
   {
@@ -1227,12 +1233,19 @@
         {
           "comp": "TestLayoutReference",
           "node": "TestLayout",
-          "property": "rightSF::cc.SpriteFrame"
+          "property": "rightSF::cc.SpriteFrame",
+          "root": "176885681.193415941"
         }
       ]
     },
     "abc": null,
-    "__$info__sp": null,
+    "__$info__sp": {
+      "bundle": "resources",
+      "url": "/images/sp/spriteFrame",
+      "type": "cc.SpriteFrame",
+      "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@f9941",
+      "name": "spriteFrame"
+    },
     "sp": null,
     "_id": "7boTD4DeVAb4I+NU0jKdUY"
   },
@@ -1257,17 +1270,18 @@
     "savedAssetInfos": {
       "341616122": {
         "bundle": "resources",
-        "url": "/images/fp/texture",
-        "type": "cc.Texture2D",
-        "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@6c48a",
-        "name": "texture"
+        "url": "/images/fp/spriteFrame",
+        "type": "cc.SpriteFrame",
+        "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@f9941",
+        "name": "spriteFrame"
       },
       "2503865294": {
         "bundle": "resources",
-        "url": "/images/sp/texture",
-        "type": "cc.Texture2D",
-        "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@6c48a",
-        "name": "texture"
+        "url": "/images/sp/spriteFrame",
+        "type": "cc.SpriteFrame",
+        "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@f9941",
+        "name": "spriteFrame",
+        "references": []
       }
     },
     "propertyAsset": {
@@ -1288,6 +1302,16 @@
         "sp"
       ],
       "value": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        2503865294,
+        null,
+        null,
         341616122
       ]
     },
@@ -1301,10 +1325,10 @@
     "component": "TestLayoutReference<TestLayout>",
     "__$info__value": {
       "bundle": "resources",
-      "url": "/images/fp/texture",
-      "type": "cc.Texture2D",
-      "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@6c48a",
-      "name": "texture"
+      "url": "/images/fp/spriteFrame",
+      "type": "cc.SpriteFrame",
+      "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@f9941",
+      "name": "spriteFrame"
     },
     "value": null
   },
@@ -1316,10 +1340,11 @@
     "component": "TestLayoutReference<TestLayout>",
     "__$info__value": {
       "bundle": "resources",
-      "url": "/images/sp/texture",
-      "type": "cc.Texture2D",
-      "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@6c48a",
-      "name": "texture"
+      "url": "/images/sp/spriteFrame",
+      "type": "cc.SpriteFrame",
+      "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@f9941",
+      "name": "spriteFrame",
+      "references": []
     },
     "value": null
   },

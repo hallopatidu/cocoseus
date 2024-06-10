@@ -26,7 +26,8 @@ export const PREFAB_DETAIL_PREFIX:string = '__$prefab__';
 enum ClassType {
     ASSET,
     COMPONENT,
-    NODE
+    NODE,
+    INFO
 }
 
 export type PrefabInfo = SimpleAssetInfo & {
@@ -208,7 +209,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             return Referencified.references.has(token);
         }
 
-        // --------------- PRIVATE --------------
+        
 
         /**
          * Called when the particular asset is loaded.
@@ -247,24 +248,24 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             return simpleAssetInfo;
         }
 
-
+        // --------------- PRIVATE --------------
         /**
          * 
          * @param fromComponent 
          * @returns 
          */
-        protected getChildReferenceInfo(fromComponent:Component):ReferenceInfo[]{   
+        private getChildReferenceInfo(fromComponent:Component):ReferenceInfo[]{   
             const refInfos:ReferenceInfo[] = [];         
             if(hadInjectorImplemented(fromComponent.constructor as Constructor, Referencify.name)){
                 const classType:string = js.getClassName(fromComponent);
                 const localNodePath:string = fromComponent?.node?.getPathInHierarchy();
                 const loadedPropertyNames:string[] = Array.from(Decoratify(fromComponent).keys('@reference'));
-                loadedPropertyNames.forEach((propName:string)=>{                                                          
-                    if(propName){
+                loadedPropertyNames.forEach((recoredPropertyName:string)=>{                                                          
+                    if(recoredPropertyName){
                         const tempRefInfo:ReferenceInfo = Object.create(null);
                         tempRefInfo.comp = classType;
                         tempRefInfo.node = localNodePath;
-                        tempRefInfo.property = propName;
+                        tempRefInfo.property = recoredPropertyName;
                         refInfos.push(tempRefInfo);
                     }
                 })
@@ -272,7 +273,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
             }
             return refInfos
         }
-
+        // -------------------------------------
 
         // async loadEachAsset(propertyRecord:string, assetInfo:SimpleAssetInfo):Promise<Asset>{
         //     return await loadAsset(assetInfo, js.getClassByName(assetInfo.type));
@@ -593,6 +594,7 @@ function detechBaseCCObject(classTypes:Constructor<any>|Constructor<any>[]):Clas
             case js.isChildClassOf(classType, Asset): return ClassType.ASSET;
             case js.isChildClassOf(classType, Component): return ClassType.COMPONENT;
             case js.isChildClassOf(classType, Node): return ClassType.NODE;
+            default: return ClassType.INFO
         }
     }
     return null;

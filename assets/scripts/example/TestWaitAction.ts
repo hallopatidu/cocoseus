@@ -1,4 +1,4 @@
-import { _decorator, Component, log, Node } from 'cc';
+import { _decorator, Component, log, Node, SpriteFrame } from 'cc';
 import Actionify, { action } from '../cocoseus/core/Actionify';
 import { Action } from '../cocoseus/types/CoreType';
 import { reference } from '../cocoseus/core/Referencify';
@@ -11,6 +11,8 @@ export class TestWaitAction extends Actionify(Component) {
     @reference({type:Component})
     waitComp:Component;
 
+    @property({type:SpriteFrame})
+    spriteFrame:SpriteFrame = null;
     // @reference
     // secondComp:Component;
 

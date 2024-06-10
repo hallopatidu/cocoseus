@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Sprite, SpriteFrame } from 'cc';
+import { _decorator, Component, log, Node, Sprite, SpriteFrame } from 'cc';
 import Referencify, { reference } from '../cocoseus/core/Referencify';
 const { ccclass, property } = _decorator;
 
@@ -18,6 +18,7 @@ export class TestLayoutReference extends Referencify(Component) {
     leftSprite:Sprite = null;
 
     protected onLoad(): void {
+        log('Loaded test layout !!!')
         if(this.leftSF && this.leftSprite){
             this.leftSprite.spriteFrame = this.leftSF;
         }
