@@ -255,7 +255,7 @@ export class ReferenceComponent extends Parasitify(Component) {
                 // Phân tích mảng reference info để gắn skin tương ướng component và thuộc tính.
                 prefabInfo.references && prefabInfo.references.forEach((refInfo:ReferenceInfo)=>{  
                     const token:number = ReferenceInfoView.getTokenFrom(parentKey, refInfo);                    
-                    this.addPropertyReference(propertyName, token);
+                    // this.addPropertyReference(propertyName, token);
                     // Cập nhật view 
                     const refInfoView:ReferenceInfoView = new ReferenceInfoView(parentKey, refInfo);
                     this.referenceViews.push(refInfoView);
@@ -276,7 +276,7 @@ export class ReferenceComponent extends Parasitify(Component) {
      * @param propertyName 
      * @param refToken 
      */
-    private addPropertyReference(propertyName:string, refToken:number, assetInfo?:SimpleAssetInfo|EmbedAsset){
+    private addPropertyReference(propertyName:string, refToken:number, assetInfo:SimpleAssetInfo|EmbedAsset){
         const refTokens:number[] = (this.propertyAsset[propertyName] ??= []);
         (refTokens.indexOf(refToken) == -1) && refTokens.push(refToken);
         if(!!assetInfo){
