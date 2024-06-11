@@ -1269,35 +1269,14 @@
     ],
     "savedAssetInfos": {
       "341616122": {
-        "__uuid__": "2949d721-df15-4530-a3f8-46de305c9ffa@f9941",
-        "__expectedType__": "cc.SpriteFrame"
-      },
-      "2503865294": {
         "bundle": "resources",
-        "url": "/images/sp/spriteFrame",
+        "url": "/images/fp/spriteFrame",
         "type": "cc.SpriteFrame",
-        "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@f9941",
-        "name": "spriteFrame",
-        "references": []
+        "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@f9941",
+        "name": "spriteFrame"
       }
     },
     "propertyAsset": {
-      "abc": [
-        "abc",
-        "abc",
-        "abc",
-        "abc",
-        "abc",
-        341616122,
-        2503865294
-      ],
-      "sp": [
-        "sp",
-        "sp",
-        "sp",
-        "sp",
-        "sp"
-      ],
       "value": [
         null,
         null,
@@ -1306,27 +1285,12 @@
         null,
         null,
         null,
-        2503865294,
         null,
-        null,
-        null,
-        null,
-        341616122
+        341616122,
+        null
       ]
     },
-    "_id": "61itXhmkhOEYCTG7vdC6MJ"
-  },
-  {
-    "__type__": "ReferenceInfoView",
-    "_name": "",
-    "_objFlags": 0,
-    "__editorExtras__": {},
-    "component": "TestLayoutReference<TestLayout>",
-    "__$info__value": null,
-    "value": {
-      "__uuid__": "2949d721-df15-4530-a3f8-46de305c9ffa@f9941",
-      "__expectedType__": "cc.SpriteFrame"
-    }
+    "_id": "45/zfNQMJAUIhVYBhFbvBa"
   },
   {
     "__type__": "ReferenceInfoView",
@@ -1336,12 +1300,20 @@
     "component": "TestLayoutReference<TestLayout>",
     "__$info__value": {
       "bundle": "resources",
-      "url": "/images/sp/spriteFrame",
+      "url": "/images/fp/spriteFrame",
       "type": "cc.SpriteFrame",
-      "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@f9941",
-      "name": "spriteFrame",
-      "references": []
+      "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@f9941",
+      "name": "spriteFrame"
     },
+    "value": null
+  },
+  {
+    "__type__": "ReferenceInfoView",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "component": "TestLayoutReference<TestLayout>",
+    "__$info__value": null,
     "value": null
   },
   {
