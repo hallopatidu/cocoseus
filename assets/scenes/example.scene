@@ -1268,6 +1268,10 @@
       }
     ],
     "savedAssetInfos": {
+      "341616122": {
+        "__uuid__": "2949d721-df15-4530-a3f8-46de305c9ffa@f9941",
+        "__expectedType__": "cc.SpriteFrame"
+      },
       "2503865294": {
         "bundle": "resources",
         "url": "/images/sp/spriteFrame",
@@ -1305,7 +1309,9 @@
         2503865294,
         null,
         null,
-        null
+        null,
+        null,
+        341616122
       ]
     },
     "_id": "61itXhmkhOEYCTG7vdC6MJ"
@@ -1317,7 +1323,10 @@
     "__editorExtras__": {},
     "component": "TestLayoutReference<TestLayout>",
     "__$info__value": null,
-    "value": null
+    "value": {
+      "__uuid__": "2949d721-df15-4530-a3f8-46de305c9ffa@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    }
   },
   {
     "__type__": "ReferenceInfoView",

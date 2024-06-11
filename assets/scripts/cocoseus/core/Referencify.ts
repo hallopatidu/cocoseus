@@ -483,8 +483,6 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
     const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
     const wrapperPropertyName:any = WRAPPER_PROPERTY_PREFIX + propertyName;    
     const infoPropertyName:any = INFO_PROPERTY_PREFIX + propertyName;
-    // const prefabPropertyName:any = PREFAB_DETAIL_PREFIX + propertyName;
-    // const propertyType:ClassType = detechBaseCCObject((options as IPropertyOptions).type);
     // 
     // Record info -------------
     const infoPropertyDescriptor:PropertyDescriptor = {value:null, writable:true}    
@@ -594,11 +592,6 @@ function detechBaseCCObject(classTypes:Constructor<any>|Constructor<any>[]):Clas
     return null;
 }
 
-// type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
-
-
-function prefabDetailInfo(prefab:Prefab){}
-
 /**
  * 
  * @param classTypes 
@@ -665,7 +658,7 @@ async function loadAsset(assetInfo:SimpleAssetInfo, classType:any):Promise<Asset
             return null
         }
 
-        DEV && warn('---- load success:: ' + assetInfo.name);
+        // DEV && warn('---- load success:: ' + assetInfo.name);
         return remoteAsset
     }else{
 

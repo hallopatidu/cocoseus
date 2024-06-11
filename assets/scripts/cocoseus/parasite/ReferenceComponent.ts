@@ -38,8 +38,9 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
      * @param asset 
      * @returns 
      */
-    static isEmbedAsset(asset:EmbedAsset):Boolean{
-        return js.isChildClassOf(asset, Asset) || js.isChildClassOf(asset, Node) || js.isChildClassOf(asset, Component);
+    static isEmbedAsset(asset:SimpleAssetInfo|EmbedAsset):Boolean{
+        const assetConstructor:Constructor<Asset> = asset.constructor as Constructor<Asset> ;
+        return js.isChildClassOf(assetConstructor, Asset) || js.isChildClassOf(assetConstructor, Node) || js.isChildClassOf(assetConstructor, Component);
     }
 
     // @property({readonly:true})
@@ -87,12 +88,6 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
             classType && CCClass["Attr"].setClassAttr(this, WRAPPER_PROPERTY_PREFIX + 'value', 'ctor', js.getClassByName(classType));  
             propertyName && CCClass["Attr"].setClassAttr(this, WRAPPER_PROPERTY_PREFIX + 'value', 'displayName', propertyName);    
             propertyName && CCClass["Attr"].setClassAttr(this, ENUM_PROPERTY_PREFIX + 'value', 'displayName', propertyName);
-            // Test
-            // Object.defineProperty(this,this.info.property, {value:null})
-            // CCClass["Attr"].setClassAttr(this, this.info.property, 'type', 'Object');
-            // CCClass["Attr"].setClassAttr(this, this.info.property, 'ctor', Component);
-            // CCClass["Attr"].createAttrsSingle(this,)
-            // log(':: ' + JSON.stringify( CCClass["Attr"].getClassAttrs(this.constructor)))
         }
     }
 
@@ -101,19 +96,14 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
      * @param assetOrInfo 
      */
     recordAssetInfo(assetOrInfo:SimpleAssetInfo|EmbedAsset){
-        if(ReferenceInfoView.isEmbedAsset(assetOrInfo as EmbedAsset)){
+        if(ReferenceInfoView.isEmbedAsset(assetOrInfo)){
+            this[INFO_PROPERTY_PREFIX + 'value'] = null;
             this[WRAPPER_PROPERTY_PREFIX + 'value'] = assetOrInfo as unknown as EmbedAsset;
         }else{
-            this[INFO_PROPERTY_PREFIX + 'value'] = assetOrInfo;
-            this[WRAPPER_PROPERTY_PREFIX + 'value'];    // Call to update view.  
+            this[INFO_PROPERTY_PREFIX + 'value'] = assetOrInfo as SimpleAssetInfo;
+            this[WRAPPER_PROPERTY_PREFIX + 'value'];    // Call get function to update view.  
         }
     }
-
-    isAssetInfo(asset:Asset|Component|Node):boolean{
-        const classType:any = asset.constructor || asset;
-        return !js.isChildClassOf(classType, Asset)
-    }
-
 
     /**
      * 
@@ -146,7 +136,7 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
 }
 
 type AssetInfoValue = {
-    [n:number]:SimpleAssetInfo|Asset
+    [n:number]:SimpleAssetInfo|EmbedAsset
 }
 
 @ccclass('ReferenceComponent')
@@ -173,11 +163,17 @@ export class ReferenceComponent extends Parasitify(Component) {
                 const refInfos:ReferenceInfo[] = this.super['getChildReferenceInfo'](comp)
                 refInfos.forEach((refInfo:ReferenceInfo)=>{
                     const refToken:number = ReferenceInfoView.getTokenFrom(parentKey, refInfo);
-                    if(this.savedAssetInfos[refToken]){
-                        // log('Has ref info :: ' + propertyName + ' --- ' +refToken + " :: " + JSON.stringify(refInfo));
-                        const propArr:string[] = refInfo?.property?.split("::");
-                        const compPropertyName:string = propArr[0];
-                        comp[INFO_PROPERTY_PREFIX + compPropertyName] = this.savedAssetInfos[refToken]
+                    const propArr:string[] = refInfo?.property?.split("::");
+                    const compPropertyName:string = propArr[0];
+                    const assetOrInfo:SimpleAssetInfo|EmbedAsset = this.savedAssetInfos[refToken]
+                    if(assetOrInfo){
+                        comp[INFO_PROPERTY_PREFIX + compPropertyName] = null;
+                        // log('Has ref info :: ' + propertyName + ' --- ' +refToken + " :: " + JSON.stringify(refInfo));  
+                        if(ReferenceInfoView.isEmbedAsset(assetOrInfo)){
+                            comp[compPropertyName] = assetOrInfo;
+                        }else{
+                            comp[INFO_PROPERTY_PREFIX + compPropertyName] = assetOrInfo;
+                        }
                     }else{
                         log('No infomation !!! ')
                     }
@@ -280,7 +276,7 @@ export class ReferenceComponent extends Parasitify(Component) {
      * @param propertyName 
      * @param refToken 
      */
-    private addPropertyReference(propertyName:string, refToken:number, assetInfo?:SimpleAssetInfo|Asset){
+    private addPropertyReference(propertyName:string, refToken:number, assetInfo?:SimpleAssetInfo|EmbedAsset){
         const refTokens:number[] = (this.propertyAsset[propertyName] ??= []);
         (refTokens.indexOf(refToken) == -1) && refTokens.push(refToken);
         if(!!assetInfo){
@@ -309,11 +305,11 @@ export class ReferenceComponent extends Parasitify(Component) {
      * 
      * @param assetInfo 
      */
-    protected saveAsset(propertyName:string, token:number, assetInfo:SimpleAssetInfo){
+    protected saveAsset(propertyName:string, token:number, assetInfo:SimpleAssetInfo|EmbedAsset){
         if(!assetInfo){
             this.removePropertyReference(propertyName, token);
-        }else{
-            this.addPropertyReference(propertyName, token, assetInfo);
+        }else{            
+            this.addPropertyReference(propertyName, token, assetInfo);            
         }
     }
 
