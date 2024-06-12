@@ -1,0 +1,63 @@
+{
+    "$schema": "./@types/schema/package/index.json",
+    "package_version": 2,
+    "name": "cocoseus",
+    "version": "1.0.0",
+    "author": "hallopatidu",
+    "editor": ">=3.8.3",
+    "scripts": {
+        "preinstall": "node ./scripts/preinstall.js",
+        "build": "tsc"
+    },
+    "description": "i18n:cocoseus.description",
+    "main": "./dist/main.js",
+    "dependencies": {
+        "fs-extra": "^10.0.0",
+        "json-to-ts": "^2.1.0",
+        "vue": "^3.1.4"
+    },
+    "devDependencies": {
+        "@cocos/creator-types": "^3.8.3",
+        "@types/fs-extra": "^9.0.5",
+        "@types/node": "^18.17.1"
+    },
+    "panels": {
+        "default": {
+            "title": "cocoseus Default Panel",
+            "type": "dockable",
+            "main": "dist/panels/default",
+            "size": {
+                "min-width": 400,
+                "min-height": 300,
+                "width": 1024,
+                "height": 600
+            }
+        }
+    },
+    "contributions": {
+        "menu": [
+            {
+                "path": "i18n:menu.panel/cocoseus",
+                "label": "i18n:cocoseus.open_panel",
+                "message": "open-panel"
+            },
+            {
+                "path": "i18n:menu.develop/cocoseus",
+                "label": "i18n:cocoseus.send_to_panel",
+                "message": "send-to-panel"
+            }
+        ],
+        "messages": {
+            "open-panel": {
+                "methods": [
+                    "openPanel"
+                ]
+            },
+            "send-to-panel": {
+                "methods": [
+                    "default.hello"
+                ]
+            }
+        }
+    }
+}
