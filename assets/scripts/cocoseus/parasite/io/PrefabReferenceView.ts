@@ -329,7 +329,7 @@ export class PrefabReferenceView extends Parasitify(Component) {
     }
 
     /**
-     * 
+     * Lưu thay đổi của một @reference property xuất phát từ ReferenceView
      * @param assetInfo 
      */
     protected saveAsset(propertyName:string, token:number, assetInfo:SimpleAssetInfo|EmbedAsset){
