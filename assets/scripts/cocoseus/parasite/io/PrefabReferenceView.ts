@@ -1,20 +1,23 @@
 import { __private, _decorator, Asset, CCClass, CCObject, Component, Constructor, Eventify, js, log, Node, Prefab } from 'cc';
-import Parasitify, { override } from '../core/Parasitify';
-import { hadInjectorImplemented } from '../core/Inheritancify';
-import Decoratify from '../core/Decoratify';
-import Referencify, { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PrefabInfo, reference, WRAPPER_PROPERTY_PREFIX } from '../core/Referencify';
-import { CCEditor, SimpleAssetInfo } from '../utils/CCEditor';
-import { EmbedAsset, IReferencified, ReferenceInfo } from '../types/CoreType';
+import Parasitify, { override } from '../../core/Parasitify';
+import { hadInjectorImplemented } from '../../core/Inheritancify';
+import Decoratify from '../../core/Decoratify';
+import Referencify, { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PrefabInfo, reference, WRAPPER_PROPERTY_PREFIX } from '../../core/Referencify';
+import { SimpleAssetInfo } from '../../utils/CCEditor';
+import { EmbedAsset, IReferencified, ReferenceInfo } from '../../types/CoreType';
 import { EDITOR } from 'cc/env';
-import { Support } from '../utils/Support';
+import { Support } from '../../utils/Support';
 const { ccclass, property, executeInEditMode } = _decorator;
 
 
-const SimpleAssetInfoClassToken:number = Support.tokenize.apply(Support, ['bundle','name','type','url','uuid'].sort())
-const PrefabInfoClassToken:number = Support.tokenize.apply(Support, ['bundle','name','references','type','url','uuid'].sort());
+// const SimpleAssetInfoClassToken:number = Support.tokenize.apply(Support, ['bundle','name','type','url','uuid'].sort())
+// const PrefabInfoClassToken:number = Support.tokenize.apply(Support, ['bundle','name','references','type','url','uuid'].sort());
 
-@ccclass('ReferenceInfoView')
-class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core_event_eventify__IEventified>(Eventify(CCObject))  {
+/**
+ * 
+ */
+@ccclass('ReferenceProperty')
+class ReferenceProperty extends Referencify<IReferencified&__private._cocos_core_event_eventify__IEventified>(Eventify(CCObject))  {
 
     static EVENT = {
         UPDATE:'ReferenceInfoView.UPDATE_ASSET_EVENT'
@@ -22,12 +25,12 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
 
     /**
      * 
-     * @param parentKey 
+     * @param propertyName 
      * @param info 
      * @returns 
      */
-    static getTokenFrom(parentKey:string, info:ReferenceInfo):number{
-        return Support.tokenize((parentKey ? Support.tokenize(parentKey) + '.' : '') + 
+    static getTokenFrom(propertyName:string, info:ReferenceInfo):number{
+        return Support.tokenize((propertyName ? Support.tokenize(propertyName) + '.' : '') + 
                 (info?.node ? Support.pathToToken(info?.node) + '.' : '') +
                 (info?.comp ? Support.tokenize(info?.comp) + '.'  : '') + 
                 (info?.id ? Support.tokenize(info?.id?.toString()) : '0')+
@@ -40,24 +43,13 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
      * @returns 
      */
     static isEmbedAsset(asset:SimpleAssetInfo|EmbedAsset):Boolean{
-        return asset && !!asset?.constructor;
-        // const assetConstructor:Constructor<Asset> = asset.constructor as Constructor<Asset> ;
-        // return js.isChildClassOf(assetConstructor, Asset) || js.isChildClassOf(assetConstructor, Node) || js.isChildClassOf(assetConstructor, Component);
+        // return asset && !!asset?.constructor;
+        const assetConstructor:Constructor<Asset> = asset?.constructor as Constructor<Asset> ;
+        return assetConstructor ? (js.isChildClassOf(assetConstructor, Asset) || js.isChildClassOf(assetConstructor, Node) || js.isChildClassOf(assetConstructor, Component)) : false;
     }
-
-    static isSimpleAssetInfo(asset:SimpleAssetInfo|EmbedAsset):Boolean{
-        const propetiesToken:number = Support.tokenize.apply(Support, Object.keys(asset).sort());
-        return (propetiesToken == SimpleAssetInfoClassToken) || (propetiesToken == SimpleAssetInfoClassToken)
-    }
-
-    // @property({readonly:true})
-    // nodePath:string = '';
 
     @property({readonly:true})
-    component:string = ''
-    
-    // @property({readonly:true})
-    // key:string = ''
+    component:string = '';
 
     @reference({
         type:Asset,
@@ -66,22 +58,30 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
     value:Asset|Node|Component = null;
     
     private info:ReferenceInfo = null;
-    private parentKey:string = '';
+    private _token:number = -1;
     /**
      * 
      * @param refInfo 
      */
-    constructor(parentKey:string, refInfo?:ReferenceInfo){        
+    constructor(propertyName:string, refInfo?:ReferenceInfo){        
         super();
-        this.parentKey = parentKey;
+        this.setData(propertyName, refInfo);        
+        // 
+    }
+
+    /**
+     * 
+     * @param propertyName 
+     * @param refInfo 
+     */
+    setData(propertyName:string, refInfo?:ReferenceInfo){
         if(refInfo){
+            this._token = ReferenceProperty.getTokenFrom(propertyName, refInfo);
             this.info = refInfo;
             this.component = refInfo?.comp + '<' + refInfo?.node + '>';
             // 
             this.updatePropertyEditorView();
         }
-        
-        // 
     }
 
     /**
@@ -103,48 +103,30 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
      * 
      * @param assetOrInfo 
      */
-    recordAssetInfo(assetOrInfo:SimpleAssetInfo|EmbedAsset){
-        if(ReferenceInfoView.isEmbedAsset(assetOrInfo)){
+    updateAssetInfo(assetOrInfo:SimpleAssetInfo|EmbedAsset){
+        if(ReferenceProperty.isEmbedAsset(assetOrInfo)){
             this[INFO_PROPERTY_PREFIX + 'value'] = null;
             this[WRAPPER_PROPERTY_PREFIX + 'value'] = assetOrInfo as unknown as EmbedAsset;
         }else{
             this[INFO_PROPERTY_PREFIX + 'value'] = assetOrInfo as SimpleAssetInfo;            
             this[WRAPPER_PROPERTY_PREFIX + 'value'];    // Call get function to update view.  
-        }
-        
-    }
-
-    async onEditorAssetChanged(propertyName:string){
-
+        }        
     }
 
     /**
      * 
      * @param propertyName 
-     * @param asset 
-     * @returns 
      */
-    async analysisAsset<T=EmbedAsset>(propertyName:string, asset:T):Promise<SimpleAssetInfo|null>{
-        const simpleAssetInfo:SimpleAssetInfo = await super.analysisAsset(propertyName, asset);  
-        const bundleName:string = simpleAssetInfo?.bundle;  
-        if(bundleName){                    
-            (this as unknown as __private._cocos_core_event_eventify__IEventified).emit(ReferenceInfoView.EVENT.UPDATE, propertyName, this.token, simpleAssetInfo);
-            return simpleAssetInfo;
+    async onEditorAssetChanged(propertyName:string){
+        if(!!this.value){
+            (this as unknown as __private._cocos_core_event_eventify__IEventified).emit(ReferenceProperty.EVENT.UPDATE, propertyName, this.token, this.value, true);
         }else{
-            (this as unknown as __private._cocos_core_event_eventify__IEventified).emit(ReferenceInfoView.EVENT.UPDATE, propertyName, this.token, asset);
+            (this as unknown as __private._cocos_core_event_eventify__IEventified).emit(ReferenceProperty.EVENT.UPDATE, propertyName, this.token, this[INFO_PROPERTY_PREFIX + 'value'], false);
         }
-        return null
-    }
-
-    get refInfo():ReferenceInfo{
-        if(this.info && !this.info.root){
-            this.info.root = this.parentKey;
-        }
-        return this.info
     }
 
     get token():number{
-        return super.token
+        return this._token
     }
 
 }
@@ -153,11 +135,17 @@ type AssetInfoValue = {
     [n:number]:SimpleAssetInfo|EmbedAsset
 }
 
-@ccclass('ReferenceComponent')
+
+/**
+ * Một dạng Parasitify Component, có chức năng đọc các property dạng @reference của Component trước nó, tìm ra các tham chiếu tới một hoặc nhiều Prefab (dạng load động hoặc dạng nhúng)
+ * Có thể thay đổi tham số truyền vào của các @reference property của các Component bên trong Prefab (ví dụ: thay spriteframe, asset, node ...).
+ * Thường được sử dụng để thay giao diện của các Prefab dùng chung.
+ */
+@ccclass('PrefabReferenceView')
 @executeInEditMode(true)
-export class ReferenceComponent extends Parasitify(Component) {
-    @property({type:[ReferenceInfoView], readonly:true})
-    referenceViews:ReferenceInfoView[] = []
+export class PrefabReferenceView extends Parasitify(Component) {
+    @property({type:[ReferenceProperty], readonly:true})
+    referenceProperties:ReferenceProperty[] = []
 
     @property({serializable:true, visible:false})
     savedAssetInfos:AssetInfoValue = {};
@@ -165,25 +153,27 @@ export class ReferenceComponent extends Parasitify(Component) {
     @property({serializable:true, visible:false})
     private propertyAsset:{[n:string]:number[]} = js.createMap(null);
 
-    
+    /**
+     * Hàm thực thi khi các giá trị tham chiếu trong các @reference property của host được load hoặc được khởi tạo thành công.
+     * @param propertyName 
+     * @param asset 
+     */
     @override
     async onLoadedAsset(propertyName:string, asset:Asset){
         if(asset && js.isChildClassOf(asset.constructor, Prefab)){
-            const hostToken:number = (this.host as IReferencified).token;
-            const parentKey:string = hostToken + '.' + Support.tokenize(propertyName);
             // 
             let allPrefabComponents:Component[] = ((asset as Prefab).data as Node).getComponentsInChildren(Component);
             allPrefabComponents.forEach((comp:Component)=>{                
                 const refInfos:ReferenceInfo[] = this.super['getChildReferenceInfo'](comp)
                 refInfos.forEach((refInfo:ReferenceInfo)=>{
-                    const refToken:number = ReferenceInfoView.getTokenFrom(parentKey, refInfo);
+                    const refToken:number = ReferenceProperty.getTokenFrom(propertyName, refInfo);
                     const propArr:string[] = refInfo?.property?.split("::");
                     const compPropertyName:string = propArr[0];
                     const assetOrInfo:SimpleAssetInfo|EmbedAsset = this.savedAssetInfos[refToken]
                     if(assetOrInfo){
                         comp[INFO_PROPERTY_PREFIX + compPropertyName] = null;
                         // log('Has ref info :: ' + propertyName + ' --- ' +refToken + " :: " + JSON.stringify(refInfo));  
-                        if(ReferenceInfoView.isEmbedAsset(assetOrInfo)){
+                        if(ReferenceProperty.isEmbedAsset(assetOrInfo)){
                             comp[compPropertyName] = assetOrInfo;
                         }else{
                             comp[INFO_PROPERTY_PREFIX + compPropertyName] = assetOrInfo;
@@ -197,6 +187,10 @@ export class ReferenceComponent extends Parasitify(Component) {
         }
     }
 
+    /**
+     * Hàm chỉ chạy trong Editor. onEditorAssetChanged được gọi khi có thay đổi giá trị trong các @reference property của host
+     * @param propertyName 
+     */
     @override
     async onEditorAssetChanged(propertyName:string){
         if(EDITOR){
@@ -204,15 +198,6 @@ export class ReferenceComponent extends Parasitify(Component) {
         }
     }
     
-    /**
-     * 
-     * @param propField 
-     * @returns 
-     */
-    // protected genAssetKey(...props:string[]):string{        
-    //     return props.reduce((value:string, currentValue:string)=> value + Support.tokenize(currentValue) + '.', '');
-    // }
-
     /**
      * 
      */
@@ -225,23 +210,24 @@ export class ReferenceComponent extends Parasitify(Component) {
     }
 
     /**
-     * 
+     * Hiển thị các ReferenceInfo dưới dạng Component để thuận tiện cho việc sử dụng.
      */
     private updateReferenceView(){
         if(EDITOR){
             if(hadInjectorImplemented(this.host.constructor as Constructor, 'Referencify')){
                 //  Clear view.
-                this.referenceViews = [];
+                this.referenceProperties = [];
                 const loadedPropertyNames:string[] = Array.from(Decoratify(this.host).keys('@reference'));            
                 loadedPropertyNames.forEach((propName:string)=>{    
                     const propArr:string[] = propName?.split("::");                                       
-                    if(propArr && propArr.length){
-                        const propertyName:string = propArr[0];                         
-                        this.displayProperty(propertyName);
+                    if(propArr && propArr.length){                        
+                        const propertyName:string = propArr[0];
+                        const isEmbed:boolean = !!this.host[propertyName];
+                        isEmbed ? this.updateEmbedProperty(propertyName) : this.updateLoadingProperty(propertyName);
                     }
-                })
+                });
                 // 
-                this.referenceViews.forEach((refView:ReferenceInfoView)=>{
+                this.referenceProperties.forEach((refView:ReferenceProperty)=>{
                     refView.updatePropertyEditorView()
                 })
                 // this.saveAndRefresh_Editor();
@@ -250,16 +236,35 @@ export class ReferenceComponent extends Parasitify(Component) {
     }
 
     // -----------------------------
+
     /**
+     * Hàm được gọi khi giá trị tham chiếu của một @reference property (của host) đang ở dạng lưu trực tiếp vào file.scene.
      * 
      * @param propertyName 
      */
-    private displayProperty(propertyName:string){
+    private updateEmbedProperty(propertyName:string){
         if(propertyName){
-            // Lay token cua host kêt hop voi property name để tính ra parent token.
-            const hostToken:number = (this.host as IReferencified).token;
-            const parentKey:string = hostToken + '.' + Support.tokenize(propertyName);
-            
+            const asset:EmbedAsset = this.host[propertyName]
+            if(asset && js.isChildClassOf(asset.constructor, Prefab)){
+                // 
+                let allPrefabComponents:Component[] = ((asset as Prefab).data as Node).getComponentsInChildren(Component);
+                allPrefabComponents.forEach((comp:Component)=>{
+                    const refInfos:ReferenceInfo[] = this.super['getChildReferenceInfo'](comp);
+                    refInfos.forEach((refInfo:ReferenceInfo)=>this.createOrUpdateReferenceInfoView(propertyName, refInfo))
+                })
+                // 
+            }
+            // 
+        }
+    }
+
+    /**
+     * Hàm được gọi khi giá trị tham chiếu của một @reference property (của host) đang ở dạng phải tiến hành việc loading.
+     * @param propertyName 
+     */
+    private updateLoadingProperty(propertyName:string){
+        if(propertyName){
+            //          
             // Lay asset info tu host tương ứng thuộc tính
             const assetInfo:SimpleAssetInfo = this.host[INFO_PROPERTY_PREFIX + propertyName];            
             if(!!assetInfo && js.isChildClassOf(js.getClassByName(assetInfo.type), Prefab) &&
@@ -267,20 +272,28 @@ export class ReferenceComponent extends Parasitify(Component) {
                 // Nêu đó là Prefab và có asset info thì là prefab phải load va đã có ref trong assetInfo,                
                 const prefabInfo:PrefabInfo = assetInfo as PrefabInfo;
                 // Phân tích mảng reference info để gắn skin tương ướng component và thuộc tính.
-                prefabInfo.references && prefabInfo.references.forEach((refInfo:ReferenceInfo)=>{  
-                    const token:number = ReferenceInfoView.getTokenFrom(parentKey, refInfo);                    
-                    // this.addPropertyReference(propertyName, token);
-                    // Cập nhật view 
-                    const refInfoView:ReferenceInfoView = new ReferenceInfoView(parentKey, refInfo);
-                    this.referenceViews.push(refInfoView);
-                    (refInfoView as unknown as __private._cocos_core_event_eventify__IEventified).on(ReferenceInfoView.EVENT.UPDATE, this.saveAsset.bind(this));
-                    // 
-                    if(this.savedAssetInfos[token]){
-                        refInfoView.recordAssetInfo(this.savedAssetInfos[token]);
-                    }
-                })
+                // Cập nhật view.
+                prefabInfo.references.forEach((refInfo:ReferenceInfo)=>this.createOrUpdateReferenceInfoView(propertyName, refInfo));
             }
+        }
+    }
 
+    /**
+     * Tạo ra phần tử hiển thị một ReferenceInfo. 
+     * @param propertyName 
+     * @param refInfo 
+     */
+    private createOrUpdateReferenceInfoView(propertyName:string, refInfo:ReferenceInfo){
+        if(refInfo){
+            // const propertyToken:number = Support.tokenize(propertyName);
+            const refInfoView:ReferenceProperty = new ReferenceProperty(propertyName, refInfo);
+            const token:number = refInfoView.token;
+            (refInfoView as unknown as __private._cocos_core_event_eventify__IEventified).on(ReferenceProperty.EVENT.UPDATE, this.saveAsset.bind(this));
+            // 
+            if(this.savedAssetInfos[token]){
+                refInfoView.updateAssetInfo(this.savedAssetInfos[token]);
+            }
+            this.referenceProperties.push(refInfoView);
         }
     }
 
@@ -332,9 +345,9 @@ export class ReferenceComponent extends Parasitify(Component) {
      * 
      */
     protected onDestroy(): void {
-        if(this.referenceViews && this.referenceViews.length){
-            this.referenceViews.forEach((refInfoView:ReferenceInfoView)=>{
-                (refInfoView as unknown as __private._cocos_core_event_eventify__IEventified).off(ReferenceInfoView.EVENT.UPDATE, this.saveAsset);
+        if(this.referenceProperties && this.referenceProperties.length){
+            this.referenceProperties.forEach((refInfoView:ReferenceProperty)=>{
+                (refInfoView as unknown as __private._cocos_core_event_eventify__IEventified).off(ReferenceProperty.EVENT.UPDATE, this.saveAsset);
             })
         }        
     }
