@@ -19,7 +19,7 @@ type ActionTaskInfo = {
 }
 
 
-
+export const ActionifyName:string = 'Actionify';
 /**
  * 
  */
@@ -274,7 +274,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
 
     }
     return Actionized as unknown as Constructor<TBase & IActionized>;
-} )
+}, ActionifyName);
 
 /**
  * 

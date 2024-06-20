@@ -6,7 +6,7 @@ import { DEV } from 'cc/env';
  * 
  */
 
-const InjectorTag:string = '$injector';
+export const InjectorTag:string = '$injector';
 
 export const CACHE_KEY = '__ccclassCache__';
 
@@ -79,7 +79,8 @@ export function hadInjectorImplemented(baseCtor:Constructor, injectorName:string
     if(!injectorName || !injectorName.length) return false;    
     if(!baseCtor) return false;    
     return (baseCtor.name.indexOf(injectorName) !== -1) 
-            || (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? true : hadInjectorImplemented(js.getSuper(baseCtor), injectorName);    
+            || (baseCtor[InjectorTag] && 
+                baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? true : hadInjectorImplemented(js.getSuper(baseCtor), injectorName);    
 }
 
 export function getInjector(injectorName:string, baseCtor:Constructor, currentBaseCtorName:string = baseCtor.name):Constructor{
@@ -105,18 +106,18 @@ type ReturnInheritancified<T, TCtor> = T extends { __props__: unknown, __values_
  * @param additionalConstructor 
  * @returns 
  */
-export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>(...args:Constructor<TBase>[])=>Constructor<TBase & TInjector>):(<TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>){    
+export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>(...args:Constructor<TBase>[])=>Constructor<TBase & TInjector>, injectorName:string = injectorMethod.name ):(<TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>){    
     
-    return function<TBase>(base:validateTBase<TBase>):ReturnInheritancified<TBase&TInjector, TStaticInjector>{
+    return function<TBase>(base:validateTBase<TBase>, targetInjectorName:string = injectorName):ReturnInheritancified<TBase&TInjector, TStaticInjector>{
         if(!!base['__props__'] && !!base['__values__']){            // 
-            if(hadInjectorImplemented(base as Constructor, injectorMethod.name)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
+            if(hadInjectorImplemented(base as Constructor, injectorName)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
             const superClass:TStaticInjector = injectorMethod.apply(this, Array.from(arguments));
             if(hadInjectorImplemented(base as Constructor, (superClass as Constructor).name)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;     
-            superClass[InjectorTag] = injectorMethod.name;
+            superClass[InjectorTag] = injectorName;
             return superClass as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
         }else{
-            const ctor:Constructor = base.constructor as Constructor;
-            return getInjector(injectorMethod.name, ctor)  as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
-        }   
+            const ctor:Constructor = base.constructor as Constructor || Object.getPrototypeOf(base);
+            return getInjector(targetInjectorName, ctor)  as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
+        }
     } as <TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>
 }

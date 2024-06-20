@@ -3,9 +3,8 @@ import { IDecoratified, IStaticDecoratified } from "../types/CoreType";
 import { EDITOR } from "cc/env";
 import { Inheritancify } from "./Inheritancify";
 
-
+export const DecoratifyName:string = 'Decoratify';
 const DecoratedTag = '__$decorated';
-// const SelectedKey = '__$selected_key__'
 /**
  * 
  */
@@ -55,7 +54,7 @@ export default Inheritancify<IDecoratified, IStaticDecoratified>(function Decora
     };
     // 
     return Decoratified as unknown as Constructor<TBase & IDecoratified>
-})
+}, DecoratifyName)
 
 
 

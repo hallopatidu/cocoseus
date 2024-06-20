@@ -11,11 +11,12 @@ import { CCEditor, SimpleAssetInfo } from "../utils/CCEditor";
 import AsyncProcessify from "./AsyncProcessify";
 
 const { ccclass, property } = _decorator;
+
 // const {Editor} = globalThis
-let ReferenceEnum = Enum({Default:-1});
+// let ReferenceEnum = Enum({Default:-1});
 
-// globalThis.Editor.Message.addBroadcastListener('console:logsUpdate', () => {log('-------------------- ????????')});
 
+export const ReferenciyInjector:string = 'Referencify';
 export const ENUM_PROPERTY_PREFIX:string = '__$enum__';
 export const INDEX_PROPERTY_PREFIX:string = '__$id__';
 export const STRING_PROPERTY_PREFIX:string = '__$string__';
@@ -409,7 +410,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
     }
     return Referencified as unknown as Constructor<TBase & IReferencified>;
 
-}) 
+}, ReferenciyInjector) 
 
 
 
