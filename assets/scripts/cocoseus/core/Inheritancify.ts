@@ -6,7 +6,8 @@ import { DEV } from 'cc/env';
  * 
  */
 
-export const InjectorTag:string = '$injector';
+export const InjectorTag = Symbol() //'$injector';
+// export const InjectorTag:string = Symbol() //'$injector';
 
 export const CACHE_KEY = '__ccclassCache__';
 
@@ -99,20 +100,21 @@ export function lastInjector<TStaticInjector>(base:any):TStaticInjector|null{
 
 type validateTBase<T> = T extends Constructor<Component> ? Constructor<T> : any;
 type ReturnInheritancified<T, TCtor> = T extends { __props__: unknown, __values__: unknown }? Constructor<T> : TCtor;
+
 /**
+ * 
  * Base on the new intergaraion method class which found on Coco Engine Source.
- * Main Idea is generatting a new class from the given base class, after polyfill all functionalities
+ * Main Idea is generatting a new class from the given base class, after polyfill all functionalities.
  * @param constructor 
  * @param additionalConstructor 
  * @returns 
  */
-export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>(...args:Constructor<TBase>[])=>Constructor<TBase & TInjector>, injectorName:string = injectorMethod.name ):(<TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>){    
-    
+export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>(...args:Constructor<TBase>[])=>Constructor<TBase & TInjector>, injectorName:string = injectorMethod.name ):(<TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>){
     return function<TBase>(base:validateTBase<TBase>, targetInjectorName:string = injectorName):ReturnInheritancified<TBase&TInjector, TStaticInjector>{
         if(!!base['__props__'] && !!base['__values__']){            // 
             if(hadInjectorImplemented(base as Constructor, injectorName)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
             const superClass:TStaticInjector = injectorMethod.apply(this, Array.from(arguments));
-            if(hadInjectorImplemented(base as Constructor, (superClass as Constructor).name)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;     
+            // if(hadInjectorImplemented(base as Constructor, (superClass as Constructor).name)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;     
             superClass[InjectorTag] = injectorName;
             return superClass as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
         }else{

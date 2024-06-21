@@ -339,33 +339,48 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
         /**
          * 
          */
-        // public get internalStart (): (() => void) | undefined {
-        //     return async ()=>{
-        //         await this.startLoadingAssets();
-        //         super['internalStart'] && super['internalStart']();
-        //     } 
-        // }
+        public get internalStart (): (() => void) | undefined {
+            // const internalOnLoadFunc:(() => void)  = super['internalStart'] || this.start;
+            // return internalOnLoadFunc;
+            // console.log('===========?????==> internalStart !!' + this.node?.name)
+            return super['internalStart'] || this.start
+            // return async function(){
+            //     await this.preloadingAssets.call(this);
+            //     await this.startLoadingAssets.call(this);
+            //     internalOnLoadFunc && internalOnLoadFunc.call(this);
+            //     console.log('===========?????==> internalOnLoad !!' + this.node?.name)
+            // }.bind(this)
+        }
 
-        /**
-         * 
-         */
+        // /**
+        //  * 
+        //  */
         public get internalOnLoad (): (() => void) | undefined {
-            !Referencified.hasRegisted(this) && Referencified.register(this);            
+            !Referencified.hasRegisted(this) && Referencified.register(this);
             return async ()=>{
                 await this.preloadingAssets();
                 await this.startLoadingAssets();
                 super['internalOnLoad'] && super['internalOnLoad']();
-                // log('===========?????==> internalOnLoad !!' + this.node?.name)
-            }            
+                log('===========?????==> internalOnLoad !!' + this.node?.name)
+            }   
+            // const internalOnLoadFunc:(() => void)  = super['internalOnLoad'] || this.onLoad;
+            // return async ()=>{
+            //     await this.preloadingAssets.call(this);
+            //     await this.startLoadingAssets.call(this);
+            //     // internalOnLoadFunc && internalOnLoadFunc.call(this);
+            //     (super['internalOnLoad'] || this.onLoad)()
+            //     console.log('===========?????==> internalOnLoad !!' + this.node?.name)
+            // }
+            // .bind(this)
         }
 
         /**
          * 
          */
-        public get internalOnDisable (): (() => void) | undefined {
-            Referencified.hasRegisted(this) && Referencified.remove(this);
-            return super['internalOnDisable']
-        }
+        // public get internalOnDisable (): (() => void) | undefined {
+        //     Referencified.hasRegisted(this) && Referencified.remove(this);
+        //     return super['internalOnDisable']
+        // }
 
         /**
          * 

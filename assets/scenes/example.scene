@@ -178,7 +178,7 @@
     "_priority": 0,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 384.3713733075435,
+    "_orthoHeight": 371.64478764478764,
     "_near": 0,
     "_far": 1000,
     "_color": {
@@ -270,7 +270,7 @@
     "__prefab": null,
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 288.2421875,
+      "width": 288.179777992278,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -303,7 +303,7 @@
     "_string": "Referencify........",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 40,
+    "_actualFontSize": 40.46875,
     "_fontSize": 40,
     "_fontFamily": "Arial",
     "_lineHeight": 40,

@@ -13,13 +13,20 @@ export class TestReferencify extends Referencify(Component) {
     @reference({type:SpriteFrame})
     sp:SpriteFrame = null
 
+    protected start(): void {
+        console.log('START !!!!!!!!!!!!!')
+    }
+
     protected onLoad(): void {
         // 
+        console.log('AABBCC Loaded !!!!')
         // if(!this.sp) error('unload asset !!')
         // const sprite:Sprite = this.node.getComponent(Sprite)||this.node.addComponent(Sprite);
         // sprite.spriteFrame = this.sp;
-        if(!this.abc) warn('unload asset !!')
-        else{
+        if(!this.abc) {
+            warn('unload asset !!')
+            console.log('unload asset !!');
+        }else{
             const node:Node = instantiate(this.abc);
             node.setPosition(new Vec3);
             this.node.addChild(node)
