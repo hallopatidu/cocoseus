@@ -165,9 +165,10 @@ export class CCEditor {
     static createEditorClassProperty(target:Record<string, any>, propertyName:string, option:IPropertyOptions, propertyDescriptor:PropertyDescriptor){   
         if(!Object.prototype.hasOwnProperty.call(target, propertyName)){
             Object.defineProperty(target, propertyName, propertyDescriptor);
-            const propertyNormalized:LegacyPropertyDecorator = property(option);
-            propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyName, propertyDescriptor);
-        }        
+           
+        }  
+        const propertyNormalized:LegacyPropertyDecorator = property(option);
+        propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyName, propertyDescriptor);      
     }
     // 
 }

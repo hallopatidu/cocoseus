@@ -334,23 +334,28 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
                 
         // ---------------
 
-
+        protected async onLoad(): Promise<void> {
+            console.log('\n \n ------------------- CALLLLLLLLLLLL! ')
+            await this.preloadingAssets();
+            await this.startLoadingAssets();
+            super.onLoad?.call(this);
+        }
 
         /**
          * 
          */
-        public get internalStart (): (() => void) | undefined {
-            // const internalOnLoadFunc:(() => void)  = super['internalStart'] || this.start;
-            // return internalOnLoadFunc;
-            // console.log('===========?????==> internalStart !!' + this.node?.name)
-            return super['internalStart'] || this.start
-            // return async function(){
-            //     await this.preloadingAssets.call(this);
-            //     await this.startLoadingAssets.call(this);
-            //     internalOnLoadFunc && internalOnLoadFunc.call(this);
-            //     console.log('===========?????==> internalOnLoad !!' + this.node?.name)
-            // }.bind(this)
-        }
+        // public get internalStart (): (() => void) | undefined {
+        //     // const internalOnLoadFunc:(() => void)  = super['internalStart'] || this.start;
+        //     // return internalOnLoadFunc;
+        //     // console.log('===========?????==> internalStart !!' + this.node?.name)
+        //     return super['internalStart'] || this.start
+        //     // return async function(){
+        //     //     await this.preloadingAssets.call(this);
+        //     //     await this.startLoadingAssets.call(this);
+        //     //     internalOnLoadFunc && internalOnLoadFunc.call(this);
+        //     //     console.log('===========?????==> internalOnLoad !!' + this.node?.name)
+        //     // }.bind(this)
+        // }
 
         // /**
         //  * 
