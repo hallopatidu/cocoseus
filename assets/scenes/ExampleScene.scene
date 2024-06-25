@@ -288,8 +288,20 @@
     "taskName": "",
     "abc": null,
     "sp": null,
-    "__$info__abc": null,
-    "__$info__sp": null,
+    "__$info__abc": {
+      "bundle": "resources",
+      "url": "/prefab/TestLayout",
+      "type": "cc.Prefab",
+      "uuid": "a591f020-2e36-40a4-a13b-4a280f69581b",
+      "name": "TestLayout.prefab"
+    },
+    "__$info__sp": {
+      "bundle": "resources",
+      "url": "/images/sp/spriteFrame",
+      "type": "cc.SpriteFrame",
+      "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@f9941",
+      "name": "spriteFrame"
+    },
     "_id": "d2OPvd4BZMUbtrhl7arrbQ"
   },
   {

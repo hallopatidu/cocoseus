@@ -236,7 +236,7 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
                 let allPrefabComponents:Component[] = ((asset as Prefab).data as Node).getComponentsInChildren(Component);
                 allPrefabComponents.forEach((comp:Component)=>{
                     if(!prefabInfo.references) prefabInfo.references = [];
-                    const refInfos:ReferenceInfo[] = this.getChildReferenceInfo(comp)
+                    const refInfos:ReferenceInfo[] = this.getChildReferenceInfo(comp);
                     prefabInfo.references = prefabInfo.references.concat(refInfos);
                 })
             }

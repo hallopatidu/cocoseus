@@ -1,4 +1,4 @@
-import { Asset, AssetManager, CCString, Constructor, Enum, _decorator, error, js, log } from "cc";
+import { Asset, AssetManager, CCString, Component, Constructor, Enum, _decorator, error, js, log } from "cc";
 import { makeSmartClassDecorator } from "./plugins/PluginClassify";
 import { BabelPropertyDecoratorDescriptor, EmbedAsset, IPropertyOptions, LegacyPropertyDecorator } from "./types/CoreType";
 import { CCEditor, SimpleAssetInfo } from "./utils/CCEditor";
@@ -13,8 +13,6 @@ const CACHE_KEY = '__ccclassCache__';
  * 
  */
 export namespace cocoseus {
-    
-
     export const propertyDynamicLoading: ((name?: string) => ClassDecorator) & ClassDecorator = makeSmartClassDecorator<string>((constructor, name) => {
         const cache = constructor[CACHE_KEY];
         if (cache) {
@@ -28,15 +26,18 @@ export namespace cocoseus {
                 
             }
         }
-        const tempDes:PropertyDescriptor = js.getPropertyDescriptor(constructor.prototype, 'getTesttaskName')
-        const getTempDes:PropertyDescriptor = js.getPropertyDescriptor(tempDes, 'get')
-        // const internalLoadMethod:PropertyDescriptor = js.getPropertyDescriptor(constructor.prototype, 'internalOnLoad')
-        // internalLoadMethod.get = (function(supeMethod:Function){
-        //     return async()=>{
-        //         log('-------inject internalLoadMethod.get')
-        //         return supeMethod
-        //     }
-        // })(internalLoadMethod.get)
+        
+        const prototype = constructor.prototype;
+        if(Object.prototype.hasOwnProperty.call(prototype, 'onLoad')){
+            const superOnload:Function = prototype.onLoad;            
+            js.value(prototype, 'onLoad',async function():Promise<any>{
+                await new Promise((resolve:Function)=>{
+                    (this as Component).scheduleOnce(resolve, 1);
+                })
+                console.log('call async onload')
+                superOnload.call(this);
+            })
+        }
 
         return constructor //Referencify(constructor)
     });
@@ -134,7 +135,8 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
         },
         set:async function(asset:EmbedAsset){
             if(EDITOR){
-                const assetInfo:SimpleAssetInfo = await this.analysisAsset(propertyName, asset);
+                // const assetInfo:SimpleAssetInfo = await this.analysisAsset(propertyName, asset);
+                const assetInfo:SimpleAssetInfo = await CCEditor.getSimpleAssetInfo(asset as Asset);
                 if(!!assetInfo){
                     const bundleName:string = assetInfo.bundle;
                     //       
