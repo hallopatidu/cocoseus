@@ -1,10 +1,10 @@
-import { Asset, AssetManager, Constructor, Enum, error, js } from "cc";
+import { Asset, AssetManager, CCString, Constructor, Enum, _decorator, error, js, log } from "cc";
 import { makeSmartClassDecorator } from "./plugins/PluginClassify";
-import { BabelPropertyDecoratorDescriptor, EmbedAsset, IPropertyOptions } from "./types/CoreType";
+import { BabelPropertyDecoratorDescriptor, EmbedAsset, IPropertyOptions, LegacyPropertyDecorator } from "./types/CoreType";
 import { CCEditor, SimpleAssetInfo } from "./utils/CCEditor";
 import { EDITOR } from "cc/env";
 import { Support } from "./utils/Support";
-
+const { ccclass, property } = _decorator;
 const CACHE_KEY = '__ccclassCache__';
 
 /**
@@ -23,23 +23,32 @@ export namespace cocoseus {
                 // decoratedProto.properties = createProperties(ctor, decoratedProto.properties);
                 const keys:string[] = Object.keys(decoratedProto.properties);
                 keys.forEach((key:string)=>{
-                    remakeProperty(constructor, key, decoratedProto.properties[key])
+                    remakeProperty(constructor, key, decoratedProto.properties)
                 })
                 
             }
         }
-    
+        const tempDes:PropertyDescriptor = js.getPropertyDescriptor(constructor.prototype, 'getTesttaskName')
+        const getTempDes:PropertyDescriptor = js.getPropertyDescriptor(tempDes, 'get')
+        // const internalLoadMethod:PropertyDescriptor = js.getPropertyDescriptor(constructor.prototype, 'internalOnLoad')
+        // internalLoadMethod.get = (function(supeMethod:Function){
+        //     return async()=>{
+        //         log('-------inject internalLoadMethod.get')
+        //         return supeMethod
+        //     }
+        // })(internalLoadMethod.get)
+
         return constructor //Referencify(constructor)
     });
     
 }
 
 //  TEST
-function remakeProperty(constructor, propertyName:string, options:IPropertyOptions){
+function remakeProperty(constructor, propertyName:string, properties:any){
+    const options = properties[propertyName];
     const isAsset:boolean = js.isChildClassOf(getClassType((options as IPropertyOptions)?.type), Asset)
     if(isAsset){
-        const propertyDescriptor:BabelPropertyDecoratorDescriptor = js.getPropertyDescriptor(constructor, propertyName);
-        defineSmartProperty(constructor, propertyName, options, propertyDescriptor)
+        defineSmartProperty(constructor, propertyName, options);
     }
 }
 
@@ -73,16 +82,20 @@ function getClassType(classTypes:Constructor<any>|Constructor<any>[]):Constructo
  * @param options 
  * @param descriptorOrInitializer 
  */
-function defineSmartProperty(target:Record<string, any>, propertyName:string, options:IPropertyOptions, descriptorOrInitializer:  BabelPropertyDecoratorDescriptor){
+function defineSmartProperty(target:Record<string, any>, propertyName:string, options:IPropertyOptions, descriptorOrInitializer?:  BabelPropertyDecoratorDescriptor){
     const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
     const wrapperPropertyName:any = WRAPPER_PROPERTY_PREFIX + propertyName;    
     const infoPropertyName:any = INFO_PROPERTY_PREFIX + propertyName;
     // 
-    
+    descriptorOrInitializer ??= js.getPropertyDescriptor(target.prototype, propertyName)
     // Record info -------------
-    const infoPropertyDescriptor:PropertyDescriptor = {value:null, writable:true}    
-    const infoOption:IPropertyOptions = {serializable:true, visible:false};
-    CCEditor.createEditorClassProperty(target, infoPropertyName,infoOption, infoPropertyDescriptor);
+    const infoPropertyDescriptor:PropertyDescriptor = {value:null, writable:true};
+    const infoOption:IPropertyOptions = {
+        // type:options.type,
+        serializable:true, 
+        visible:false
+    };
+    CCEditor.createEditorClassProperty(target, infoPropertyName, infoOption, infoPropertyDescriptor);
     // -------------------------- End info
     
     // Define Enum ------------------------------
@@ -95,7 +108,7 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
                 this[wrapperPropertyName] = null;
                 this[infoPropertyName] = null;
                 this[propertyName] = null;
-                EDITOR && this.onEditorAssetChanged(propertyName);
+                // EDITOR && this.onEditorAssetChanged(propertyName);
             }
         }
     }
@@ -115,7 +128,7 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
         get():EmbedAsset{                
             if(this[infoPropertyName]){
                 const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
-                CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]));                
+                CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]));
             }            
             return this[propertyName];
         },
@@ -128,12 +141,12 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
                     if( !!bundleName &&
                         bundleName !== AssetManager.BuiltinBundleName.INTERNAL &&
                         bundleName !== AssetManager.BuiltinBundleName.MAIN  &&
-                        bundleName !== AssetManager.BuiltinBundleName.START_SCENE){
+                        bundleName !== AssetManager.BuiltinBundleName.START_SCENE   ){
                         // 
                         this[infoPropertyName] = assetInfo;
                         const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
                         CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]));
-                        this[propertyName] = null
+                        this[propertyName] = null;
                         // this.onEditorAssetChanged(propertyName);
                         return false
                         // 
@@ -147,21 +160,21 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
             this[propertyName] = asset;
             // EDITOR && this.onEditorAssetChanged(propertyName);
         },
-        // configurable: descriptorOrInitializer.configurable,
-        // enumerable: descriptorOrInitializer.enumerable,
-        // writable: descriptorOrInitializer.writable,        
+        configurable: true,
+        enumerable: false        
     } as PropertyDescriptor;
 
     const wrapperOption:IPropertyOptions = Object.assign({}, options, {
-        displayName:Support.upperFirstCharacter(propertyName),
+        type:options.type,
+        displayName:Support.upperFirstCharacter(propertyName) + '__??',
         visible(){
             return !this[infoPropertyName];
         }
     }) as IPropertyOptions;
-    CCEditor.createEditorClassProperty(target, wrapperPropertyName, wrapperOption, wrapperDescriptor)
+    CCEditor.createEditorClassProperty(target, wrapperPropertyName, wrapperOption, wrapperDescriptor);
     
     // ------------------------------------- end Define Wrapper
-
+    
     // Current property ---------------
     if(!!options){
         (options as IPropertyOptions).visible = false;

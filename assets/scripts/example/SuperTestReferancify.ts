@@ -11,7 +11,7 @@ export class SuperTestReferancify extends Component {
     taskName:string = ''
 
     private _getTesttaskName: string = '';
-    @property    
+    @property
     public get getTesttaskName(): string {
         return this._getTesttaskName;
     }

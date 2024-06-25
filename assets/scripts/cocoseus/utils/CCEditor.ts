@@ -1,7 +1,8 @@
-import { _decorator, Asset, CCClass, Component, Enum, js, Node } from 'cc';
+import { _decorator, Asset, CCClass, Component, Constructor, Enum, js, Node } from 'cc';
 import { EDITOR } from 'cc/env';
 import { Support } from './Support';
-import { IPropertyOptions, LegacyPropertyDecorator, PropertyType } from '../types/CoreType';
+import { IPropertyOptions, LegacyPropertyDecorator, PropertyStash, PropertyType } from '../types/CoreType';
+import { CACHE_KEY } from '../core/Inheritancify';
 const { ccclass, property } = _decorator;
 
 export type SimpleAssetInfo = {
@@ -153,6 +154,7 @@ export class CCEditor {
     }
     // 
 
+    
 
     // 
     /**
@@ -162,15 +164,36 @@ export class CCEditor {
      * @param option 
      * @param propertyDescriptor 
      */
-    static createEditorClassProperty(target:Record<string, any>, propertyName:string, option:IPropertyOptions, propertyDescriptor:PropertyDescriptor){   
-        if(!Object.prototype.hasOwnProperty.call(target, propertyName)){
-            Object.defineProperty(target, propertyName, propertyDescriptor);
-           
-        }  
+    static createEditorClassProperty(target:Record<string, any>, propertyName:string, option:IPropertyOptions, propertyDescriptor:PropertyDescriptor){ 
+        let prototype;
+        let constructor;
+        if(!!(target as Constructor).prototype){            
+            prototype = (target as Constructor).prototype;
+            constructor = target;
+        } else{
+            constructor = target.constructor;
+            prototype = target;
+        }
+        // 
+        if(!Object.prototype.hasOwnProperty.call(prototype, propertyName)){
+            Object.defineProperty(prototype, propertyName, propertyDescriptor); 
+        }
+        // 
         const propertyNormalized:LegacyPropertyDecorator = property(option);
-        propertyNormalized(target as Parameters<LegacyPropertyDecorator>[0], propertyName, propertyDescriptor);      
+        propertyNormalized(prototype, propertyName, propertyDescriptor);
+        const isGetset = propertyDescriptor && typeof propertyDescriptor !== 'function' && (propertyDescriptor.get || propertyDescriptor.set);
+        if(isGetset){
+            const classStash:unknown = constructor[CACHE_KEY] || ((constructor[CACHE_KEY]) = {});
+            const ccclassProto:unknown = classStash['proto'] || ((classStash['proto'])={});
+            const properties:unknown = ccclassProto['properties'] || ((ccclassProto['properties'])={});
+            const propertyStash:PropertyStash = properties[propertyName] ??= {};
+            if(Object.prototype.hasOwnProperty.call(propertyStash, 'default')) {
+                delete propertyStash.default;
+            }
+        }
     }
     // 
+
 }
 
 

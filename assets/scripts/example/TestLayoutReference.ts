@@ -5,11 +5,11 @@ const { ccclass, property } = _decorator;
 @ccclass('TestLayoutReference')
 export class TestLayoutReference extends Referencify(Component) {
 
-    @reference({type:SpriteFrame})
-    leftSF:SpriteFrame = null;
+    // @reference({type:SpriteFrame})
+    // leftSF:SpriteFrame = null;
 
-    @reference({type:SpriteFrame})
-    rightSF:SpriteFrame = null;
+    // @reference({type:SpriteFrame})
+    // rightSF:SpriteFrame = null;
 
     @property({type:Sprite})
     rightSprite:Sprite = null;
@@ -19,13 +19,13 @@ export class TestLayoutReference extends Referencify(Component) {
 
     protected onLoad(): void {
         log('Loaded test layout !!!')
-        if(this.leftSF && this.leftSprite){
-            this.leftSprite.spriteFrame = this.leftSF;
-        }
+        // if(this.leftSF && this.leftSprite){
+        //     this.leftSprite.spriteFrame = this.leftSF;
+        // }
 
-        if(this.rightSF && this.rightSprite){
-            this.rightSprite.spriteFrame = this.rightSF;
-        }
+        // if(this.rightSF && this.rightSprite){
+        //     this.rightSprite.spriteFrame = this.rightSF;
+        // }
     }
 
     start() {

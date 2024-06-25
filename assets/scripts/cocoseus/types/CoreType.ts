@@ -156,7 +156,35 @@ export type Action = {
 // }
 
 export type Initializer = () => unknown;
+export type PrimitiveType<T> = __private._cocos_core_data_utils_attribute__PrimitiveType<T>;
+export type IExposedAttributes = __private._cocos_core_data_utils_attribute_defines__IExposedAttributes;
+export type PropertyStash = IExposedAttributes & {
+    default?: unknown;
+    get?: () => unknown;
+    set?: (value: unknown) => void;
+    _short?: unknown;
+    __internalFlags: number;
+}
 export type IPropertyOptions = __private._cocos_core_data_decorators_property__IPropertyOptions;
 export type PropertyType = __private._cocos_core_data_decorators_property__PropertyType;
 export type LegacyPropertyDecorator = __private._cocos_core_data_decorators_utils__LegacyPropertyDecorator;
 export type BabelPropertyDecoratorDescriptor = PropertyDescriptor & { initializer?: Initializer };
+export enum PropertyStashInternalFlag {
+    /**
+     * Indicates this property is reflected using "standalone property decorators" such as
+     * `@editable`, `@visible`, `serializable`.
+     * All standalone property decorators would set this flag;
+     * non-standalone property decorators won't set this flag.
+     */
+    STANDALONE = 1 << 0,
+
+    /**
+     * Indicates this property is visible, if no other explicit visibility decorators(`@visible`s) are attached.
+     */
+    IMPLICIT_VISIBLE = 1 << 1,
+
+    /**
+     * Indicates this property is serializable, if no other explicit visibility decorators(`@serializable`s) are attached.
+     */
+    IMPLICIT_SERIALIZABLE = 1 << 2,
+}

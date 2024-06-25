@@ -5,13 +5,14 @@ const { ccclass, property, executeInEditMode } = _decorator;
 
 @ccclass('TestReferencify')
 // @executeInEditMode(true)
-export class TestReferencify extends Referencify(Component) {
+// export class TestReferencify extends Referencify(Component) {
+export class TestReferencify extends Component {
 
-    @reference({type:Prefab})
-    abc:Prefab = null;
+    // @reference({type:Prefab})
+    // abc:Prefab = null;
 
-    @reference({type:SpriteFrame})
-    sp:SpriteFrame = null
+    // @reference({type:SpriteFrame})
+    // sp:SpriteFrame = null
 
     protected start(): void {
         console.log('START !!!!!!!!!!!!!')
@@ -23,14 +24,14 @@ export class TestReferencify extends Referencify(Component) {
         // if(!this.sp) error('unload asset !!')
         // const sprite:Sprite = this.node.getComponent(Sprite)||this.node.addComponent(Sprite);
         // sprite.spriteFrame = this.sp;
-        if(!this.abc) {
-            warn('unload asset !!')
-            console.log('unload asset !!');
-        }else{
-            const node:Node = instantiate(this.abc);
-            node.setPosition(new Vec3);
-            this.node.addChild(node)
-        }
+        // if(!this.abc) {
+        //     warn('unload asset !!')
+        //     console.log('unload asset !!');
+        // }else{
+        //     const node:Node = instantiate(this.abc);
+        //     node.setPosition(new Vec3);
+        //     this.node.addChild(node)
+        // }
         // 
         // if(!this.sp) error('sp unload asset !!')
         // else {
