@@ -2,10 +2,10 @@ import { _decorator, Asset, CCClass, Component, Constructor, Enum, js, Node } fr
 import { EDITOR } from 'cc/env';
 import { Support } from './Support';
 import { IPropertyOptions, LegacyPropertyDecorator, PropertyStash, PropertyType, SimpleAssetInfo } from '../types/CoreType';
-import { CACHE_KEY } from '../core/Inheritancify';
+
 const { ccclass, property } = _decorator;
 
-
+export const CACHE_KEY = '__ccclassCache__';
 
 type  AssetMeta = {
     files: string[];
@@ -150,9 +150,7 @@ export class CCEditor {
 
     
     // 
-    static getSubDict<T, TKey extends keyof T> (obj: T, key: TKey): NonNullable<T[TKey]> {
-        return obj[key] as NonNullable<T[TKey]> || ((obj[key]) = {} as NonNullable<T[TKey]>);
-    }
+    
     // 
     /**
      * 
@@ -190,6 +188,11 @@ export class CCEditor {
         }
     }
     // 
+
+
+    static getSubDict<T, TKey extends keyof T> (obj: T, key: TKey): NonNullable<T[TKey]> {
+        return obj[key] as NonNullable<T[TKey]> || ((obj[key]) = {} as NonNullable<T[TKey]>);
+    }
 
     // static extendClassCache(constructor:Constructor, base:Constructor){
     //     // Apply to all @property decorator.

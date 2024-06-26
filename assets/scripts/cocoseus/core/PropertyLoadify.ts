@@ -1,10 +1,10 @@
-import { Asset, AssetManager, CCObject, Component, Constructor, Enum, Node, Prefab, assetManager, error, js, warn } from "cc";
-import { CACHE_KEY, Inheritancify, hadInjectorImplemented } from "./Inheritancify";
+import { Asset, AssetManager, CCClass, CCObject, Component, Constructor, Enum, Node, Prefab, assetManager, error, js, log, warn } from "cc";
+import { Inheritancify, hadInjectorImplemented } from "./Inheritancify";
 import { EmbedAsset, IAsyncProcessified, IPropertyLoadified, IPropertyOptions, IStaticPropertyLoadified, PrefabInfo, PropertyStash, ReferenceInfo, SimpleAssetInfo } from "../types/CoreType";
-import { CCEditor } from "../utils/CCEditor";
+import { CACHE_KEY, CCEditor } from "../utils/CCEditor";
 import { Support } from "../utils/Support";
 import { DEV, EDITOR } from "cc/env";
-import Decoratify from "./Decoratify";
+// import Decoratify from "./Decoratify";
 import AsyncProcessify from "./AsyncProcessify";
 
 const ENUM_PROPERTY_PREFIX:string = '__$enum__';
@@ -19,10 +19,8 @@ export const PropertyLoadifyName:string = 'PropertyLoadify';
 const LOADING_LIST_DECORATED_KEY:string = '@' + PropertyLoadifyName + '.load';
 
 export default Inheritancify<IPropertyLoadified, IStaticPropertyLoadified>(function PropertyLoadify <TBase>(base:Constructor<TBase>):Constructor<TBase & IPropertyLoadified>{
-    
     // 
-    class PropertyLoadified extends AsyncProcessify(Decoratify( base as unknown as Constructor<Component>)) implements IPropertyLoadified {
-
+    class PropertyLoadified extends AsyncProcessify( base as unknown as Constructor<Component>) implements IPropertyLoadified {
 
         protected onLoad(): void {
             console.log('loading completed !!')
@@ -80,7 +78,8 @@ export default Inheritancify<IPropertyLoadified, IStaticPropertyLoadified>(funct
                     if(hadInjectorImplemented(fromComponent.constructor as Constructor, PropertyLoadifyName)){
                         const classType:string = js.getClassName(fromComponent);
                         const localNodePath:string = fromComponent?.node?.getPathInHierarchy();
-                        const loadedPropertyNames:string[] = Array.from(Decoratify(fromComponent).keys(LOADING_LIST_DECORATED_KEY));
+                        // const loadedPropertyNames:string[] = Array.from(Decoratify(fromComponent).keys(LOADING_LIST_DECORATED_KEY));
+                        const loadedPropertyNames:string[] = Array.from(decorated(fromComponent).keys());
                         loadedPropertyNames.forEach((recoredPropertyName:string)=>{                                                          
                             if(recoredPropertyName){
                                 const tempRefInfo:ReferenceInfo = Object.create(null);
@@ -100,7 +99,8 @@ export default Inheritancify<IPropertyLoadified, IStaticPropertyLoadified>(funct
          */
         protected async asyncLoadingAssets(){
             const thisAsyncLoading:IAsyncProcessified = this as unknown as IAsyncProcessified;
-            const propertyRecord:string[] = Array.from( Decoratify(this).keys(LOADING_LIST_DECORATED_KEY));
+            // const propertyRecord:string[] = Array.from( Decoratify(thisAsyncLoading).keys(LOADING_LIST_DECORATED_KEY));
+            const propertyRecord:string[] = Array.from(decorated(thisAsyncLoading).keys());
             if(thisAsyncLoading.isProgressing()) { await thisAsyncLoading.wait()}
             else if(!thisAsyncLoading.isProgressing() && propertyRecord && propertyRecord.length){                
                 thisAsyncLoading.begin(-1);                
@@ -112,12 +112,12 @@ export default Inheritancify<IPropertyLoadified, IStaticPropertyLoadified>(funct
                         const propertyName:string = propArr[0];
                         const classTypeName:string = propArr[1];
                         const classType:any = js.getClassByName(classTypeName);
-                        const assetInfo:SimpleAssetInfo = this[INFO_PROPERTY_PREFIX + propertyName];
+                        const assetInfo:SimpleAssetInfo = thisAsyncLoading[INFO_PROPERTY_PREFIX + propertyName];
                         if(propertyName && classType && assetInfo){                            
                             promises.push(new Promise(async (resolve:Function)=>{
                                 // const asset:Asset = await loadAsset(assetInfo, classType);
                                 const asset:Asset = await this.loadEachAsset(assetInfo, js.getClassByName(assetInfo.type));
-                                this[propertyName] = asset;
+                                thisAsyncLoading[propertyName] = asset;
                                 resolve(asset);
                             }) )
 
@@ -132,13 +132,14 @@ export default Inheritancify<IPropertyLoadified, IStaticPropertyLoadified>(funct
             }
             // 
             const promises:Promise<any>[] = [];
-            const loadedPropertyRecord:string[] = Array.from( Decoratify(this).keys(LOADING_LIST_DECORATED_KEY));
+            // const loadedPropertyRecord:string[] = Array.from( Decoratify(this).keys(LOADING_LIST_DECORATED_KEY));
+            const loadedPropertyRecord:string[] = Array.from(decorated(thisAsyncLoading).keys());
             loadedPropertyRecord.forEach((recordContent:string)=>{
                 const propArr:string[] = recordContent?.split("::");
                 if(propArr && propArr.length){                    
-                    const propertyName:string = propArr[0];
-                    if(!!this[propertyName]){ 
-                        promises.push(this.onLoadedAsset(propertyName, this[propertyName]));
+                    const propertyName:string = propArr[0];                    
+                    if(!!Object.prototype.hasOwnProperty.call(thisAsyncLoading, propertyName)){ 
+                        promises.push(this.onLoadedAsset(propertyName, thisAsyncLoading[propertyName]));
                     }
                 }
             })
@@ -223,6 +224,7 @@ export default Inheritancify<IPropertyLoadified, IStaticPropertyLoadified>(funct
                 const propertyStash:PropertyStash = injectorProperties[propertyName] ??= {};
                 js.mixin(propertyStash, properties[propertyName])
                 remakeProperty(PropertyLoadified, propertyName, injectorProperties);
+
             })            
         }
         base[CACHE_KEY] = undefined;
@@ -255,13 +257,23 @@ function remakeProperty(constructor:Constructor, propertyName:string, properties
     // 
     const isAsset:boolean = js.isChildClassOf(options.type, Asset);
     if(isAsset){
+        // Tag these propeties would be loading at the runtime.
         const classTypeName:string = js.getClassName(classType);
-        const recordContent:string = propertyName + (classTypeName ? "::" + classTypeName : "");        
-        Decoratify(constructor.prototype).record(recordContent, LOADING_LIST_DECORATED_KEY);
+        const recordContent:string = propertyName + (classTypeName ? "::" + classTypeName : "");
+        const records:Set<string> = decorated(constructor)
+        !records.has(recordContent) && records.add(recordContent);
+        // 
         defineSmartProperty(constructor, propertyName, options);        
     }
     // 
 }
+
+
+function decorated(target:any):Set<string>{
+    const ctor:Constructor = target.prototype ? target : target.constructor;
+    return ctor[LOADING_LIST_DECORATED_KEY] || (ctor[LOADING_LIST_DECORATED_KEY] = new Set<string>())
+}
+
 
 /**
  * 

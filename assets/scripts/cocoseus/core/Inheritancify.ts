@@ -1,15 +1,16 @@
-import { _decorator, Component, Constructor, error, js, Node, warn } from 'cc';
+import { _decorator, Component, Constructor, error, js, log, Node, warn } from 'cc';
 import { DEV } from 'cc/env';
+
+export const InjectorTag = Symbol() //'$injector';
+
+type validateTBase<T> = T extends Constructor<Component> ? Constructor<T> : any;
+type ReturnInheritancified<T, TCtor> = T extends { __props__: unknown, __values__: unknown }? Constructor<T> : TCtor;
 
 /**
  * Injector class. The class which is generated like a new class from the given base class, after polyfill all functionalities, inject to lifecycle of component.
  * 
  */
 
-export const InjectorTag = Symbol() //'$injector';
-// export const InjectorTag:string = Symbol() //'$injector';
-
-export const CACHE_KEY = '__ccclassCache__';
 
 /**
  * Dangerous Function !!!
@@ -79,9 +80,7 @@ export function mixinClass(base:Constructor, invokerCtor:Constructor):Constructo
 export function hadInjectorImplemented(baseCtor:Constructor, injectorName:string):boolean{
     if(!injectorName || !injectorName.length) return false;    
     if(!baseCtor) return false;    
-    return (baseCtor.name.indexOf(injectorName) !== -1) 
-            || (baseCtor[InjectorTag] && 
-                baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? true : hadInjectorImplemented(js.getSuper(baseCtor), injectorName);    
+    return (baseCtor.name.indexOf(injectorName) !== -1) || (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? true : hadInjectorImplemented(js.getSuper(baseCtor), injectorName);    
 }
 
 export function getInjector(injectorName:string, baseCtor:Constructor, currentBaseCtorName:string = baseCtor.name):Constructor{
@@ -89,10 +88,10 @@ export function getInjector(injectorName:string, baseCtor:Constructor, currentBa
         error("Can not find the injector with the name " + injectorName + ". The class " + currentBaseCtorName + " need to be Inheritancified with " + injectorName + " injector.");
         return null;    
     }
-    // return (baseCtor.name.indexOf(injectorName) !== -1) || 
-    return (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? 
-            baseCtor : 
-            getInjector(injectorName, js.getSuper(baseCtor), currentBaseCtorName);    
+    // else{
+    //     warn('injector : ' + injectorName + ' -class : ' + baseCtor.name + ' -getted ' + baseCtor[InjectorTag]);
+    // }
+    return (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? baseCtor : getInjector(injectorName, js.getSuper(baseCtor), currentBaseCtorName);
 }
 
 export function lastInjector<TStaticInjector>(base:any):TStaticInjector|null{
@@ -101,8 +100,7 @@ export function lastInjector<TStaticInjector>(base:any):TStaticInjector|null{
 }
 
 
-type validateTBase<T> = T extends Constructor<Component> ? Constructor<T> : any;
-type ReturnInheritancified<T, TCtor> = T extends { __props__: unknown, __values__: unknown }? Constructor<T> : TCtor;
+
 
 /**
  * 
@@ -128,3 +126,6 @@ export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>
         }
     } as <TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>
 }
+
+
+
