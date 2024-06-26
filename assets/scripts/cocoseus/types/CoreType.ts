@@ -90,7 +90,9 @@ export interface IStaticAsyncWaited extends Constructor<IAsyncWaited>{
 
 // ------------ LazyLoadify ------------
 export interface IPropertyLoadified extends IInheritancified{
-
+    analysisAsset<T=EmbedAsset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>;
+    onLoadedAsset(propertyName:string, asset:SimpleAssetInfo):void;
+    onEditorAssetChanged(propertyName:string):void;
 }
 
 export interface IStaticPropertyLoadified extends Constructor<IPropertyLoadified>{
@@ -101,8 +103,8 @@ export interface IStaticPropertyLoadified extends Constructor<IPropertyLoadified
 export interface IReferencified extends IInheritancified{
     get refInfo():ReferenceInfo;
     get token():number;
-    analysisAsset<T=EmbedAsset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>
-    onLoadedAsset(propertyName:string, asset:SimpleAssetInfo)
+    // analysisAsset<T=EmbedAsset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>
+    // onLoadedAsset(propertyName:string, asset:SimpleAssetInfo)
 }
 
 export interface IStaticReferencified extends Constructor<IReferencified>{

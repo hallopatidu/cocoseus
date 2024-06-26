@@ -7,12 +7,12 @@ import { DEV, EDITOR } from "cc/env";
 // import Decoratify from "./Decoratify";
 import AsyncProcessify from "./AsyncProcessify";
 
-const ENUM_PROPERTY_PREFIX:string = '__$enum__';
-const INDEX_PROPERTY_PREFIX:string = '__$id__';
-const STRING_PROPERTY_PREFIX:string = '__$string__';
-const INFO_PROPERTY_PREFIX:string = '__$info__';
-const WRAPPER_PROPERTY_PREFIX:string = '__$';
-const PREFAB_DETAIL_PREFIX:string = '__$prefab__';
+export const ENUM_PROPERTY_PREFIX:string = '__$enum__';
+export const INFO_PROPERTY_PREFIX:string = '__$info__';
+export const WRAPPER_PROPERTY_PREFIX:string = '__$';
+// const INDEX_PROPERTY_PREFIX:string = '__$id__';
+// const STRING_PROPERTY_PREFIX:string = '__$string__';
+// const PREFAB_DETAIL_PREFIX:string = '__$prefab__';
 
 
 export const PropertyLoadifyName:string = 'PropertyLoadify';

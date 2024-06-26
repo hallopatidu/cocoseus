@@ -3,9 +3,7 @@ import { cocoseus } from '../cocoseus';
 const { ccclass, property, executeInEditMode } = _decorator;
 
 @ccclass('TestReferencify')
-// @executeInEditMode(true)
-// export class TestReferencify extends Referencify(Component) {
-@cocoseus.propertyLazyLoading
+@cocoseus.propertyDynamicLoading
 export class TestReferencify extends Component {
 
     // @reference({type:Prefab})
@@ -26,10 +24,8 @@ export class TestReferencify extends Component {
 
     protected onLoad(): void {
         // 
-        console.log('AABBCC Loaded !!!!')
-        // if(!this.sp) error('unload asset !!')
-        // const sprite:Sprite = this.node.getComponent(Sprite)||this.node.addComponent(Sprite);
-        // sprite.spriteFrame = this.sp;
+        console.log('AABBCC Loaded !!!!');
+        // 
         if(!this.abc) {
             warn('unload asset !!')
             console.log('unload asset !!');

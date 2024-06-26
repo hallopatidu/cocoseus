@@ -2,10 +2,8 @@ import { _decorator, Asset, Component, js, log, Node } from 'cc';
 // import { TestReferencify } from '../TestReferencify';
 // import Interfacify from '../../cocoseus/core/Interfacify';
 // import { TestWaitAction } from '../TestWaitAction';
-import Referencify, { reference } from '../../cocoseus/core/Referencify';
 import Parasitify, { override, OverrideMethodNameMap } from '../../cocoseus/core/Parasitify';
-import { TestReferencify } from '../TestReferencify';
-import Decoratify from '../../cocoseus/core/Decoratify';
+
 
 const { ccclass, property, executeInEditMode } = _decorator;
 
@@ -38,14 +36,14 @@ export class TestWaitActionSkin extends Parasitify(Component) {
     //     // // this.node.addComponent(Referencify(Component))        
     // }
 
-    public get internalOnLoad (): (() => void) | undefined {
+    // public get internalOnLoad (): (() => void) | undefined {
         
-        // const propertyNames:string[] = Array.from( Decoratify(this.super).keys('@reference'));
-        this[OverrideMethodNameMap]
-        // log('Parasiiiiiiiiiiiiiii  ' + propertyNames)
-        // js.getset()
-        return super['internalOnLoad']
-    }
+    //     // const propertyNames:string[] = Array.from( Decoratify(this.super).keys('@reference'));
+    //     this[OverrideMethodNameMap]
+    //     // log('Parasiiiiiiiiiiiiiii  ' + propertyNames)
+    //     // js.getset()
+    //     return super['internalOnLoad']
+    // }
 
     // @override
     // async startLoadingAssets(){

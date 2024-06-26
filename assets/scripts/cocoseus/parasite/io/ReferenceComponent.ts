@@ -2,11 +2,11 @@ import { __private, _decorator, Asset, CCClass, CCObject, Component, Constructor
 import Parasitify, { override } from '../../core/Parasitify';
 import { hadInjectorImplemented } from '../../core/Inheritancify';
 import Decoratify from '../../core/Decoratify';
-import Referencify, { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PrefabInfo, reference, WRAPPER_PROPERTY_PREFIX } from '../../core/Referencify';
-import { SimpleAssetInfo } from '../../utils/CCEditor';
-import { EmbedAsset, IReferencified, ReferenceInfo } from '../../types/CoreType';
+import { EmbedAsset, PrefabInfo, ReferenceInfo, SimpleAssetInfo } from '../../types/CoreType';
 import { EDITOR } from 'cc/env';
 import { Support } from '../../utils/Support';
+import { cocoseus } from '../..';
+import { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, WRAPPER_PROPERTY_PREFIX } from '../../core/PropertyLoadify';
 const { ccclass, property, executeInEditMode } = _decorator;
 
 
@@ -14,7 +14,8 @@ const { ccclass, property, executeInEditMode } = _decorator;
 // const PrefabInfoClassToken:number = Support.tokenize.apply(Support, ['bundle','name','references','type','url','uuid'].sort());
 
 @ccclass('ReferenceInfoView')
-class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core_event_eventify__IEventified>(Eventify(CCObject))  {
+@cocoseus.propertyDynamicLoading
+class ReferenceInfoView extends Eventify(CCObject) {
 
     static EVENT = {
         UPDATE:'ReferenceInfoView.UPDATE_ASSET_EVENT'
@@ -48,7 +49,7 @@ class ReferenceInfoView extends Referencify<IReferencified&__private._cocos_core
     @property({readonly:true})
     component:string = '';
 
-    @reference({
+    @property({
         type:Asset,
         visible:false
     })
@@ -255,7 +256,6 @@ export class ReferenceComponent extends Parasitify(Component) {
      */
     private updateLoadingProperty(propertyName:string){
         if(propertyName){
-            //          
             // Lay asset info tu host tương ứng thuộc tính
             const assetInfo:SimpleAssetInfo = this.host[INFO_PROPERTY_PREFIX + propertyName];            
             if(!!assetInfo && js.isChildClassOf(js.getClassByName(assetInfo.type), Prefab) &&

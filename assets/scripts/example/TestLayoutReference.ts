@@ -1,5 +1,5 @@
-import { _decorator, Component, log, Node, Sprite, SpriteFrame } from 'cc';
-import Referencify, { reference } from '../cocoseus/core/Referencify';
+import { _decorator, Component, log, Sprite } from 'cc';
+import Referencify from '../cocoseus/core/Referencify';
 const { ccclass, property } = _decorator;
 
 @ccclass('TestLayoutReference')
