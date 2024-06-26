@@ -1,13 +1,13 @@
 // Referencify
 
 import { _decorator, Asset, assetManager, AssetManager, CCObject, Component, Constructor, director, Enum, error, find, js, log, Node, Prefab, PrefabLink, Script, warn} from "cc";
-import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified, IAsyncProcessified, EmbedAsset } from "../types/CoreType";
+import { BabelPropertyDecoratorDescriptor, IPropertyOptions, ReferenceInfo, IReferencified, LegacyPropertyDecorator, PropertyType, IStaticReferencified, IAsyncProcessified, EmbedAsset, SimpleAssetInfo, PrefabInfo } from "../types/CoreType";
 import { Support } from "../utils/Support";
 import Decoratify from "./Decoratify";
 import { CACHE_KEY, hadInjectorImplemented, Inheritancify, lastInjector } from "./Inheritancify";
 import Storagify from "./Storagify";
 import { DEV, EDITOR } from "cc/env";
-import { CCEditor, SimpleAssetInfo } from "../utils/CCEditor";
+import { CCEditor } from "../utils/CCEditor";
 import AsyncProcessify from "./AsyncProcessify";
 
 const { ccclass, property } = _decorator;
@@ -31,9 +31,9 @@ enum ClassType {
     INFO
 }
 
-export type PrefabInfo = SimpleAssetInfo & {
-    references?:ReferenceInfo[]
-}
+// export type PrefabInfo = SimpleAssetInfo & {
+//     references?:ReferenceInfo[]
+// }
 
 
 
@@ -431,6 +431,8 @@ export default Inheritancify<IReferencified, IStaticReferencified>(function Refe
     return Referencified as unknown as Constructor<TBase & IReferencified>;
 
 }, ReferenciyInjector) 
+
+
 
 
 

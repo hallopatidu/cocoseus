@@ -1,7 +1,6 @@
 // export type Constructor<T> = new (...args: any[]) => T;
 
 import { Asset, Component, Constructor, ValueType, __private } from "cc"
-import { SimpleAssetInfo } from "../utils/CCEditor";
 
 
 // TYPE
@@ -89,6 +88,14 @@ export interface IStaticAsyncWaited extends Constructor<IAsyncWaited>{
 // }
 
 
+// ------------ LazyLoadify ------------
+export interface IPropertyLoadified extends IInheritancified{
+
+}
+
+export interface IStaticPropertyLoadified extends Constructor<IPropertyLoadified>{
+
+}
 // ------------ Referencify ------------
 
 export interface IReferencified extends IInheritancified{
@@ -120,6 +127,18 @@ export interface IStaticStoragified extends Constructor<IStoragified>{
 }
 
 // -------------
+
+export type SimpleAssetInfo = {
+    name?:string,
+    type?:string,
+    uuid?: string;
+    url?: string;
+    bundle?: string    
+}
+
+export type PrefabInfo = SimpleAssetInfo & {
+    references?:ReferenceInfo[]
+}
 
 export type ReferenceInfo = {
     root?:string,

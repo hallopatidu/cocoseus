@@ -1,17 +1,11 @@
 import { _decorator, Asset, CCClass, Component, Constructor, Enum, js, Node } from 'cc';
 import { EDITOR } from 'cc/env';
 import { Support } from './Support';
-import { IPropertyOptions, LegacyPropertyDecorator, PropertyStash, PropertyType } from '../types/CoreType';
+import { IPropertyOptions, LegacyPropertyDecorator, PropertyStash, PropertyType, SimpleAssetInfo } from '../types/CoreType';
 import { CACHE_KEY } from '../core/Inheritancify';
 const { ccclass, property } = _decorator;
 
-export type SimpleAssetInfo = {
-    name?:string,
-    type?:string,
-    uuid?: string;
-    url?: string;
-    bundle?: string    
-}
+
 
 type  AssetMeta = {
     files: string[];
@@ -155,7 +149,10 @@ export class CCEditor {
     // 
 
     
-
+    // 
+    static getSubDict<T, TKey extends keyof T> (obj: T, key: TKey): NonNullable<T[TKey]> {
+        return obj[key] as NonNullable<T[TKey]> || ((obj[key]) = {} as NonNullable<T[TKey]>);
+    }
     // 
     /**
      * 
@@ -193,6 +190,46 @@ export class CCEditor {
         }
     }
     // 
+
+    // static extendClassCache(constructor:Constructor, base:Constructor){
+    //     // Apply to all @property decorator.
+    //     const cache = base[CACHE_KEY];    
+    //     if (cache) {
+    //         const decoratedProto = cache.proto;
+    //         if (decoratedProto) {
+    //             const properties:Record<string, any> = decoratedProto.properties;
+    //             // 
+    //             constructor[CACHE_KEY] = js.createMap();
+    //             const classStash:unknown = constructor[CACHE_KEY] || ((constructor[CACHE_KEY]) ??= {});
+    //             const ccclassProto:unknown = classStash['proto'] || ((classStash['proto'])??={});
+    //             const injectorProperties:unknown = ccclassProto['properties'] || ((ccclassProto['properties'])??={});
+    //             // 
+    //             const keys:string[] = Object.keys(properties);
+    //             keys.forEach((propertyName:string)=>{
+    //                 const propertyStash:PropertyStash = injectorProperties[propertyName] ??= {};
+    //                 js.mixin(propertyStash, properties[propertyName]);
+    //                 // remakeProperty(constructor, propertyName, injectorProperties);
+    //             })            
+    //         }
+    //         base[CACHE_KEY] = undefined;
+    //     }
+    // }
+
+    /**
+     * 
+     * @param target 
+     * @param functionName 
+     * @param functionMethod 
+     */
+    // static overrideClassMethod(target:Record<string, any>, functionName:string, functionMethod:(superMethod:Function)=>{}){
+    //     const prototype = target.prototype ? target.prototype : target;
+    //     if(Object.prototype.hasOwnProperty.call(prototype, 'onLoad')){
+    //         const lastMethod:Function = prototype[functionName];            
+    //         js.value(prototype, functionName, function(){
+    //             functionMethod.bind(this, lastMethod);
+    //         })
+    //     }
+    // }
 
 }
 

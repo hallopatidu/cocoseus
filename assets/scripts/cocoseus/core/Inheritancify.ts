@@ -15,24 +15,24 @@ export const CACHE_KEY = '__ccclassCache__';
  * Dangerous Function !!!
  * This function can changed all inheritances of cocos system.
  * Cutting a segment of class inheritance, add more a new segment to this point.
- * 
+ * Untest function
  * @param base 
  * @param newSegmentConstructor 
  * @param cuttingFromConstructor 
  * @returns 
  */
-export function remakeClassInheritance<TBase, TSuper>(base:Constructor<TBase>, newSegmentConstructor:Constructor<TSuper>, cuttingFromConstructor:Constructor = Component):Constructor<TBase&TSuper|TBase|TSuper>{
-    // let superCtor:Constructor = getSuperBase(base, cuttingFromConstructor);
-    let superCtor:Constructor = base;
-    while(superCtor && superCtor !== cuttingFromConstructor) superCtor = js.getSuper(base);    
-    if(superCtor){
-        Object.setPrototypeOf(superCtor, newSegmentConstructor);
-        return base;
-    }else{
-        DEV && warn('remakeClassInheritance unsuccessful !!')
-        return newSegmentConstructor;
-    }
-}
+// export function remakeClassInheritance<TBase, TSuper>(base:Constructor<TBase>, newSegmentConstructor:Constructor<TSuper>, cuttingFromConstructor:Constructor = Component):Constructor<TBase&TSuper|TBase|TSuper>{
+//     // let superCtor:Constructor = getSuperBase(base, cuttingFromConstructor);
+//     let superCtor:Constructor = base;
+//     while(superCtor && superCtor !== cuttingFromConstructor) superCtor = js.getSuper(base);    
+//     if(superCtor){
+//         Object.setPrototypeOf(superCtor, newSegmentConstructor);
+//         return base;
+//     }else{
+//         DEV && warn('remakeClassInheritance unsuccessful !!')
+//         return newSegmentConstructor;
+//     }
+// }
 
 export function getHierarchyMethod(constructor:any, methodName:string):Function{
     if(!constructor) return null;
@@ -89,7 +89,10 @@ export function getInjector(injectorName:string, baseCtor:Constructor, currentBa
         error("Can not find the injector with the name " + injectorName + ". The class " + currentBaseCtorName + " need to be Inheritancified with " + injectorName + " injector.");
         return null;    
     }
-    return (baseCtor.name.indexOf(injectorName) !== -1) || (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? baseCtor : getInjector(injectorName, js.getSuper(baseCtor), currentBaseCtorName);    
+    // return (baseCtor.name.indexOf(injectorName) !== -1) || 
+    return (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? 
+            baseCtor : 
+            getInjector(injectorName, js.getSuper(baseCtor), currentBaseCtorName);    
 }
 
 export function lastInjector<TStaticInjector>(base:any):TStaticInjector|null{
@@ -118,8 +121,10 @@ export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>
             superClass[InjectorTag] = injectorName;
             return superClass as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
         }else{
-            const ctor:Constructor = base.constructor as Constructor || Object.getPrototypeOf(base);
-            return getInjector(targetInjectorName, ctor)  as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
+            const ctor:Constructor = base.constructor as Constructor || base//|| Object.getPrototypeOf(base);
+            // const injector:ReturnInheritancified<TBase&TInjector, TStaticInjector> = (getInjector(targetInjectorName, ctor) || injectorMethod(ctor))  as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector> ;
+            const injector:ReturnInheritancified<TBase&TInjector, TStaticInjector> = getInjector(targetInjectorName, ctor)   as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector> ;
+            return injector;
         }
     } as <TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>
 }
