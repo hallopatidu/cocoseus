@@ -16,7 +16,7 @@ export const WRAPPER_PROPERTY_PREFIX:string = '__$';
 // const PREFAB_DETAIL_PREFIX:string = '__$prefab__';
 
 export const PropertyLoadifyName:string = 'PropertyLoadify';
-const DecoratorName:string = '@property.load';
+export const PropertyLoadifyDecorator:string = '@property.load';
 
 export default Inheritancify<IPropertyLoadified, IStaticPropertyLoadified>(function PropertyLoadify <TBase>(base:Constructor<TBase>):Constructor<TBase & IPropertyLoadified>{
     // 
@@ -77,8 +77,8 @@ export default Inheritancify<IPropertyLoadified, IStaticPropertyLoadified>(funct
                     if(hadInjectorImplemented(fromComponent.constructor as Constructor, PropertyLoadifyName)){
                         const classType:string = js.getClassName(fromComponent);
                         const localNodePath:string = fromComponent?.node?.getPathInHierarchy();
-                        // const loadedPropertyNames:string[] = Array.from(Decoratify(fromComponent).keys(LOADING_LIST_DECORATED_KEY));
-                        const loadedPropertyNames:string[] = Array.from(decorated(fromComponent).keys());
+                        const loadedPropertyNames:string[] = Array.from(Decoratify(fromComponent).keys(PropertyLoadifyDecorator));
+                        // const loadedPropertyNames:string[] = Array.from(decorated(fromComponent).keys());
                         loadedPropertyNames.forEach((recoredPropertyName:string)=>{                                                          
                             if(recoredPropertyName){
                                 const tempRefInfo:ReferenceInfo = Object.create(null);
@@ -98,8 +98,8 @@ export default Inheritancify<IPropertyLoadified, IStaticPropertyLoadified>(funct
          */
         protected async asyncLoadingAssets(){
             const thisAsyncLoading:IAsyncProcessified = this as unknown as IAsyncProcessified;
-            // const propertyRecord:string[] = Array.from( Decoratify(thisAsyncLoading).keys(LOADING_LIST_DECORATED_KEY));
-            const propertyRecord:string[] = Array.from(decorated(thisAsyncLoading).keys());
+            const propertyRecord:string[] = Array.from( Decoratify(thisAsyncLoading).keys(PropertyLoadifyDecorator));
+            // const propertyRecord:string[] = Array.from(decorated(thisAsyncLoading).keys());
             if(thisAsyncLoading.isProgressing()) { await thisAsyncLoading.wait()}
             else if(!thisAsyncLoading.isProgressing() && propertyRecord && propertyRecord.length){                
                 thisAsyncLoading.begin(-1);                
@@ -131,8 +131,8 @@ export default Inheritancify<IPropertyLoadified, IStaticPropertyLoadified>(funct
             }
             // 
             const promises:Promise<any>[] = [];
-            // const loadedPropertyRecord:string[] = Array.from( Decoratify(this).keys(LOADING_LIST_DECORATED_KEY));
-            const loadedPropertyRecord:string[] = Array.from(decorated(thisAsyncLoading).keys());
+            const loadedPropertyRecord:string[] = Array.from( Decoratify(this).keys(PropertyLoadifyDecorator));
+            // const loadedPropertyRecord:string[] = Array.from(decorated(thisAsyncLoading).keys());
             loadedPropertyRecord.forEach((recordContent:string)=>{
                 const propArr:string[] = recordContent?.split("::");
                 if(propArr && propArr.length){                    
@@ -257,8 +257,9 @@ function remakeProperty(constructor:Constructor, propertyName:string, properties
         // Tag these propeties would be loading at the runtime.
         const classTypeName:string = js.getClassName(classType);
         const recordContent:string = propertyName + (classTypeName ? "::" + classTypeName : "");
-        const records:Set<string> = decorated(constructor)
-        !records.has(recordContent) && records.add(recordContent);
+        // const records:Set<string> = decorated(constructor)
+        // !records.has(recordContent) && records.add(recordContent);
+        Decoratify({constructor}).record(recordContent, PropertyLoadifyDecorator);
         // 
         defineSmartProperty(constructor, propertyName, options);        
     }
@@ -268,7 +269,7 @@ function remakeProperty(constructor:Constructor, propertyName:string, properties
 
 function decorated(target:any):Set<string>{
     const ctor:Constructor = target.prototype ? target : target.constructor;
-    return ctor[DecoratorName] || (ctor[DecoratorName] = new Set<string>())
+    return ctor[PropertyLoadifyDecorator] || (ctor[PropertyLoadifyDecorator] = new Set<string>())
 }
 
 

@@ -5,7 +5,7 @@ import Decoratify from '../../core/Decoratify';
 import { EmbedAsset, PrefabInfo, ReferenceInfo, SimpleAssetInfo } from '../../types/CoreType';
 import { EDITOR } from 'cc/env';
 import { Support } from '../../utils/Support';
-import { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, WRAPPER_PROPERTY_PREFIX } from '../../core/PropertyLoadify';
+import { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PropertyLoadifyDecorator, PropertyLoadifyName, WRAPPER_PROPERTY_PREFIX } from '../../core/PropertyLoadify';
 import { cocoseus } from '../../plugins';
 
 const { ccclass, property, executeInEditMode } = _decorator;
@@ -217,11 +217,11 @@ export class PrefabReferenceView extends Parasitify(Component) {
      */
     private updateReferenceView(){
         if(EDITOR){
-            if(hadInjectorImplemented(this.host.constructor as Constructor, 'Referencify')){
+            if(hadInjectorImplemented(this.host.constructor as Constructor, PropertyLoadifyName)){
                 //  Clear view.
                 this.referenceProperties = [];
                 const decoratify = Decoratify(this.host);                
-                const loadedPropertyNames:string[] = Array.from(Decoratify(this.host).keys('@reference'));            
+                const loadedPropertyNames:string[] = Array.from(Decoratify(this.host).keys(PropertyLoadifyDecorator));            
                 loadedPropertyNames.forEach((propName:string)=>{    
                     const propArr:string[] = propName?.split("::");                                       
                     if(propArr && propArr.length){                        

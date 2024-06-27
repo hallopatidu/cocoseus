@@ -1,7 +1,9 @@
 import { _decorator, Component, log, Sprite } from 'cc';
+import { cocoseus } from '../cocoseus/plugins';
 const { ccclass, property } = _decorator;
 
 @ccclass('TestLayoutReference')
+@cocoseus.propertyDynamicLoading
 export class TestLayoutReference extends Component {
 
     // @reference({type:SpriteFrame})
