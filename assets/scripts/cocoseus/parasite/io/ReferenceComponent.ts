@@ -5,8 +5,8 @@ import Decoratify from '../../core/Decoratify';
 import { EmbedAsset, PrefabInfo, ReferenceInfo, SimpleAssetInfo } from '../../types/CoreType';
 import { EDITOR } from 'cc/env';
 import { Support } from '../../utils/Support';
-import { cocoseus } from '../..';
 import { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, WRAPPER_PROPERTY_PREFIX } from '../../core/PropertyLoadify';
+import { cocoseus } from '../../plugins';
 const { ccclass, property, executeInEditMode } = _decorator;
 
 

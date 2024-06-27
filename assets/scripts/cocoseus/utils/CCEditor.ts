@@ -194,6 +194,24 @@ export class CCEditor {
         return obj[key] as NonNullable<T[TKey]> || ((obj[key]) = {} as NonNullable<T[TKey]>);
     }
 
+    static makeSmartClassDecorator<TArg> (
+        decorate: <TFunction extends Function>(constructor: TFunction, arg?: TArg) => ReturnType<ClassDecorator>,
+    ): ClassDecorator & ((arg?: TArg) => ClassDecorator) {
+        return proxyFn;
+        function proxyFn(...args: Parameters<ClassDecorator>): ReturnType<ClassDecorator>;
+        function proxyFn(arg?: TArg): ClassDecorator;
+        function proxyFn (target?: Parameters<ClassDecorator>[0] | TArg): ReturnType<ClassDecorator> {
+            if (typeof target === 'function') {
+                // If no parameter specified
+                return decorate(target);
+            } else {
+                return function <TFunction extends Function> (constructor: TFunction): void | Function {
+                    return decorate(constructor, target);
+                };
+            }
+        }
+    }
+
     // static extendClassCache(constructor:Constructor, base:Constructor){
     //     // Apply to all @property decorator.
     //     const cache = base[CACHE_KEY];    

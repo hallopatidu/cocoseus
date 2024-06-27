@@ -1,6 +1,7 @@
 import { _decorator, Component, error, instantiate, log, Node, Prefab, Sprite, SpriteFrame, Vec3, warn } from 'cc';
-import { cocoseus } from '../cocoseus';
-const { ccclass, property, executeInEditMode } = _decorator;
+import { cocoseus } from '../cocoseus/plugins';
+
+const { ccclass, property } = _decorator;
 
 @ccclass('TestReferencify')
 @cocoseus.propertyDynamicLoading

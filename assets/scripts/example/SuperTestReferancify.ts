@@ -1,6 +1,7 @@
 import { _decorator, Component, instantiate, Node, Prefab, SpriteFrame, Vec3, warn } from 'cc';
+import { cocoseus } from '../cocoseus/plugins';
 
-import { cocoseus } from '../cocoseus';
+
 const { ccclass, property } = _decorator;
 
 @ccclass('SuperTestReferancify')

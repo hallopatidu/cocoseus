@@ -1,9 +1,8 @@
 import { _decorator, Component, log, Sprite } from 'cc';
-import Referencify from '../cocoseus/core/Referencify';
 const { ccclass, property } = _decorator;
 
 @ccclass('TestLayoutReference')
-export class TestLayoutReference extends Referencify(Component) {
+export class TestLayoutReference extends Component {
 
     // @reference({type:SpriteFrame})
     // leftSF:SpriteFrame = null;

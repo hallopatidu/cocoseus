@@ -8,12 +8,12 @@ export type EmbedAsset = Asset|Node|Component
 
 // --------------- Parasitify --------
 
-export interface IParasitified<TSuper> {
+export interface IParasitified<TSuper=any> {
     get super():TSuper
     get host():TSuper
 }
 
-export interface IStaticParasitified<TSuper> extends Constructor<IParasitified<TSuper>> {
+export interface IStaticParasitified<TSuper=any> extends Constructor<IParasitified<TSuper>> {
    
 }
 

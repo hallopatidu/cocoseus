@@ -80,7 +80,8 @@ export function mixinClass(base:Constructor, invokerCtor:Constructor):Constructo
 export function hadInjectorImplemented(baseCtor:Constructor, injectorName:string):boolean{
     if(!injectorName || !injectorName.length) return false;    
     if(!baseCtor) return false;    
-    return (baseCtor.name.indexOf(injectorName) !== -1) || (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? true : hadInjectorImplemented(js.getSuper(baseCtor), injectorName);    
+    // return (baseCtor.name.indexOf(injectorName) !== -1) || 
+    return (baseCtor[InjectorTag] && baseCtor[InjectorTag].indexOf(injectorName) !== -1) ? true : hadInjectorImplemented(js.getSuper(baseCtor), injectorName);    
 }
 
 export function getInjector(injectorName:string, baseCtor:Constructor, currentBaseCtorName:string = baseCtor.name):Constructor{
@@ -100,8 +101,6 @@ export function lastInjector<TStaticInjector>(base:any):TStaticInjector|null{
 }
 
 
-
-
 /**
  * 
  * Base on the new intergaraion method class which found on Coco Engine Source.
@@ -116,7 +115,11 @@ export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>
             if(hadInjectorImplemented(base as Constructor, injectorName)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
             const superClass:TStaticInjector = injectorMethod.apply(this, Array.from(arguments));
             // if(hadInjectorImplemented(base as Constructor, (superClass as Constructor).name)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;     
-            superClass[InjectorTag] = injectorName;
+            const injector:string[]= superClass[InjectorTag] || (superClass[InjectorTag] ??= []);
+            // superClass[InjectorTag] = injectorName;
+            if(injector.indexOf(injectorName) == -1){   
+                injector.push(injectorName);
+            }
             return superClass as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
         }else{
             const ctor:Constructor = base.constructor as Constructor || base//|| Object.getPrototypeOf(base);

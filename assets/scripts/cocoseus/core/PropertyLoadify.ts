@@ -6,6 +6,7 @@ import { Support } from "../utils/Support";
 import { DEV, EDITOR } from "cc/env";
 // import Decoratify from "./Decoratify";
 import AsyncProcessify from "./AsyncProcessify";
+import Decoratify from "./Decoratify";
 
 export const ENUM_PROPERTY_PREFIX:string = '__$enum__';
 export const INFO_PROPERTY_PREFIX:string = '__$info__';
@@ -14,18 +15,16 @@ export const WRAPPER_PROPERTY_PREFIX:string = '__$';
 // const STRING_PROPERTY_PREFIX:string = '__$string__';
 // const PREFAB_DETAIL_PREFIX:string = '__$prefab__';
 
-
 export const PropertyLoadifyName:string = 'PropertyLoadify';
-const LOADING_LIST_DECORATED_KEY:string = '@' + PropertyLoadifyName + '.load';
+const DecoratorName:string = '@property.load';
 
 export default Inheritancify<IPropertyLoadified, IStaticPropertyLoadified>(function PropertyLoadify <TBase>(base:Constructor<TBase>):Constructor<TBase & IPropertyLoadified>{
     // 
-    class PropertyLoadified extends AsyncProcessify( base as unknown as Constructor<Component>) implements IPropertyLoadified {
+    class PropertyLoadified extends AsyncProcessify(Decoratify (base as unknown as Constructor<Component>)) implements IPropertyLoadified {
 
         protected onLoad(): void {
             console.log('loading completed !!')
             if(super.onLoad){
-
                 this.asyncLoadingAssets().then(super.onLoad.bind(this))
             }
         }
@@ -202,9 +201,7 @@ export default Inheritancify<IPropertyLoadified, IStaticPropertyLoadified>(funct
         
             }
             return
-        }
-
-        
+        }        
     }
 
     // Apply to all @property decorator.
@@ -271,7 +268,7 @@ function remakeProperty(constructor:Constructor, propertyName:string, properties
 
 function decorated(target:any):Set<string>{
     const ctor:Constructor = target.prototype ? target : target.constructor;
-    return ctor[LOADING_LIST_DECORATED_KEY] || (ctor[LOADING_LIST_DECORATED_KEY] = new Set<string>())
+    return ctor[DecoratorName] || (ctor[DecoratorName] = new Set<string>())
 }
 
 

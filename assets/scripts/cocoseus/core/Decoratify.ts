@@ -1,6 +1,5 @@
 import { Component, Constructor, _decorator, log } from "cc";
 import { IDecoratified, IStaticDecoratified } from "../types/CoreType";
-import { EDITOR } from "cc/env";
 import { Inheritancify } from "./Inheritancify";
 
 export const DecoratifyName:string = 'Decoratify';

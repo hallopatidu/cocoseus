@@ -2,13 +2,12 @@ import { __private, _decorator, Asset, CCClass, CCObject, Component, Constructor
 import Parasitify, { override } from '../../core/Parasitify';
 import { hadInjectorImplemented } from '../../core/Inheritancify';
 import Decoratify from '../../core/Decoratify';
-// import Referencify, { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PrefabInfo, reference, WRAPPER_PROPERTY_PREFIX } from '../../core/Referencify';
-// import { SimpleAssetInfo } from '../../utils/CCEditor';
-import { EmbedAsset, IReferencified, PrefabInfo, ReferenceInfo, SimpleAssetInfo } from '../../types/CoreType';
+import { EmbedAsset, PrefabInfo, ReferenceInfo, SimpleAssetInfo } from '../../types/CoreType';
 import { EDITOR } from 'cc/env';
 import { Support } from '../../utils/Support';
-import { cocoseus } from '../..';
 import { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, WRAPPER_PROPERTY_PREFIX } from '../../core/PropertyLoadify';
+import { cocoseus } from '../../plugins';
+
 const { ccclass, property, executeInEditMode } = _decorator;
 
 
@@ -20,7 +19,8 @@ const { ccclass, property, executeInEditMode } = _decorator;
  */
 @ccclass('ReferenceProperty')
 @cocoseus.propertyDynamicLoading
-class ReferenceProperty extends Eventify(CCObject)  {
+@cocoseus.eventEmitter
+class ReferenceProperty extends CCObject {
 
     static EVENT = {
         UPDATE:'ReferenceInfoView.UPDATE_ASSET_EVENT'
@@ -161,7 +161,7 @@ export class PrefabReferenceView extends Parasitify(Component) {
      * @param propertyName 
      * @param asset 
      */
-    @override
+    @override    
     async onLoadedAsset(propertyName:string, asset:Asset){
         if(asset && js.isChildClassOf(asset.constructor, Prefab)){
             // 
@@ -220,6 +220,7 @@ export class PrefabReferenceView extends Parasitify(Component) {
             if(hadInjectorImplemented(this.host.constructor as Constructor, 'Referencify')){
                 //  Clear view.
                 this.referenceProperties = [];
+                const decoratify = Decoratify(this.host);                
                 const loadedPropertyNames:string[] = Array.from(Decoratify(this.host).keys('@reference'));            
                 loadedPropertyNames.forEach((propName:string)=>{    
                     const propArr:string[] = propName?.split("::");                                       
