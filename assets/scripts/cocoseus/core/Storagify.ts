@@ -4,12 +4,10 @@ import { IStaticStoragified, IStoragified } from '../types/CoreType';
 import { Support } from '../utils/Support';
 const { ccclass, property } = _decorator;
 
-
+export const StoragifyName:string = 'Storagify';
 
 const SettingStorage:Map<number, Map<string, any>> = new Map<number, Map<string, any>> ();
-class ClientStorage {
-
-}
+// class ClientStorage {}
 /**
  * 
  * @param base 
@@ -52,6 +50,6 @@ export default Inheritancify<IStoragified, IStaticStoragified>(function Storagif
     }
     
     return Storagified  as unknown as Constructor<TBase & IStoragified>;
-})
+}, StoragifyName)
 
 

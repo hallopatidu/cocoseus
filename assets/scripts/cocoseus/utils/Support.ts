@@ -1,4 +1,5 @@
-import { _decorator, CCClass, Component, Enum, log, Node } from 'cc';
+import { _decorator, CCClass, Component, Enum, error, js, log, Node } from 'cc';
+import { DEV } from 'cc/env';
 const { ccclass, property } = _decorator;
 
 @ccclass('Support')
@@ -141,6 +142,17 @@ export class Support extends Component {
         // }
     }
 
+    /**
+     * 
+     * @param array Push a unique primitive value to array.
+     * @param item 
+     */
+    static pushUnique (array:Array<any>, item:any): void {
+        if (array.indexOf(item) < 0) {
+            array.push(item);
+        }
+    }
+
     // ------------- Data Structor -------------------
     /**
      * Detect Cycle in a Directed Graph Data . BFS solution (Bread First Search);
@@ -167,6 +179,10 @@ export class Support extends Component {
             }
             queue = batch;
         }        
+    }
+
+    static getSubTag<T, TKey extends keyof T> (obj: T, key: TKey): NonNullable<T[TKey]> {        
+        return obj[key] as NonNullable<T[TKey]> || ((obj[key]) = {} as NonNullable<T[TKey]>);
     }
 
 }

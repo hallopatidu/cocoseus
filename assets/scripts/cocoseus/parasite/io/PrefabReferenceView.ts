@@ -2,11 +2,12 @@ import { __private, _decorator, Asset, CCClass, CCObject, Component, Constructor
 import Parasitify, { override } from '../../core/Parasitify';
 import { hadInjectorImplemented } from '../../core/Inheritancify';
 import Decoratify from '../../core/Decoratify';
-import Referencify, { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PrefabInfo, reference, WRAPPER_PROPERTY_PREFIX } from '../../core/Referencify';
-import { SimpleAssetInfo } from '../../utils/CCEditor';
-import { EmbedAsset, IReferencified, ReferenceInfo } from '../../types/CoreType';
+import { EmbedAsset, PrefabInfo, ReferenceInfo, SimpleAssetInfo } from '../../types/CoreType';
 import { EDITOR } from 'cc/env';
 import { Support } from '../../utils/Support';
+import { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PropertyLoadifyDecorator, PropertyLoadifyName, WRAPPER_PROPERTY_PREFIX } from '../../core/PropertyLoadify';
+import { cocoseus } from '../../plugins';
+
 const { ccclass, property, executeInEditMode } = _decorator;
 
 
@@ -17,7 +18,9 @@ const { ccclass, property, executeInEditMode } = _decorator;
  * 
  */
 @ccclass('ReferenceProperty')
-class ReferenceProperty extends Referencify<IReferencified&__private._cocos_core_event_eventify__IEventified>(Eventify(CCObject))  {
+@cocoseus.propertyDynamicLoading
+@cocoseus.eventEmitter
+class ReferenceProperty extends CCObject {
 
     static EVENT = {
         UPDATE:'ReferenceInfoView.UPDATE_ASSET_EVENT'
@@ -51,7 +54,7 @@ class ReferenceProperty extends Referencify<IReferencified&__private._cocos_core
     @property({readonly:true})
     component:string = '';
 
-    @reference({
+    @property({
         type:Asset,
         visible:false
     })
@@ -158,7 +161,7 @@ export class PrefabReferenceView extends Parasitify(Component) {
      * @param propertyName 
      * @param asset 
      */
-    @override
+    @override    
     async onLoadedAsset(propertyName:string, asset:Asset){
         if(asset && js.isChildClassOf(asset.constructor, Prefab)){
             // 
@@ -214,10 +217,11 @@ export class PrefabReferenceView extends Parasitify(Component) {
      */
     private updateReferenceView(){
         if(EDITOR){
-            if(hadInjectorImplemented(this.host.constructor as Constructor, 'Referencify')){
+            if(hadInjectorImplemented(this.host.constructor as Constructor, PropertyLoadifyName)){
                 //  Clear view.
                 this.referenceProperties = [];
-                const loadedPropertyNames:string[] = Array.from(Decoratify(this.host).keys('@reference'));            
+                const decoratify = Decoratify(this.host);                
+                const loadedPropertyNames:string[] = Array.from(Decoratify(this.host).keys(PropertyLoadifyDecorator));            
                 loadedPropertyNames.forEach((propName:string)=>{    
                     const propArr:string[] = propName?.split("::");                                       
                     if(propArr && propArr.length){                        

@@ -1,7 +1,6 @@
 // export type Constructor<T> = new (...args: any[]) => T;
 
 import { Asset, Component, Constructor, ValueType, __private } from "cc"
-import { SimpleAssetInfo } from "../utils/CCEditor";
 
 
 // TYPE
@@ -9,12 +8,12 @@ export type EmbedAsset = Asset|Node|Component
 
 // --------------- Parasitify --------
 
-export interface IParasitified<TSuper> {
+export interface IParasitified<TSuper=any> {
     get super():TSuper
     get host():TSuper
 }
 
-export interface IStaticParasitified<TSuper> extends Constructor<IParasitified<TSuper>> {
+export interface IStaticParasitified<TSuper=any> extends Constructor<IParasitified<TSuper>> {
    
 }
 
@@ -89,13 +88,23 @@ export interface IStaticAsyncWaited extends Constructor<IAsyncWaited>{
 // }
 
 
+// ------------ LazyLoadify ------------
+export interface IPropertyLoadified extends IInheritancified{
+    analysisAsset<T=EmbedAsset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>;
+    onLoadedAsset(propertyName:string, asset:SimpleAssetInfo):void;
+    onEditorAssetChanged(propertyName:string):void;
+}
+
+export interface IStaticPropertyLoadified extends Constructor<IPropertyLoadified>{
+
+}
 // ------------ Referencify ------------
 
 export interface IReferencified extends IInheritancified{
     get refInfo():ReferenceInfo;
     get token():number;
-    analysisAsset<T=EmbedAsset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>
-    onLoadedAsset(propertyName:string, asset:SimpleAssetInfo)
+    // analysisAsset<T=EmbedAsset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>
+    // onLoadedAsset(propertyName:string, asset:SimpleAssetInfo)
 }
 
 export interface IStaticReferencified extends Constructor<IReferencified>{
@@ -120,6 +129,18 @@ export interface IStaticStoragified extends Constructor<IStoragified>{
 }
 
 // -------------
+
+export type SimpleAssetInfo = {
+    name?:string,
+    type?:string,
+    uuid?: string;
+    url?: string;
+    bundle?: string    
+}
+
+export type PrefabInfo = SimpleAssetInfo & {
+    references?:ReferenceInfo[]
+}
 
 export type ReferenceInfo = {
     root?:string,
@@ -156,7 +177,35 @@ export type Action = {
 // }
 
 export type Initializer = () => unknown;
+export type PrimitiveType<T> = __private._cocos_core_data_utils_attribute__PrimitiveType<T>;
+export type IExposedAttributes = __private._cocos_core_data_utils_attribute_defines__IExposedAttributes;
+export type PropertyStash = IExposedAttributes & {
+    default?: unknown;
+    get?: () => unknown;
+    set?: (value: unknown) => void;
+    _short?: unknown;
+    __internalFlags: number;
+}
 export type IPropertyOptions = __private._cocos_core_data_decorators_property__IPropertyOptions;
 export type PropertyType = __private._cocos_core_data_decorators_property__PropertyType;
 export type LegacyPropertyDecorator = __private._cocos_core_data_decorators_utils__LegacyPropertyDecorator;
 export type BabelPropertyDecoratorDescriptor = PropertyDescriptor & { initializer?: Initializer };
+export enum PropertyStashInternalFlag {
+    /**
+     * Indicates this property is reflected using "standalone property decorators" such as
+     * `@editable`, `@visible`, `serializable`.
+     * All standalone property decorators would set this flag;
+     * non-standalone property decorators won't set this flag.
+     */
+    STANDALONE = 1 << 0,
+
+    /**
+     * Indicates this property is visible, if no other explicit visibility decorators(`@visible`s) are attached.
+     */
+    IMPLICIT_VISIBLE = 1 << 1,
+
+    /**
+     * Indicates this property is serializable, if no other explicit visibility decorators(`@serializable`s) are attached.
+     */
+    IMPLICIT_SERIALIZABLE = 1 << 2,
+}

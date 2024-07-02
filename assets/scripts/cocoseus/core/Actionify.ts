@@ -19,12 +19,12 @@ type ActionTaskInfo = {
 }
 
 
-
+export const ActionifyName:string = 'Actionify';
 /**
  * 
  */
 export default Inheritancify<IActionized, IStaticActionized>(function Actionify<TBase>(base:Constructor<TBase>):Constructor<TBase & IActionized>{
-    class Actionized extends Referencify(AsyncWaitify(base as unknown as Constructor<Component>)) implements IActionized, IAsyncWaited {
+    class Actionized extends Referencify(AsyncWaitify( Decoratify(base as unknown as Constructor<Component>))) implements IActionized, IAsyncWaited {
         
         private static _actions:Map<number, Map<number, Function[]>>;
 
@@ -274,7 +274,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
 
     }
     return Actionized as unknown as Constructor<TBase & IActionized>;
-} )
+}, ActionifyName);
 
 /**
  * 

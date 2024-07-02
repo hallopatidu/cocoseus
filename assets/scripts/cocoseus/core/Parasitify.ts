@@ -1,10 +1,10 @@
 import { Component, Constructor, error, js, warn, _decorator } from "cc";
 import { DEV, EDITOR } from "cc/env";
-import { IParasitified } from "../types/CoreType";
-import { hadInjectorImplemented } from "./Inheritancify";
+import { IParasitified, IStaticParasitified } from "../types/CoreType";
+import { Inheritancify, hadInjectorImplemented } from "./Inheritancify";
 const { property } = _decorator;
 
-export const ModifierName:string = 'Parasitified';
+export const ParasitifyName:string = 'Parasitify';
 export const OverrideMethodNameMap = Symbol();
 
 /**
@@ -14,9 +14,9 @@ export const OverrideMethodNameMap = Symbol();
  * @param propertyKey 
  * @param descriptor 
  */
-export function override(target: Component, propertyKey: string, descriptor: PropertyDescriptor){
+export function override(target:any, propertyKey: string, descriptor: PropertyDescriptor){
     if(DEV){
-        if(!hadInjectorImplemented(target.constructor as Constructor, ModifierName)){
+        if(!hadInjectorImplemented(target.constructor as Constructor, ParasitifyName)){
             error('You need add the Parasitify Modifier for this class to use @override');
         }
     }
@@ -32,14 +32,16 @@ export function override(target: Component, propertyKey: string, descriptor: Pro
 }
 
 /**
- * 
+ * Parameters
  * @param base 
  * @returns 
  */
-export default function Parasitify<TBase,TSuper>(base:Constructor<TBase>, superConstructor?:Constructor<TSuper>):Constructor<TBase & IParasitified<TSuper>>{
-    if(hadInjectorImplemented(base, ModifierName)){
-        return base as unknown as any
-    }else{
+// export default function Parasitify<TBase,TSuper>(base:Constructor<TBase>, superConstructor?:Constructor<TSuper>):Constructor<TBase & IParasitified<TSuper>>{
+//     if(hadInjectorImplemented(base, ModifierName)){
+//         return base as unknown as any
+//     }else{
+
+export default Inheritancify<IParasitified, IStaticParasitified>(function Parasitify<TBase,TSuper>(base:Constructor<TBase>, superConstructor?:Constructor<TSuper>):Constructor<TBase & IParasitified<TSuper>>{
         class Parasitified extends (base as unknown as Constructor<Component>) implements IParasitified<TSuper>{
             @property({
                 displayName: 'Extends',        
@@ -101,10 +103,10 @@ export default function Parasitify<TBase,TSuper>(base:Constructor<TBase>, superC
             //     });
             // }
         }
+        
+        return Parasitified as unknown as Constructor<TBase & IParasitified<TSuper>>;
 
-        return Parasitified as unknown as Constructor<TBase & IParasitified<TSuper>>
-    }
-}
+}, ParasitifyName)
 
 // -------------------------
 
@@ -132,7 +134,7 @@ function excuteHierarchyOverridding(thisComp:Component){
         let investigateComp:Component = null;
         if(eligibleForInheritance){
             // const componentIsParasite:boolean = js.isChildClassOf(component.constructor, parasiteClass); 
-            const componentIsParasite:boolean = hadInjectorImplemented(component.constructor as Constructor, ModifierName);            
+            const componentIsParasite:boolean = hadInjectorImplemented(component.constructor as Constructor, ParasitifyName);            
             hostComp = componentIsParasite ? hostComp : component;                
             let enabledIndex:number = index;
             // Search enabled nextComp
@@ -153,8 +155,7 @@ function excuteHierarchyOverridding(thisComp:Component){
         //     // update firstParasite
         //     firstParasite = nextComp && !componentIsParasite ? nextComp : firstParasite;
         // }
-        // 
-        
+        //         
         return eligibleForInheritance && investigateComp && (investigateComp == thisComp);
     })
     // 
