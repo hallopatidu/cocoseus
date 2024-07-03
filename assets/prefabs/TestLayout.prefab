@@ -378,6 +378,10 @@
     "__prefab": {
       "__id__": 17
     },
+    "leftSF": null,
+    "__$info__leftSF": null,
+    "rightSF": null,
+    "__$info__rightSF": null,
     "rightSprite": {
       "__id__": 5
     },
