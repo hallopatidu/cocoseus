@@ -1,5 +1,6 @@
 import { _decorator, Component, Constructor, error, js, log, Node, warn } from 'cc';
 import { DEV } from 'cc/env';
+import { CACHE_KEY, CCEditor } from '../utils/CCEditor';
 
 export const InjectorTag = Symbol() //'$injector';
 
@@ -111,15 +112,10 @@ export function lastInjector<TStaticInjector>(base:any):TStaticInjector|null{
  */
 export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>(...args:Constructor<TBase>[])=>Constructor<TBase & TInjector>, injectorName:string = injectorMethod.name ):(<TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>){
     return function<TBase>(base:validateTBase<TBase>, targetInjectorName:string = injectorName):ReturnInheritancified<TBase&TInjector, TStaticInjector>{
-        if(!!base['__props__'] && !!base['__values__']){            // 
+        if(!!base['__props__'] && !!base['__values__']){            
+            // 
             if(hadInjectorImplemented(base as Constructor, injectorName)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
-            const superClass:TStaticInjector = injectorMethod.apply(this, Array.from(arguments));
-            // if(hadInjectorImplemented(base as Constructor, (superClass as Constructor).name)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;     
-            const injector:string[]= superClass[InjectorTag] || (superClass[InjectorTag] ??= []);
-            // superClass[InjectorTag] = injectorName;
-            if(injector.indexOf(injectorName) == -1){   
-                injector.push(injectorName);
-            }
+            const superClass:TStaticInjector = implementInjectorMethod(injectorMethod, injectorName, arguments);
             return superClass as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
         }else{
             const ctor:Constructor = base.constructor as Constructor || base//|| Object.getPrototypeOf(base);
@@ -131,4 +127,31 @@ export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>
 }
 
 
+export function CCClassify<TInjector, TStaticInjector>(injectorMethod:<TBase>(...args:Constructor<TBase>[])=>Constructor<TBase & TInjector>, injectorName:string = injectorMethod.name ):(<TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>){
+    return function<TBase>(base:validateTBase<TBase>):ReturnInheritancified<TBase&TInjector, TStaticInjector>{
+        if(hadInjectorImplemented(base as Constructor, injectorName)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
+        //         
+        const superClass:TStaticInjector = implementInjectorMethod(injectorMethod, injectorName, arguments);
+        if(!superClass) error('Please, declare the injector class and return it inside injector function !')
+        return CCEditor.extendClassCache(superClass) as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
 
+    } as <TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>
+}
+
+        /**
+         * 
+         * @param injectorMethod 
+         * @param injectorName 
+         * @param args 
+         * @returns 
+         */
+        function implementInjectorMethod<TInjector, TStaticInjector>(injectorMethod:<TBase>(...args:Constructor<TBase>[])=>Constructor<TBase & TInjector>, injectorName:string, args:any):TStaticInjector{    
+            const superClass:TStaticInjector = injectorMethod.apply(this, Array.from(args));            
+            const injector:string[]= superClass[InjectorTag] || (superClass[InjectorTag] ??= []);           
+                if(injector.indexOf(injectorName) == -1){   
+                    injector.push(injectorName);
+            }
+            return superClass;
+        }
+
+        

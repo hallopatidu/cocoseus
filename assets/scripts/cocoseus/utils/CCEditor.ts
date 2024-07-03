@@ -187,6 +187,27 @@ export class CCEditor {
             }
         }
     }
+
+    static extendClassCache<TStaticInjector>(constructor:TStaticInjector):TStaticInjector{
+        let base = js.getSuper(constructor as Constructor);
+        if (base === Object) {
+            base = null;
+        }
+        // 
+        const cache = base[CACHE_KEY];
+        if (cache) {
+            const decoratedProto = cache.proto;
+            if (decoratedProto) {
+                decoratedProto.extends = base;
+                decoratedProto.ctor = constructor;
+            }
+            base[CACHE_KEY] = undefined;                
+        }
+        // 
+        constructor[CACHE_KEY] = cache;
+        // 
+        return constructor;
+    }
     // 
 
 
