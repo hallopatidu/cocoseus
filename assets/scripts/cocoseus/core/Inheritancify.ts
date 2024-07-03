@@ -1,5 +1,6 @@
 import { _decorator, Component, Constructor, error, js, log, Node, warn } from 'cc';
 import { DEV } from 'cc/env';
+import { CACHE_KEY } from '../utils/CCEditor';
 
 export const InjectorTag = Symbol() //'$injector';
 
@@ -130,5 +131,32 @@ export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>
     } as <TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>
 }
 
-
-
+export function CCClassify <TInjector, TStaticInjector>(injectorMethod:<TBase>(...args:Constructor<TBase>[])=>Constructor<TBase & TInjector>, injectorName:string = injectorMethod.name ):(<TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>){
+    return function<TBase>(base:validateTBase<TBase>, targetInjectorName:string = injectorName):ReturnInheritancified<TBase&TInjector, TStaticInjector>{
+        // 
+        if(hadInjectorImplemented(base as Constructor, injectorName)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
+        const superClass:TStaticInjector = injectorMethod.apply(this, Array.from(arguments));
+        // if(hadInjectorImplemented(base as Constructor, (superClass as Constructor).name)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;     
+        const injectorStash:string[]= superClass[InjectorTag] || (superClass[InjectorTag] ??= []);
+        // superClass[InjectorTag] = injectorName;
+        if(injectorStash.indexOf(injectorName) == -1){   
+            injectorStash.push(injectorName);
+        }
+        // 
+        const cache = base[CACHE_KEY];    
+        if (cache) {
+            const decoratedProto = cache.proto;
+            if (decoratedProto) {
+                superClass[CACHE_KEY] = js.createMap();
+                const classStash:unknown = superClass[CACHE_KEY] || ((superClass[CACHE_KEY]) ??= {});
+                const ccclassProto:unknown = classStash['proto'] || ((classStash['proto'])??={});
+                js.mixin(ccclassProto, decoratedProto)
+            }
+            base[CACHE_KEY] = undefined;
+        }
+        // 
+        return superClass as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
+        
+    } as <TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>
+    
+}

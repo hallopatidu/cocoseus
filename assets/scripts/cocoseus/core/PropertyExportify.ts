@@ -5,8 +5,8 @@ import { CACHE_KEY } from '../utils/CCEditor';
 import { IPropertyOptions, PropertyStash } from '../types/CoreType';
 const { ccclass, property } = _decorator;
 
-export const PropertyLoadifiedInjector:string = "PropertyExportify";
-export const PropertyLoadifiedDecorator:string = "@property.export";
+export const PropertyExportifyInjector:string = "PropertyExportify";
+export const PropertyExportifyDecorator:string = "@property.export";
 
 export default Inheritancify(function PropertyExportify <TBase>(base:Constructor<TBase>):Constructor<TBase>{
 
@@ -54,5 +54,5 @@ function remakeProperty(constructor:Constructor, propertyName:string, properties
     // 
     const classTypeName:string = js.getClassName(classType);
     const recordContent:string = propertyName + (classTypeName ? "::" + classTypeName : "");
-    Decoratify({constructor}).record(recordContent, PropertyLoadifiedDecorator);
+    Decoratify({constructor}).record(recordContent, PropertyExportifyDecorator);
 }
