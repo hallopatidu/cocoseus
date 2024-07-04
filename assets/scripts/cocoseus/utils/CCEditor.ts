@@ -283,7 +283,8 @@ export class CCEditor {
      * @param decoratorHandler 
      * @returns 
      */
-    static generateDecorator(decoratorHandler:DecorateHandlerType):DecoratePropertyType{    
+    static generateDecorator(type:string, decoratorHandler:DecorateHandlerType):DecoratePropertyType{    
+        // const {type} = {[type]:function(){}}
         const decorateFunc:Function = function (target?: Parameters<LegacyPropertyDecorator>[0] | PropertyType, 
             propertyKey?: Parameters<LegacyPropertyDecorator>[1],
             descriptorOrInitializer?: Parameters<LegacyPropertyDecorator>[2],
@@ -304,8 +305,7 @@ export class CCEditor {
                     target,
                     propertyKey,
                 );
-                // propertyStash.__handlers =  propertyStash.__handlers || [];
-                // propertyStash.__handlers.push(decoratorHandler);  
+                propertyStash.__$decorate = type;
                 // 
                 decoratorHandler(
                     classStash,
@@ -313,7 +313,7 @@ export class CCEditor {
                     classConstructor,
                     propertyKey,
                     options as IPropertyOptions,
-                    descriptorOrInitializer,
+                    descriptorOrInitializer
                 );
             }
         

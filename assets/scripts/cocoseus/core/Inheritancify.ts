@@ -1,5 +1,4 @@
 import { __private, _decorator, Component, Constructor, error, js, log, Node, warn } from 'cc';
-import { DEV } from 'cc/env';
 import { CACHE_KEY, CCEditor } from '../utils/CCEditor';
 import { ClassStash, DecorateHandlerType, DecoratePropertyType, IPropertyOptions, LegacyPropertyDecorator, PropertyStash, PropertyType } from '../types/CoreType';
 const {property} = _decorator
@@ -141,12 +140,13 @@ export function CCClassify<TInjector, TStaticInjector>(injectorMethod:<TBase>(..
     return function<TBase>(base:validateTBase<TBase>):ReturnInheritancified<TBase&TInjector, TStaticInjector>{
         if(hadInjectorImplemented(base as Constructor, injectorName)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
         //         
-        const superClass:TStaticInjector = implementInjectorMethod(injectorMethod, injectorName, arguments);
+        let superClass:TStaticInjector = implementInjectorMethod(injectorMethod, injectorName, arguments);
         if(!superClass) error('Please, declare the injector class and return it inside injector function !')
-
-        
-        return CCEditor.extendClassCache(superClass) as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
-
+        // 
+        superClass = CCEditor.extendClassCache(superClass);
+        extendCustomizedProperties(superClass as Constructor);
+        //  
+        return superClass as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
     } as <TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>
 }
 
@@ -166,21 +166,68 @@ export function CCClassify<TInjector, TStaticInjector>(injectorMethod:<TBase>(..
             return superClass;
         }
 
+        /**
+         * 
+         * @param constructor 
+         */
+        function extendCustomizedProperties(constructor:Constructor){
+            const classStash:ClassStash = constructor[CACHE_KEY] || ((constructor[CACHE_KEY]) = {});
+            const ccclassProto = CCEditor.getSubDict<ClassStash, keyof ClassStash>(classStash, 'proto');
+            const properties:Record<string, PropertyStash> = CCEditor.getSubDict(ccclassProto, 'properties');
+            const propertyKeys:string[] = Object.keys(properties);
+            propertyKeys.forEach((key:string)=>{
+                const propertyStash:PropertyStash = properties[key];
+                if(propertyStash && propertyStash.__$extends && propertyStash.__$extends.length){                    
+                    while(propertyStash.__$extends.length){
+                        const executeDecoratorFunction:Function = propertyStash.__$extends.shift();
+                        executeDecoratorFunction && executeDecoratorFunction();
+                    }
+                    delete propertyStash.__$extends;
+                }
+
+            });             
+        }
         
 /**
  * 
  * @param decoratorHandler 
  * @returns 
  */
-export function generateCustomPropertyDecorator(decoratorHandler:DecorateHandlerType):DecoratePropertyType{ 
-    return CCEditor.generateDecorator(function(cache:ClassStash, 
-        propertyStash:PropertyStash, 
-        ctor: new ()=>unknown, 
-        propertyKey:string|symbol, 
-        option:IPropertyOptions, descriptorOrInitializer?:any){
-            // 
-            propertyStash.__handlers = propertyStash.__handlers  || [];
-            propertyStash.__handlers.push(decoratorHandler);
+export function generateCustomPropertyDecorator(type:string, decoratorHandler:DecorateHandlerType):DecoratePropertyType{ 
+    return CCEditor.generateDecorator(type, function( 
+        cache?:ClassStash, 
+        propertyStash?:PropertyStash, 
+        ctor?: new ()=>unknown, 
+        propertyKey?:string|symbol,
+    ){
+        // 
+        propertyStash.__$extends = propertyStash.__$extends  || [];        
+        propertyStash.__$extends.push(decoratorHandler.bind(this, cache, propertyStash, ctor, propertyKey));
+        // 
     }) as DecoratePropertyType
 }
 
+/**
+ * 
+ * @param decoratorName 
+ * @param decoratorHandler 
+ * @returns 
+ */
+export function remakeClassProperty(constructor:Constructor, decoratorName:string, decoratorHandler:DecorateHandlerType){    
+    const classStash:ClassStash = constructor[CACHE_KEY] || ((constructor[CACHE_KEY]) = {});
+    const ccclassProto = CCEditor.getSubDict<ClassStash, keyof ClassStash>(classStash, 'proto');
+    const properties:Record<string, PropertyStash> = CCEditor.getSubDict(ccclassProto, 'properties');     
+    const propertyKeys:string[] = Object.keys(properties);
+    propertyKeys.forEach((key:string|symbol)=>{     
+        const propertyStash:PropertyStash = properties[key.toString()];   
+        if(!propertyStash.__$decorate) {propertyStash.__$decorate = 'property';}   
+        if( propertyStash.__$decorate == decoratorName.toString() && propertyStash && propertyStash.__$extends && propertyStash.__$extends.length  ){
+            // 
+            propertyStash.__$extends = propertyStash.__$extends  || [];
+            propertyStash.__$extends.push(decoratorHandler.bind(this, classStash, propertyStash, constructor, key));
+            // 
+        }
+
+    });       
+    return
+}

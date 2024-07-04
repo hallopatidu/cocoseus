@@ -1,5 +1,5 @@
 import { Asset, AssetManager, CCClass, CCObject, Component, Constructor, Enum, Node, Prefab, assetManager, error, js, log, warn } from "cc";
-import { Inheritancify, hadInjectorImplemented } from "./Inheritancify";
+import { CCClassify, Inheritancify, hadInjectorImplemented } from "./Inheritancify";
 import { EmbedAsset, IAsyncProcessified, IPropertyLoadified, IPropertyOptions, IStaticPropertyLoadified, PrefabInfo, PropertyStash, ReferenceInfo, SimpleAssetInfo } from "../types/CoreType";
 import { CACHE_KEY, CCEditor } from "../utils/CCEditor";
 import { Support } from "../utils/Support";
@@ -18,7 +18,7 @@ export const WRAPPER_PROPERTY_PREFIX:string = '__$';
 export const PropertyLoadifyName:string = 'PropertyLoadify';
 export const PropertyLoadifyDecorator:string = '@property.load';
 
-export default Inheritancify<IPropertyLoadified, IStaticPropertyLoadified>(function PropertyLoadify <TBase>(base:Constructor<TBase>):Constructor<TBase & IPropertyLoadified>{
+export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function PropertyLoadify <TBase>(base:Constructor<TBase>):Constructor<TBase & IPropertyLoadified>{
     // 
     class PropertyLoadified extends AsyncProcessify(Decoratify (base as unknown as Constructor<Component>)) implements IPropertyLoadified {
 
