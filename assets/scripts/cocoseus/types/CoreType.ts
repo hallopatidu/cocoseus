@@ -175,21 +175,32 @@ export type Action = {
 //     ref:number
 // }
 
+
+
 export type Initializer = () => unknown;
 export type PrimitiveType<T> = __private._cocos_core_data_utils_attribute__PrimitiveType<T>;
 export type IExposedAttributes = __private._cocos_core_data_utils_attribute_defines__IExposedAttributes;
+export type ClassStash = IExposedAttributes & {
+    default?: unknown;
+    proto?: {
+        properties?: Record<PropertyKey, PropertyStash>;
+    };
+    errorProps?: Record<PropertyKey, true>;
+}
 export type PropertyStash = IExposedAttributes & {
     default?: unknown;
     get?: () => unknown;
     set?: (value: unknown) => void;
     _short?: unknown;
     __internalFlags: number;
+    __handlers?:Function[]
 }
-export type IPropertyOptions = __private._cocos_core_data_decorators_property__IPropertyOptions;
+export type IPropertyOptions = __private._cocos_core_data_decorators_property__IPropertyOptions | __private._cocos_core_data_utils_attribute_defines__IExposedAttributes;
 export type PropertyType = __private._cocos_core_data_decorators_property__PropertyType;
 export type LegacyPropertyDecorator = __private._cocos_core_data_decorators_utils__LegacyPropertyDecorator;
 export type BabelPropertyDecoratorDescriptor = PropertyDescriptor & { initializer?: Initializer };
 export enum PropertyStashInternalFlag {
+    CUSTOME = 1 << -1,  // custome property decorators. this Internal flag made by cocoseus.
     /**
      * Indicates this property is reflected using "standalone property decorators" such as
      * `@editable`, `@visible`, `serializable`.
@@ -208,3 +219,10 @@ export enum PropertyStashInternalFlag {
      */
     IMPLICIT_SERIALIZABLE = 1 << 2,
 }
+
+export type DecoratePropertyType = ((options?: IPropertyOptions) => LegacyPropertyDecorator) 
+                        | ((type: PropertyType)=> LegacyPropertyDecorator)
+                        | ((...args: Parameters<LegacyPropertyDecorator>)=>void)
+                        | ((target?: Parameters<LegacyPropertyDecorator>[0] | PropertyType, propertyKey?: Parameters<LegacyPropertyDecorator>[1],descriptorOrInitializer?: Parameters<LegacyPropertyDecorator>[2])=> LegacyPropertyDecorator | undefined)
+
+export type DecorateHandlerType = (cache: ClassStash, propertyStash: PropertyStash, ctor: new () => unknown, propertyKey: Parameters<LegacyPropertyDecorator>[1], options:IPropertyOptions, descriptorOrInitializer: Parameters<LegacyPropertyDecorator>[2] | undefined)=>void;

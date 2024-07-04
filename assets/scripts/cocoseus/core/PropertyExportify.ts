@@ -1,7 +1,6 @@
 import { _decorator, CCObject, Component, Constructor, js, Node } from 'cc';
 import { CCClassify, Inheritancify } from './Inheritancify';
 import Decoratify from './Decoratify';
-import { CACHE_KEY } from '../utils/CCEditor';
 import { IPropertyExportified, IPropertyOptions, IStaticPropertyExportified, PropertyStash } from '../types/CoreType';
 const { ccclass, property } = _decorator;
 

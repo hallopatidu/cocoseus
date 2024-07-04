@@ -1,7 +1,7 @@
-import { _decorator, Asset, CCClass, Component, Constructor, Enum, js, Node } from 'cc';
+import { __private, _decorator, Asset, CCClass, Component, Constructor, Enum, js, Node } from 'cc';
 import { EDITOR } from 'cc/env';
 import { Support } from './Support';
-import { IPropertyOptions, LegacyPropertyDecorator, PropertyStash, PropertyType, SimpleAssetInfo } from '../types/CoreType';
+import { ClassStash, DecorateHandlerType, DecoratePropertyType, IPropertyOptions, LegacyPropertyDecorator, PropertyStash, PropertyStashInternalFlag, PropertyType, SimpleAssetInfo } from '../types/CoreType';
 
 const { ccclass, property } = _decorator;
 
@@ -188,6 +188,11 @@ export class CCEditor {
         }
     }
 
+    /**
+     * 
+     * @param constructor 
+     * @returns 
+     */
     static extendClassCache<TStaticInjector>(constructor:TStaticInjector):TStaticInjector{
         let base = js.getSuper(constructor as Constructor);
         if (base === Object) {
@@ -203,12 +208,52 @@ export class CCEditor {
             }
             base[CACHE_KEY] = undefined;                
         }
-        // 
-        constructor[CACHE_KEY] = cache;
+        //         
+        const classStash:ClassStash = constructor[CACHE_KEY] || (constructor[CACHE_KEY] ??= js.createMap());
+        constructor[CACHE_KEY] = js.mixin(classStash, cache);
         // 
         return constructor;
     }
     // 
+
+    /**
+     * 
+     * @param target 
+     * @param propertyKey 
+     * @returns 
+     */
+    static getOrCreatePropertyStash (
+        target: Parameters<LegacyPropertyDecorator>[0],
+        propertyKey: Parameters<LegacyPropertyDecorator>[1],
+        descriptorOrInitializer?: Parameters<LegacyPropertyDecorator>[2],
+    ): PropertyStash {
+        const classStash:unknown = target.constructor[CACHE_KEY] || ((target.constructor[CACHE_KEY]) = {});
+        const ccclassProto = this.getSubDict(classStash, 'proto' as never);
+        const properties:any = this.getSubDict(ccclassProto, 'properties' as never);
+        const propertyStash:PropertyStash = properties[(propertyKey as string)] ??= {} as PropertyStash;        
+        // propertyStash.__internalFlags |= PropertyStashInternalFlag.CUSTOME;
+        // 
+        if (descriptorOrInitializer && typeof descriptorOrInitializer !== 'function' && (descriptorOrInitializer.get || descriptorOrInitializer.set)) {
+            if (descriptorOrInitializer.get) {
+                propertyStash.get = descriptorOrInitializer.get;
+            }
+            if (descriptorOrInitializer.set) {
+                propertyStash.set = descriptorOrInitializer.set;
+            }
+        } 
+        // This version donot support set the default value.
+        // else {
+        //     this.setDefaultValue(
+        //         classStash,
+        //         propertyStash,
+        //         target.constructor as new () => unknown,
+        //         propertyKey,
+        //         descriptorOrInitializer,
+        //     );
+        // }
+        // 
+        return propertyStash;
+    }
 
 
     static getSubDict<T, TKey extends keyof T> (obj: T, key: TKey): NonNullable<T[TKey]> {
@@ -233,45 +278,64 @@ export class CCEditor {
         }
     }
 
-    // static extendClassCache(constructor:Constructor, base:Constructor){
-    //     // Apply to all @property decorator.
-    //     const cache = base[CACHE_KEY];    
-    //     if (cache) {
-    //         const decoratedProto = cache.proto;
-    //         if (decoratedProto) {
-    //             const properties:Record<string, any> = decoratedProto.properties;
-    //             // 
-    //             constructor[CACHE_KEY] = js.createMap();
-    //             const classStash:unknown = constructor[CACHE_KEY] || ((constructor[CACHE_KEY]) ??= {});
-    //             const ccclassProto:unknown = classStash['proto'] || ((classStash['proto'])??={});
-    //             const injectorProperties:unknown = ccclassProto['properties'] || ((ccclassProto['properties'])??={});
-    //             // 
-    //             const keys:string[] = Object.keys(properties);
-    //             keys.forEach((propertyName:string)=>{
-    //                 const propertyStash:PropertyStash = injectorProperties[propertyName] ??= {};
-    //                 js.mixin(propertyStash, properties[propertyName]);
-    //                 // remakeProperty(constructor, propertyName, injectorProperties);
-    //             })            
-    //         }
-    //         base[CACHE_KEY] = undefined;
-    //     }
-    // }
-
     /**
      * 
-     * @param target 
-     * @param functionName 
-     * @param functionMethod 
+     * @param decoratorHandler 
+     * @returns 
      */
-    // static overrideClassMethod(target:Record<string, any>, functionName:string, functionMethod:(superMethod:Function)=>{}){
-    //     const prototype = target.prototype ? target.prototype : target;
-    //     if(Object.prototype.hasOwnProperty.call(prototype, 'onLoad')){
-    //         const lastMethod:Function = prototype[functionName];            
-    //         js.value(prototype, functionName, function(){
-    //             functionMethod.bind(this, lastMethod);
-    //         })
-    //     }
-    // }
+    static generateDecorator(decoratorHandler:DecorateHandlerType):DecoratePropertyType{    
+        const decorateFunc:Function = function (target?: Parameters<LegacyPropertyDecorator>[0] | PropertyType, 
+            propertyKey?: Parameters<LegacyPropertyDecorator>[1],
+            descriptorOrInitializer?: Parameters<LegacyPropertyDecorator>[2],
+        ):LegacyPropertyDecorator | undefined{
+            let options: IPropertyOptions | PropertyType | null = null;
+            function normalized (
+                target: Parameters<LegacyPropertyDecorator>[0],
+                propertyKey: Parameters<LegacyPropertyDecorator>[1],
+                descriptorOrInitializer: Parameters<LegacyPropertyDecorator>[2],
+            ): void {
+                // Create default property.
+                const propertyNormalized:LegacyPropertyDecorator = property(options as __private._cocos_core_data_utils_attribute_defines__IExposedAttributes);
+                propertyNormalized(target, propertyKey, descriptorOrInitializer);
+                // 
+                const classConstructor = target.constructor as new () => unknown;
+                const classStash = CCEditor.getSubDict(classConstructor, CACHE_KEY as never);
+                const propertyStash:PropertyStash = CCEditor.getOrCreatePropertyStash(
+                    target,
+                    propertyKey,
+                );
+                // propertyStash.__handlers =  propertyStash.__handlers || [];
+                // propertyStash.__handlers.push(decoratorHandler);  
+                // 
+                decoratorHandler(
+                    classStash,
+                    propertyStash,
+                    classConstructor,
+                    propertyKey,
+                    options as IPropertyOptions,
+                    descriptorOrInitializer,
+                );
+            }
+        
+            if (target === undefined) {
+                // @property() => LegacyPropertyDecorator
+                return decorateFunc({
+                    type: undefined,
+                });
+            } else if (typeof propertyKey === 'undefined') {
+                // @property(options) => LegacyPropertyDescriptor
+                // @property(type) => LegacyPropertyDescriptor
+                options = target;
+                return normalized;
+            } else {
+                // @property
+                normalized(target as Parameters<LegacyPropertyDecorator>[0], propertyKey, descriptorOrInitializer);
+                return undefined;
+            }
+        }
+    
+        return decorateFunc as DecoratePropertyType
+    }
 
 }
 

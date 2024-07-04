@@ -1,6 +1,8 @@
-import { _decorator, Component, Constructor, error, js, log, Node, warn } from 'cc';
+import { __private, _decorator, Component, Constructor, error, js, log, Node, warn } from 'cc';
 import { DEV } from 'cc/env';
 import { CACHE_KEY, CCEditor } from '../utils/CCEditor';
+import { ClassStash, DecorateHandlerType, DecoratePropertyType, IPropertyOptions, LegacyPropertyDecorator, PropertyStash, PropertyType } from '../types/CoreType';
+const {property} = _decorator
 
 export const InjectorTag = Symbol() //'$injector';
 
@@ -127,12 +129,22 @@ export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>
 }
 
 
+// ----------------------------------- Class Plugin -----------------------------------
+
+/**
+ * 
+ * @param injectorMethod 
+ * @param injectorName 
+ * @returns 
+ */
 export function CCClassify<TInjector, TStaticInjector>(injectorMethod:<TBase>(...args:Constructor<TBase>[])=>Constructor<TBase & TInjector>, injectorName:string = injectorMethod.name ):(<TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>){
     return function<TBase>(base:validateTBase<TBase>):ReturnInheritancified<TBase&TInjector, TStaticInjector>{
         if(hadInjectorImplemented(base as Constructor, injectorName)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
         //         
         const superClass:TStaticInjector = implementInjectorMethod(injectorMethod, injectorName, arguments);
         if(!superClass) error('Please, declare the injector class and return it inside injector function !')
+
+        
         return CCEditor.extendClassCache(superClass) as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
 
     } as <TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>
@@ -155,3 +167,20 @@ export function CCClassify<TInjector, TStaticInjector>(injectorMethod:<TBase>(..
         }
 
         
+/**
+ * 
+ * @param decoratorHandler 
+ * @returns 
+ */
+export function generateCustomPropertyDecorator(decoratorHandler:DecorateHandlerType):DecoratePropertyType{ 
+    return CCEditor.generateDecorator(function(cache:ClassStash, 
+        propertyStash:PropertyStash, 
+        ctor: new ()=>unknown, 
+        propertyKey:string|symbol, 
+        option:IPropertyOptions, descriptorOrInitializer?:any){
+            // 
+            propertyStash.__handlers = propertyStash.__handlers  || [];
+            propertyStash.__handlers.push(decoratorHandler);
+    }) as DecoratePropertyType
+}
+
