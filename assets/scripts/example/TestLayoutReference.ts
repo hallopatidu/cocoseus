@@ -1,16 +1,17 @@
-import { _decorator, Component, log, Sprite } from 'cc';
+import { _decorator, Component, log, Sprite, SpriteFrame } from 'cc';
 import { cocoseus } from '../cocoseus/plugins';
 const { ccclass, property } = _decorator;
 
 @ccclass('TestLayoutReference')
 @cocoseus.propertyDynamicLoading
+@cocoseus.exportProperties
 export class TestLayoutReference extends Component {
 
-    // @reference({type:SpriteFrame})
-    // leftSF:SpriteFrame = null;
+    @property({type:SpriteFrame})
+    leftSF:SpriteFrame = null;
 
-    // @reference({type:SpriteFrame})
-    // rightSF:SpriteFrame = null;
+    @property({type:SpriteFrame})
+    rightSF:SpriteFrame = null;
 
     @property({type:Sprite})
     rightSprite:Sprite = null;
@@ -20,13 +21,13 @@ export class TestLayoutReference extends Component {
 
     protected onLoad(): void {
         log('Loaded test layout !!!')
-        // if(this.leftSF && this.leftSprite){
-        //     this.leftSprite.spriteFrame = this.leftSF;
-        // }
+        if(this.leftSF && this.leftSprite){
+            this.leftSprite.spriteFrame = this.leftSF;
+        }
 
-        // if(this.rightSF && this.rightSprite){
-        //     this.rightSprite.spriteFrame = this.rightSF;
-        // }
+        if(this.rightSF && this.rightSprite){
+            this.rightSprite.spriteFrame = this.rightSF;
+        }
     }
 
     start() {

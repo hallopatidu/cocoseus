@@ -2,6 +2,7 @@ import { Constructor, Eventify, __private, _decorator } from "cc";
 import PropertyLoadify from "./core/PropertyLoadify";
 import { CCEditor } from "./utils/CCEditor";
 import Actionify from "./core/Actionify";
+import PropertyExportify from "./core/PropertyExportify";
 
 const { ccclass, property } = _decorator;
 
@@ -23,6 +24,10 @@ export namespace cocoseus {
         return Actionify(constructor);
     });
 
+
+    export const exportProperties: (() => ClassDecorator) & ClassDecorator = CCEditor.makeSmartClassDecorator<string>((constructor) => {
+        return PropertyExportify(constructor);
+    });
 }
 
 

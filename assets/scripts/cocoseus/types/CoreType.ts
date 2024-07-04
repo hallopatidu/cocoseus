@@ -79,13 +79,12 @@ export interface IStaticAsyncWaited extends Constructor<IAsyncWaited>{
 }
 
 // ---------------------------
-// export interface IOneFlowified extends IInheritancified{
-//     dispatch(action:Action, ...receiver:string[]):void
-// }
+export interface IPropertyExportified extends IInheritancified{
+}
 
-// export interface IStaticOneFlowified extends Constructor<IOneFlowified>{
-    
-// }
+export interface IStaticPropertyExportified extends Constructor<IPropertyExportified>{
+
+}
 
 
 // ------------ LazyLoadify ------------
