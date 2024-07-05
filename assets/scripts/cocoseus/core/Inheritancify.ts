@@ -167,7 +167,7 @@ export function CCClassify<TInjector, TStaticInjector>(injectorMethod:<TBase>(..
         }
 
         /**
-         * 
+         * Thuc thi cac ham duoc gan vao the __$extends
          * @param constructor 
          */
         function extendCustomizedProperties(constructor:Constructor){
@@ -180,7 +180,7 @@ export function CCClassify<TInjector, TStaticInjector>(injectorMethod:<TBase>(..
                 if(propertyStash && propertyStash.__$extends && propertyStash.__$extends.length){                    
                     while(propertyStash.__$extends.length){
                         const executeDecoratorFunction:Function = propertyStash.__$extends.shift();
-                        executeDecoratorFunction && executeDecoratorFunction();
+                        executeDecoratorFunction && executeDecoratorFunction(classStash, propertyStash, constructor, key)
                     }
                     delete propertyStash.__$extends;
                 }
@@ -202,18 +202,20 @@ export function generateCustomPropertyDecorator(type:string, decoratorHandler:De
     ){
         // 
         propertyStash.__$extends = propertyStash.__$extends  || [];        
-        propertyStash.__$extends.push(decoratorHandler.bind(this, cache, propertyStash, ctor, propertyKey));
+        propertyStash.__$extends.push(decoratorHandler);
         // 
     }) as DecoratePropertyType
 }
 
 /**
  * 
+ * Them function decoratorHandler(..) vao the __$extends cho moi property tuong ung co cung loai decorator name (__$decorate).
  * @param decoratorName 
  * @param decoratorHandler 
  * @returns 
  */
-export function remakeClassProperty(constructor:Constructor, decoratorName:string, decoratorHandler:DecorateHandlerType){    
+export function remakePropertyDecorator(constructor:Constructor, decoratorName:string, decoratorHandler:DecorateHandlerType){    
+    if(!constructor) throw new Error('this function have to call with constructor.')
     const classStash:ClassStash = constructor[CACHE_KEY] || ((constructor[CACHE_KEY]) = {});
     const ccclassProto = CCEditor.getSubDict<ClassStash, keyof ClassStash>(classStash, 'proto');
     const properties:Record<string, PropertyStash> = CCEditor.getSubDict(ccclassProto, 'properties');     
@@ -224,10 +226,9 @@ export function remakeClassProperty(constructor:Constructor, decoratorName:strin
         if( propertyStash.__$decorate == decoratorName.toString() && propertyStash && propertyStash.__$extends && propertyStash.__$extends.length  ){
             // 
             propertyStash.__$extends = propertyStash.__$extends  || [];
-            propertyStash.__$extends.push(decoratorHandler.bind(this, classStash, propertyStash, constructor, key));
+            propertyStash.__$extends.push(decoratorHandler);
             // 
         }
-
     });       
     return
 }

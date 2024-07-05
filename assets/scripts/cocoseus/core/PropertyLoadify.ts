@@ -15,7 +15,7 @@ export const WRAPPER_PROPERTY_PREFIX:string = '__$';
 // const STRING_PROPERTY_PREFIX:string = '__$string__';
 // const PREFAB_DETAIL_PREFIX:string = '__$prefab__';
 
-export const PropertyLoadifyName:string = 'PropertyLoadify';
+export const PropertyLoadifyInjector:string = 'PropertyLoadify';
 export const PropertyLoadifyDecorator:string = '@property.load';
 
 export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function PropertyLoadify <TBase>(base:Constructor<TBase>):Constructor<TBase & IPropertyLoadified>{
@@ -74,7 +74,7 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
                  */
                 private getChildReferenceInfo(fromComponent:Component):ReferenceInfo[]{   
                     const refInfos:ReferenceInfo[] = [];         
-                    if(hadInjectorImplemented(fromComponent.constructor as Constructor, PropertyLoadifyName)){
+                    if(hadInjectorImplemented(fromComponent.constructor as Constructor, PropertyLoadifyInjector)){
                         const classType:string = js.getClassName(fromComponent);
                         const localNodePath:string = fromComponent?.node?.getPathInHierarchy();
                         const loadedPropertyNames:string[] = Array.from(Decoratify(fromComponent).keys(PropertyLoadifyDecorator));
@@ -228,7 +228,7 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
     }
 
     return PropertyLoadified as unknown as Constructor<TBase & IPropertyLoadified>;
-}, PropertyLoadifyName)
+}, PropertyLoadifyInjector)
 
 
 // ----------
@@ -365,7 +365,7 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
 
     const wrapperOption:IPropertyOptions = Object.assign({}, options, {
         type:options.type,
-        displayName:Support.upperFirstCharacter(propertyName) + '__??',
+        displayName:Support.upperFirstCharacter(propertyName),
         visible(){
             return !this[infoPropertyName];
         }
