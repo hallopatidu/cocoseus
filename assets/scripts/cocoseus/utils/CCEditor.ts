@@ -1,11 +1,13 @@
 import { __private, _decorator, Asset, CCClass, Component, Constructor, Enum, js, Node } from 'cc';
 import { EDITOR } from 'cc/env';
 import { Support } from './Support';
-import { ClassStash, DecorateHandlerType, DecoratePropertyType, IPropertyOptions, LegacyPropertyDecorator, PropertyStash, PropertyStashInternalFlag, PropertyType, SimpleAssetInfo } from '../types/CoreType';
+import { ClassStash, DecorateHandlerType, DecoratePropertyType, IPropertyOptions, LegacyPropertyDecorator, PropertyStash, PropertyStashInternalFlag, PropertyType, ReferenceInfo, SimpleAssetInfo } from '../types/CoreType';
 
 const { ccclass, property } = _decorator;
+const SPLIT_KEY:string = '$_$';
 
 export const CACHE_KEY = '__ccclassCache__';
+
 
 type  AssetMeta = {
     files: string[];
@@ -108,6 +110,54 @@ export class CCEditor {
     }
 
     // -----------------
+
+    /**
+     * 
+     * @param fromComponent 
+     * @param fillter 
+     * @returns 
+     */
+    static getEditorPropertiesAtRuntime(fromComponent:Component, fillter?:(key:string, fullKey:string, attrs:any)=>boolean):string[]{
+        const attrs:any = CCClass.Attr.getClassAttrs(fromComponent.constructor);
+        const attrKeys:string[] = Object.keys(attrs);
+        return attrKeys.reduce((results:string[], fullKey:string)=>{
+            const splitKeyFeatures:any[] = fullKey.split(SPLIT_KEY);
+            const key:string = splitKeyFeatures[0];            
+            if(key && (fillter ? fillter(key, fullKey, attrs) : true) ){
+                const fullCtorKey:string = key+SPLIT_KEY+'ctor';
+                const fullTypeKey:string = key+SPLIT_KEY+'type';
+                const type:string = attrs[fullCtorKey] ? js.getClassName(attrs[fullCtorKey]) : (attrs[fullTypeKey] || null);
+                const recordPropertyKey:string = key + (type ? '::'+type : '');
+                results.indexOf(recordPropertyKey) == -1 && results.push(recordPropertyKey);
+            }
+            return results;
+        }, [])
+    }
+    
+
+    /**
+     * 
+     * @param fromComponent 
+     * @returns 
+     */
+    static getChildReferenceInfo(fromComponent:Component, fillter?:(key:string, fullKey:string, attrs:any)=>boolean):ReferenceInfo[]{   
+        const refInfos:ReferenceInfo[] = [];        
+        const classType:string = js.getClassName(fromComponent);
+        const localNodePath:string = fromComponent?.node?.getPathInHierarchy();
+        const loadedPropertyNames:string[] = this.getEditorPropertiesAtRuntime(fromComponent, fillter);        
+        loadedPropertyNames.forEach((recoredPropertyName:string)=>{                                                          
+            if(recoredPropertyName){
+                const tempRefInfo:ReferenceInfo = Object.create(null);
+                tempRefInfo.comp = classType;
+                tempRefInfo.node = localNodePath;
+                tempRefInfo.property = recoredPropertyName;
+                refInfos.push(tempRefInfo);
+            }
+        })
+        return refInfos;
+    }
+
+            
 
     /**
      * 

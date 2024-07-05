@@ -1,16 +1,17 @@
-import { __private, _decorator, Asset, CCClass, CCObject, Component, Constructor, Eventify, js, log, Node, Prefab } from 'cc';
+import { __private, _decorator, Asset, CCClass, CCObject, Component, Constructor, Eventify, js, log, Node, Prefab, warn } from 'cc';
 import Parasitify, { override } from '../../core/Parasitify';
-import { hadInjectorImplemented } from '../../core/Inheritancify';
-import Decoratify from '../../core/Decoratify';
 import { EmbedAsset, PrefabInfo, ReferenceInfo, SimpleAssetInfo } from '../../types/CoreType';
-import { EDITOR } from 'cc/env';
+import { DEV, EDITOR } from 'cc/env';
 import { Support } from '../../utils/Support';
-import { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PropertyLoadifyDecorator, PropertyLoadifyName, WRAPPER_PROPERTY_PREFIX } from '../../core/PropertyLoadify';
+import { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, WRAPPER_PROPERTY_PREFIX } from '../../core/PropertyLoadify';
 import { cocoseus } from '../../plugins';
+import { CCEditor } from '../../utils/CCEditor';
 
 const { ccclass, property, executeInEditMode } = _decorator;
 
-
+type AssetInfoValue = {
+    [n:number]:SimpleAssetInfo|EmbedAsset
+}
 // const SimpleAssetInfoClassToken:number = Support.tokenize.apply(Support, ['bundle','name','type','url','uuid'].sort())
 // const PrefabInfoClassToken:number = Support.tokenize.apply(Support, ['bundle','name','references','type','url','uuid'].sort());
 
@@ -134,9 +135,7 @@ class ReferenceProperty extends CCObject {
 
 }
 
-type AssetInfoValue = {
-    [n:number]:SimpleAssetInfo|EmbedAsset
-}
+
 
 
 /**
@@ -217,25 +216,32 @@ export class PrefabReferenceView extends Parasitify(Component) {
      */
     private updateReferenceView(){
         if(EDITOR){
-            if(hadInjectorImplemented(this.host.constructor as Constructor, PropertyLoadifyName)){
-                //  Clear view.
-                this.referenceProperties = [];
-                const decoratify = Decoratify(this.host);                
-                const loadedPropertyNames:string[] = Array.from(Decoratify(this.host).keys(PropertyLoadifyDecorator));            
-                loadedPropertyNames.forEach((propName:string)=>{    
-                    const propArr:string[] = propName?.split("::");                                       
-                    if(propArr && propArr.length){                        
-                        const propertyName:string = propArr[0];
-                        const isEmbed:boolean = !!this.host[propertyName];
-                        isEmbed ? this.updateEmbedProperty(propertyName) : this.updateLoadingProperty(propertyName);
-                    }
-                });
-                // 
-                this.referenceProperties.forEach((refView:ReferenceProperty)=>{
-                    refView.updatePropertyEditorView()
-                })
-                // this.saveAndRefresh_Editor();
+            // if(hadInjectorImplemented(this.host.constructor as Constructor, PropertyExportifyInjector)){
+            //  Clear view.
+            this.referenceProperties = [];
+            // const decoratify = Decoratify(this.host);  
+            // CCEditor.getEditorPropertiesAtRuntime(this.host);
+            // const loadedPropertyNames:string[] = Array.from(Decoratify(this.host).keys(PropertyLoadifyDecorator));   
+            const loadedPropertyNames:string[] = CCEditor.getEditorPropertiesAtRuntime(this.host, (key:string, fullKey:string, attrs:any):boolean=>{                
+                return (fullKey.indexOf(WRAPPER_PROPERTY_PREFIX) == -1) && fullKey.indexOf(INFO_PROPERTY_PREFIX) == -1 && (fullKey.indexOf(ENUM_PROPERTY_PREFIX) == -1)
+            });
+            if(DEV && !loadedPropertyNames.length){
+                warn('This component just run with Loadified Components');
             }
+            loadedPropertyNames.forEach((propName:string)=>{    
+                const propArr:string[] = propName?.split("::");                                       
+                if(propArr && propArr.length){
+                    const propertyName:string = propArr[0];
+                    const isEmbed:boolean = !!this.host[propertyName];
+                    isEmbed ? this.updateEmbedProperty(propertyName) : this.updateLoadingProperty(propertyName);
+                }
+            });
+            // 
+            this.referenceProperties.forEach((refView:ReferenceProperty)=>{
+                refView.updatePropertyEditorView();
+            })
+                // this.saveAndRefresh_Editor();
+            // }
         }
     }
 
