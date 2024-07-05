@@ -132,8 +132,7 @@ export class CCEditor {
             }
             return results;
         }, [])
-    }
-    
+    }    
 
     /**
      * 
@@ -156,9 +155,7 @@ export class CCEditor {
         })
         return refInfos;
     }
-
-            
-
+    
     /**
      * 
      * @param uuid 
@@ -172,10 +169,22 @@ export class CCEditor {
         return null
     }
 
+    /**
+     * 
+     * @param asset 
+     * @returns 
+     */
     static async getSimpleAssetInfo(asset:Asset):Promise<SimpleAssetInfo>{
         return EDITOR && asset && asset.uuid ?  await this.getAssetInfo_Editor(asset.uuid) : null;
     }
 
+    /**
+     * 
+     * @param targetObj 
+     * @param propName 
+     * @param newEnum 
+     * @returns 
+     */
     static enumifyProperty (targetObj:any, propName:string , newEnum:unknown):any {
         let defaultEnum = Object.assign( Enum({}) , newEnum);
         Enum['update'](defaultEnum);
@@ -305,11 +314,22 @@ export class CCEditor {
         return propertyStash;
     }
 
-
+    /**
+     * 
+     * @param obj 
+     * @param key 
+     * @returns 
+     */
     static getSubDict<T, TKey extends keyof T> (obj: T, key: TKey): NonNullable<T[TKey]> {
         return obj[key] as NonNullable<T[TKey]> || ((obj[key]) = {} as NonNullable<T[TKey]>);
     }
 
+
+    /**
+     * 
+     * @param decorate 
+     * @returns 
+     */
     static makeSmartClassDecorator<TArg> (
         decorate: <TFunction extends Function>(constructor: TFunction, arg?: TArg) => ReturnType<ClassDecorator>,
     ): ClassDecorator & ((arg?: TArg) => ClassDecorator) {
@@ -334,7 +354,7 @@ export class CCEditor {
      * @returns 
      */
     static generateDecorator(type:string, decoratorHandler:DecorateHandlerType):DecoratePropertyType{    
-        // const {type} = {[type]:function(){}}
+        // 
         const decorateFunc:Function = function (target?: Parameters<LegacyPropertyDecorator>[0] | PropertyType, 
             propertyKey?: Parameters<LegacyPropertyDecorator>[1],
             descriptorOrInitializer?: Parameters<LegacyPropertyDecorator>[2],

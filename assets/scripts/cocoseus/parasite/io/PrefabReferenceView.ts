@@ -147,7 +147,7 @@ class ReferenceProperty extends CCObject {
 @executeInEditMode(true)
 export class PrefabReferenceView extends Parasitify(Component) {
     @property({type:[ReferenceProperty], readonly:true})
-    referenceProperties:ReferenceProperty[] = []
+    exportedProperties:ReferenceProperty[] = []
 
     @property({serializable:true, visible:false})
     savedAssetInfos:AssetInfoValue = {};
@@ -166,7 +166,8 @@ export class PrefabReferenceView extends Parasitify(Component) {
             // 
             let allPrefabComponents:Component[] = ((asset as Prefab).data as Node).getComponentsInChildren(Component);
             allPrefabComponents.forEach((comp:Component)=>{                
-                const refInfos:ReferenceInfo[] = this.super['getChildReferenceInfo'](comp)
+                // const refInfos:ReferenceInfo[] = this.super['getChildReferenceInfo'](comp);
+                const refInfos:ReferenceInfo[] = CCEditor.getChildReferenceInfo(comp, this.propertiesFillter);
                 refInfos.forEach((refInfo:ReferenceInfo)=>{
                     const refToken:number = ReferenceProperty.getTokenFrom(propertyName, refInfo);
                     const propArr:string[] = refInfo?.property?.split("::");
@@ -174,7 +175,6 @@ export class PrefabReferenceView extends Parasitify(Component) {
                     const assetOrInfo:SimpleAssetInfo|EmbedAsset = this.savedAssetInfos[refToken]
                     if(assetOrInfo){
                         comp[INFO_PROPERTY_PREFIX + compPropertyName] = null;
-                        // log('Has ref info :: ' + propertyName + ' --- ' +refToken + " :: " + JSON.stringify(refInfo));  
                         if(ReferenceProperty.isEmbedAsset(assetOrInfo)){
                             comp[compPropertyName] = assetOrInfo;
                         }else{
@@ -218,13 +218,11 @@ export class PrefabReferenceView extends Parasitify(Component) {
         if(EDITOR){
             // if(hadInjectorImplemented(this.host.constructor as Constructor, PropertyExportifyInjector)){
             //  Clear view.
-            this.referenceProperties = [];
+            this.exportedProperties = [];
             // const decoratify = Decoratify(this.host);  
             // CCEditor.getEditorPropertiesAtRuntime(this.host);
             // const loadedPropertyNames:string[] = Array.from(Decoratify(this.host).keys(PropertyLoadifyDecorator));   
-            const loadedPropertyNames:string[] = CCEditor.getEditorPropertiesAtRuntime(this.host, (key:string, fullKey:string, attrs:any):boolean=>{                
-                return (fullKey.indexOf(WRAPPER_PROPERTY_PREFIX) == -1) && fullKey.indexOf(INFO_PROPERTY_PREFIX) == -1 && (fullKey.indexOf(ENUM_PROPERTY_PREFIX) == -1)
-            });
+            const loadedPropertyNames:string[] = CCEditor.getEditorPropertiesAtRuntime(this.host, this.propertiesFillter);
             if(DEV && !loadedPropertyNames.length){
                 warn('This component just run with Loadified Components');
             }
@@ -237,7 +235,7 @@ export class PrefabReferenceView extends Parasitify(Component) {
                 }
             });
             // 
-            this.referenceProperties.forEach((refView:ReferenceProperty)=>{
+            this.exportedProperties.forEach((refView:ReferenceProperty)=>{
                 refView.updatePropertyEditorView();
             })
                 // this.saveAndRefresh_Editor();
@@ -248,6 +246,20 @@ export class PrefabReferenceView extends Parasitify(Component) {
     // -----------------------------
 
     /**
+     * 
+     * @param key 
+     * @param fullKey 
+     * @param attrs 
+     * @returns 
+     */
+    private propertiesFillter(key:string, fullKey:string, attrs:any):boolean{                
+        return (fullKey.indexOf(WRAPPER_PROPERTY_PREFIX) == -1) && 
+                fullKey.indexOf(INFO_PROPERTY_PREFIX) == -1 && 
+                (fullKey.indexOf(ENUM_PROPERTY_PREFIX) == -1);
+    }
+
+    /**
+     * Just execute in Editor 
      * Hàm được gọi khi giá trị tham chiếu của một @reference property (của host) đang ở dạng lưu trực tiếp vào file.scene.
      * 
      * @param propertyName 
@@ -259,7 +271,8 @@ export class PrefabReferenceView extends Parasitify(Component) {
                 // 
                 let allPrefabComponents:Component[] = ((asset as Prefab).data as Node).getComponentsInChildren(Component);
                 allPrefabComponents.forEach((comp:Component)=>{
-                    const refInfos:ReferenceInfo[] = this.super['getChildReferenceInfo'](comp);
+                    // const refInfos:ReferenceInfo[] = this.super['getChildReferenceInfo'](comp);
+                    const refInfos:ReferenceInfo[] = CCEditor.getChildReferenceInfo(comp, this.propertiesFillter);
                     refInfos.forEach((refInfo:ReferenceInfo)=>this.createOrUpdateReferenceInfoView(propertyName, refInfo))
                 })
                 // 
@@ -269,6 +282,7 @@ export class PrefabReferenceView extends Parasitify(Component) {
     }
 
     /**
+     * Just execute in Editor 
      * Hàm được gọi khi giá trị tham chiếu của một @reference property (của host) đang ở dạng phải tiến hành việc loading.
      * @param propertyName 
      */
@@ -289,6 +303,7 @@ export class PrefabReferenceView extends Parasitify(Component) {
     }
 
     /**
+     * 
      * Tạo ra phần tử hiển thị một ReferenceInfo. 
      * @param propertyName 
      * @param refInfo 
@@ -303,7 +318,7 @@ export class PrefabReferenceView extends Parasitify(Component) {
             if(this.savedAssetInfos[token]){
                 refInfoView.updateAssetInfo(this.savedAssetInfos[token]);
             }
-            this.referenceProperties.push(refInfoView);
+            this.exportedProperties.push(refInfoView);
         }
     }
 
@@ -355,8 +370,8 @@ export class PrefabReferenceView extends Parasitify(Component) {
      * 
      */
     protected onDestroy(): void {
-        if(this.referenceProperties && this.referenceProperties.length){
-            this.referenceProperties.forEach((refInfoView:ReferenceProperty)=>{
+        if(this.exportedProperties && this.exportedProperties.length){
+            this.exportedProperties.forEach((refInfoView:ReferenceProperty)=>{
                 (refInfoView as unknown as __private._cocos_core_event_eventify__IEventified).off(ReferenceProperty.EVENT.UPDATE, this.saveAsset);
             })
         }        
