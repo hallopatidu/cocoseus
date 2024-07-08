@@ -35,7 +35,7 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
          * @param asset 
          */
         async onLoadedAsset(propertyName:string, asset:Asset){            
-            
+            if(super['onLoadedAsset']) await super['onLoadedAsset'](propertyName);
         }
 
         /**
@@ -43,7 +43,7 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
          * @param propertyName 
          */
         async onEditorAssetChanged(propertyName:string){
-
+            if(super['onEditorAssetChanged']) await super['onEditorAssetChanged'](propertyName);
         }
 
         /**
