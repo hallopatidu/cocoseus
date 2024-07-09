@@ -95,7 +95,8 @@ export default Inheritancify<IDecoratified, IStaticDecoratified>(function Decora
         static keys(tag:string = DecoratedTag):string[]{
             const customeTag:string = tag !== DecoratedTag ? '__$'+tag: DecoratedTag;
             if(!this[customeTag]) this[customeTag] = new Set<string>();
-            return [...(this[customeTag] as Set<string>)];
+            // return [...(this[customeTag] as Set<string>)];
+            return Array.from(this[customeTag])
         }
 
     };

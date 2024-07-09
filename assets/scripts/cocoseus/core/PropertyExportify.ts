@@ -14,7 +14,7 @@ export default CCClassify<IPropertyExportified, IStaticPropertyExportified>(func
     }
     remakePropertyDecorator(base, 'property', exportifiedPropertyDecorator);
     return PropertyExportified as unknown as Constructor<TBase & IPropertyExportified>;
-})
+}, PropertyExportifyInjector)
 
 /**
  * 

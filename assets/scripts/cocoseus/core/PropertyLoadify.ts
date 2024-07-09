@@ -77,7 +77,7 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
                     if(hadInjectorImplemented(fromComponent.constructor as Constructor, PropertyLoadifyInjector)){
                         const classType:string = js.getClassName(fromComponent);
                         const localNodePath:string = fromComponent?.node?.getPathInHierarchy();
-                        const loadedPropertyNames:string[] = Array.from(Decoratify(fromComponent).keys(PropertyLoadifyDecorator));
+                        const loadedPropertyNames:string[] = Decoratify(fromComponent).keys(PropertyLoadifyDecorator);
                         // const loadedPropertyNames:string[] = Array.from(decorated(fromComponent).keys());
                         loadedPropertyNames.forEach((recoredPropertyName:string)=>{                                                          
                             if(recoredPropertyName){
@@ -98,7 +98,7 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
          */
         protected async asyncLoadingAssets(){
             const thisAsyncLoading:IAsyncProcessified = this as unknown as IAsyncProcessified;
-            const propertyRecord:string[] = Array.from( Decoratify(thisAsyncLoading).keys(PropertyLoadifyDecorator));
+            const propertyRecord:string[] = Decoratify(thisAsyncLoading).keys(PropertyLoadifyDecorator);
             // const propertyRecord:string[] = Array.from(decorated(thisAsyncLoading).keys());
             if(thisAsyncLoading.isProgressing()) { await thisAsyncLoading.wait()}
             else if(!thisAsyncLoading.isProgressing() && propertyRecord && propertyRecord.length){                
@@ -115,7 +115,7 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
                         if(propertyName && classType && assetInfo){                            
                             promises.push(new Promise(async (resolve:Function)=>{
                                 // const asset:Asset = await loadAsset(assetInfo, classType);
-                                const asset:Asset = await this.loadEachAsset(assetInfo, js.getClassByName(assetInfo.type));
+                                const asset:Asset = await this.loadEachAsset(assetInfo);
                                 thisAsyncLoading[propertyName] = asset;
                                 resolve(asset);
                             }) )
@@ -131,7 +131,7 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
             }
             // 
             const promises:Promise<any>[] = [];
-            const loadedPropertyRecord:string[] = Array.from( Decoratify(this).keys(PropertyLoadifyDecorator));
+            const loadedPropertyRecord:string[] = Decoratify(this).keys(PropertyLoadifyDecorator);
             // const loadedPropertyRecord:string[] = Array.from(decorated(thisAsyncLoading).keys());
             loadedPropertyRecord.forEach((recordContent:string)=>{
                 const propArr:string[] = recordContent?.split("::");
@@ -152,7 +152,9 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
          * @param classType 
          * @returns 
          */
-        async loadEachAsset(assetInfo:SimpleAssetInfo, classType:any):Promise<Asset>{
+        async loadEachAsset(assetInfo:SimpleAssetInfo):Promise<Asset>{
+            // return await Support.asyncLoadAssetFromSimpleAssetInfo(assetInfo);
+
             if(!assetInfo) return null
             if(!assetInfo.bundle?.length) error('Asset no bundle !!');
             if(!EDITOR){
@@ -175,6 +177,7 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
                     return null
                 }
                 const assetPath:string = assetInfo.url;
+                const classType:Constructor<any> = js.getClassByName(assetInfo.type);
                 let remoteAsset:Asset = bundle.get(assetPath, classType);
                 if(!remoteAsset){
                     remoteAsset = await new Promise((resolve:Function)=>{
@@ -201,7 +204,9 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
         
             }
             return
-        }        
+        }
+
+
     }
 
     // Apply to all @property decorator.

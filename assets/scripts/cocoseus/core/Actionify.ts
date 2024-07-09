@@ -1,6 +1,6 @@
 import { Component, Constructor, error, find, js, log, warn } from "cc";
 // import { Action, IActionized, IAsyncProcessified, IAsyncWaited, IStaticActionized, ReferenceInfo } from "../types/CoreType";
-import { Inheritancify } from "./Inheritancify";
+import { CCClassify, hadInjectorImplemented, Inheritancify } from "./Inheritancify";
 import Storagify from "./Storagify";
 import Decoratify from "./Decoratify";
 import Referencify from "./Referencify";
@@ -18,12 +18,16 @@ type ActionTaskInfo = {
     action:Action
 }
 
+// SchemaManager
+// ActionScenario
 
-export const ActionifyName:string = 'Actionify';
+
+export const ActionifyInjector:string = 'Actionify';
+export const ActionifyDecorator:string = '@action';
 /**
  * 
  */
-export default Inheritancify<IActionized, IStaticActionized>(function Actionify<TBase>(base:Constructor<TBase>):Constructor<TBase & IActionized>{
+export default CCClassify<IActionized, IStaticActionized>(function Actionify<TBase>(base:Constructor<TBase>):Constructor<TBase & IActionized>{
     class Actionized extends Referencify(AsyncWaitify( Decoratify(base as unknown as Constructor<Component>))) implements IActionized, IAsyncWaited {
         
         private static _actions:Map<number, Map<number, Function[]>>;
@@ -203,7 +207,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
          */
         public get internalOnLoad (): (() => void) | undefined {
             // 
-            const actionKeys:string[] = Decoratify(this).keys('@action');
+            const actionKeys:string[] = Decoratify(this).keys(ActionifyDecorator);
             actionKeys.forEach((key:string)=>{
                 const actionInfoArr:string[] = key.split('::');
                 const actionType:string = actionInfoArr[0];
@@ -256,11 +260,12 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
             return super['internalOnLoad']
         }
 
+                
         /**
          * 
          */
         public get internalOnDisable (): (() => void) | undefined {
-            const actionKeys:string[] = Decoratify(this).keys('@action');
+            const actionKeys:string[] = Decoratify(this).keys(ActionifyDecorator);
             actionKeys.forEach((key:string)=>{
                 const actionInfoArr:string[] = key.split('::');
                 const actionType:string = actionInfoArr[0];
@@ -274,7 +279,7 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
 
     }
     return Actionized as unknown as Constructor<TBase & IActionized>;
-}, ActionifyName);
+}, ActionifyInjector);
 
 /**
  * 
@@ -283,8 +288,13 @@ export default Inheritancify<IActionized, IStaticActionized>(function Actionify<
  */
 export function action(type:string){
     const actionType:string = type;
-    return function (that: any, propertyKey: string, descriptor: PropertyDescriptor) {        
-        Decoratify(that).record(actionType + '::' +propertyKey.toString(), '@action');
+    return function (that: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        if(EDITOR || DEV){
+            if(!hadInjectorImplemented(that?.constructor, ActionifyInjector)){
+                warn('Action Decorator just work inside a Actionify Injector Component ! This component is not a Actionify Injector Component.');
+            }
+        }
+        Decoratify(that).record(actionType + '::' +propertyKey.toString(), ActionifyDecorator);
         return descriptor;
     }
 }

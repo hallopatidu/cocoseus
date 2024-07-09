@@ -1,19 +1,13 @@
-import { _decorator, CCClass, Component, Enum, error, js, log, Node } from 'cc';
-import { DEV } from 'cc/env';
+import { _decorator, Asset, assetManager, AssetManager, CCClass, Component, Enum, error, js, log, Node } from 'cc';
+import { DEV, EDITOR } from 'cc/env';
+import { SimpleAssetInfo } from '../types/CoreType';
 const { ccclass, property } = _decorator;
 
 @ccclass('Support')
 export class Support extends Component {
 
     //  ------------------- Enum ------------------------
-    // static enumifyProperty (targetObj:any, propName:string , newEnum:unknown):any {
-    //     let defaultEnum = Object.assign( Enum({}) , newEnum);
-    //     Enum['update'](defaultEnum);
-    //     CCClass["Attr"].setClassAttr(targetObj, propName, 'type', 'Enum');
-    //     CCClass["Attr"].setClassAttr(targetObj, propName, 'enumList', Enum["getList"](defaultEnum));
-    //     return defaultEnum
-    // }
-    
+        
     static convertToEnum(objOrArray:any):any{
         const enumDef: {[key: string]: number} = {};
         const names:string[] = Array.isArray(objOrArray) ? objOrArray : Object.keys(objOrArray);
@@ -184,6 +178,65 @@ export class Support extends Component {
     static getSubTag<T, TKey extends keyof T> (obj: T, key: TKey): NonNullable<T[TKey]> {        
         return obj[key] as NonNullable<T[TKey]> || ((obj[key]) = {} as NonNullable<T[TKey]>);
     }
+
+    // ------------------------ Loader -------------------------------
+    /**
+         * 
+         * @param assetInfo 
+         * @param classType 
+         * @returns 
+         */
+    static async asyncLoadAssetFromSimpleAssetInfo(assetInfo:SimpleAssetInfo):Promise<Asset>{
+        if(!assetInfo) return null
+        if(!assetInfo.bundle?.length) error('Asset no bundle !!');
+        if(!EDITOR){
+            const bundleName:string = assetInfo.bundle;
+            let bundle:AssetManager.Bundle = assetManager.getBundle(bundleName);
+            if(!bundle){
+                bundle = await new Promise<AssetManager.Bundle>((resolve:Function)=>{
+                    assetManager.loadBundle(bundleName,(err:Error, downloadBundle:AssetManager.Bundle)=>{                   
+                        if(!err){                               
+                            resolve(downloadBundle);
+                        }else{
+                            DEV && error('Bundle Loading Error ' + err + ' bundle name: ' + bundleName);
+                            resolve(null)
+                        }                    
+                    }) 
+                })
+            }
+            if(!bundle){
+                error('Bundle ' + bundleName + ' is not found !');
+                return null
+            }
+            const assetPath:string = assetInfo.url;
+            const classType:any = js.getClassByName(assetInfo.type);
+            let remoteAsset:Asset = bundle.get(assetPath, classType);
+            if(!remoteAsset){
+                remoteAsset = await new Promise((resolve:Function)=>{
+                    bundle.load(assetPath, classType, (err:Error, prefab:Asset ) =>{                
+                        if(!err){                                               
+                            // this.instantiateLoadedPrefab(prefab);
+                            resolve(prefab)
+                        }else{
+                            DEV && error('Asset Loading Error: ' + assetPath + ' with bundle: ' + bundle.name)       
+                            resolve(null);
+                        }     
+                        
+                    })
+                })
+            }
+            if(!remoteAsset) {
+                error('Asset ' + assetPath + ' in bundle '+ bundleName + ' is not found !');
+                return null
+            }
+    
+            // DEV && warn('---- load success:: ' + assetInfo.name);
+            return remoteAsset
+        }else{
+    
+        }
+        return
+    } 
 
 }
 

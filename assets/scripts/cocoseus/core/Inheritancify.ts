@@ -223,7 +223,7 @@ export function remakePropertyDecorator(constructor:Constructor, decoratorName:s
     propertyKeys.forEach((key:string|symbol)=>{     
         const propertyStash:PropertyStash = properties[key.toString()];   
         if(!propertyStash.__$decorate) {propertyStash.__$decorate = 'property';}   
-        if( propertyStash.__$decorate == decoratorName.toString() && propertyStash && propertyStash.__$extends && propertyStash.__$extends.length  ){
+        if( propertyStash && propertyStash.__$decorate == decoratorName.toString()){
             // 
             propertyStash.__$extends = propertyStash.__$extends  || [];
             propertyStash.__$extends.push(decoratorHandler);

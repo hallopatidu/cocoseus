@@ -3,10 +3,11 @@ import Parasitify, { override } from '../../core/Parasitify';
 import { EmbedAsset, PrefabInfo, ReferenceInfo, SimpleAssetInfo } from '../../types/CoreType';
 import { DEV, EDITOR } from 'cc/env';
 import { Support } from '../../utils/Support';
-import { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, WRAPPER_PROPERTY_PREFIX } from '../../core/PropertyLoadify';
+import { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PropertyLoadifyDecorator, PropertyLoadifyInjector, WRAPPER_PROPERTY_PREFIX } from '../../core/PropertyLoadify';
 import { cocoseus } from '../../plugins';
 import { CCEditor } from '../../utils/CCEditor';
 import { hadInjectorImplemented } from '../../core/Inheritancify';
+import PropertyExportify, { PropertyExportifyDecorator, PropertyExportifyInjector } from '../../core/PropertyExportify';
 
 const { ccclass, property, executeInEditMode } = _decorator;
 
@@ -166,29 +167,43 @@ export class PrefabReferenceView extends Parasitify(Component) {
         if(asset && js.isChildClassOf(asset.constructor, Prefab)){
             // 
             let allPrefabComponents:Component[] = ((asset as Prefab).data as Node).getComponentsInChildren(Component);
+            let waitLoadingPromise:Promise<void>[] = [];
             allPrefabComponents.forEach((comp:Component)=>{                
-                if(hadInjectorImplemented(comp.constructor as Constructor)){
-                    // const refInfos:ReferenceInfo[] = this.super['getChildReferenceInfo'](comp);
+                if(hadInjectorImplemented(comp.constructor as Constructor, PropertyExportifyInjector)){
                     const refInfos:ReferenceInfo[] = CCEditor.getChildReferenceInfo(comp, this.propertiesFillter);
                     refInfos.forEach((refInfo:ReferenceInfo)=>{
                         const refToken:number = ReferenceProperty.getTokenFrom(propertyName, refInfo);
                         const propArr:string[] = refInfo?.property?.split("::");
                         const compPropertyName:string = propArr[0];
-                        const assetOrInfo:SimpleAssetInfo|EmbedAsset = this.savedAssetInfos[refToken]
+                        const assetOrInfo:SimpleAssetInfo|EmbedAsset = this.savedAssetInfos[refToken];
+                        const isLoadifiedComponent:boolean = hadInjectorImplemented(comp.constructor as Constructor, PropertyLoadifyInjector)
                         if(assetOrInfo){
-                            comp[INFO_PROPERTY_PREFIX + compPropertyName] = null;
+                            if(isLoadifiedComponent){ comp[INFO_PROPERTY_PREFIX + compPropertyName] = null;}
                             if(ReferenceProperty.isEmbedAsset(assetOrInfo)){
                                 comp[compPropertyName] = assetOrInfo;
-                            }else{
+                            }else if(isLoadifiedComponent){
+                                // Truong hop asset can load, va component da co loadified injector, chuyen qua load tai component.
                                 comp[INFO_PROPERTY_PREFIX + compPropertyName] = assetOrInfo;
+                            }else{
+                                // Truong hop asset can load, component khong co tinh nang loadified injector, thuc hien load asset truc tiep.
+                                waitLoadingPromise.push(new Promise<void>(async (resolve:Function)=>{
+                                    const loadedAsset:Asset = await Support.asyncLoadAssetFromSimpleAssetInfo(assetOrInfo as SimpleAssetInfo);
+                                    comp[compPropertyName] = loadedAsset;
+                                    resolve();
+                                }))
                             }
-                        }else{
-                            log('No infomation !!! ')
                         }
+                        // else{
+                        //     log('No infomation !!! ')
+                        // }
                     })   
                     // 
-                }             
+                }
+                // else{
+                //     warn('the component ' + comp.name + ' need use cocoseus.exportProperties to export properties !!')
+                // }      
             })
+            await Promise.all(waitLoadingPromise);
             // }
         }
     }
