@@ -11,6 +11,7 @@ const { ccclass, property } = _decorator;
  * cocoseus : cocos extendable upgrading system
  * 
  */
+
 export namespace cocoseus {
     export const Plugin = {
         ExportProperties: PropertyExportifyInjector,
