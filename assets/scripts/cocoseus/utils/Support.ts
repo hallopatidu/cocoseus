@@ -19,6 +19,17 @@ export class Support extends Component {
     // ------------------------------------- RegEx + Math -------------------------------
 
     /**
+     * Get the "title" for a file, by stripping other parts of the path as well as the extension.
+     * @param path 
+     * @returns 
+     */
+    static getFileTitle(path: string, extension:string = '.md'): string {
+        if (path.includes("/")) path = path.substring(path.lastIndexOf("/") + 1);
+        if (path.endsWith(".md")) path = path.substring(0, path.length - extension.length);
+        return path;
+    }
+
+    /**
      * 
      * @param map 
      * @returns 
@@ -51,6 +62,7 @@ export class Support extends Component {
      * @returns 
      */
     static hashString(value:string):number {
+        // Default
         if(!value) return 0
         let hash:number = 5381,i:number=value.length;      
         while(i) {
@@ -61,6 +73,32 @@ export class Support extends Component {
          * integers. Since we want the results to be always positive, convert the
          * signed int to an unsigned by doing an unsigned bitshift. */
         return hash >>> 0;
+        // --------------------
+        
+    }
+
+    /**
+     * Hash funtion from The pharserJs lib.
+     * @param value 
+     * @returns 
+     */
+    static pharserJsHash(value:string):number{
+        // Pharser Lib hash
+        let h:number;
+        let n:number;
+        value = value.toString();
+        for (var i = 0; i < value.length; i++)
+        {
+            n += value.charCodeAt(i);
+            h = 0.02519603282416938 * n;
+            n = h >>> 0;
+            h -= n;
+            h *= n;
+            n = h >>> 0;
+            h -= n;
+            n += h * 0x100000000;// 2^32
+        }
+        return (n >>> 0) * 2.3283064365386963e-10;// 2^-32
     }
 
     /**
@@ -181,11 +219,11 @@ export class Support extends Component {
 
     // ------------------------ Loader -------------------------------
     /**
-         * 
-         * @param assetInfo 
-         * @param classType 
-         * @returns 
-         */
+     * 
+     * @param assetInfo 
+     * @param classType 
+     * @returns 
+     */
     static async asyncLoadAssetFromSimpleAssetInfo(assetInfo:SimpleAssetInfo):Promise<Asset>{
         if(!assetInfo) return null
         if(!assetInfo.bundle?.length) error('Asset no bundle !!');
