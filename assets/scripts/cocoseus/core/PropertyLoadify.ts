@@ -1,5 +1,5 @@
 import { Asset, AssetManager, CCClass, CCObject, Component, Constructor, Enum, Node, Prefab, assetManager, error, js, log, warn } from "cc";
-import { CCClassify, Inheritancify, hadInjectorImplemented } from "./Inheritancify";
+import { CCClassify, hadInjectorImplemented } from "./Inheritancify";
 import { EmbedAsset, IAsyncProcessified, IPropertyLoadified, IPropertyOptions, IStaticPropertyLoadified, PrefabInfo, PropertyStash, ReferenceInfo, SimpleAssetInfo } from "../types/CoreType";
 import { CACHE_KEY, CCEditor } from "../utils/CCEditor";
 import { Support } from "../utils/Support";

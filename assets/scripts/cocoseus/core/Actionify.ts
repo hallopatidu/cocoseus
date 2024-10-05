@@ -1,6 +1,5 @@
 import { Component, Constructor, error, find, js, log, warn } from "cc";
-// import { Action, IActionized, IAsyncProcessified, IAsyncWaited, IStaticActionized, ReferenceInfo } from "../types/CoreType";
-import { CCClassify, hadInjectorImplemented, Inheritancify } from "./Inheritancify";
+import { hadInjectorImplemented, Inheritancify } from "./Inheritancify";
 import Storagify from "./Storagify";
 import Decoratify from "./Decoratify";
 import Referencify from "./Referencify";
@@ -27,7 +26,7 @@ export const ActionifyDecorator:string = '@action';
 /**
  * 
  */
-export default CCClassify<IActionized, IStaticActionized>(function Actionify<TBase>(base:Constructor<TBase>):Constructor<TBase & IActionized>{
+export default Inheritancify<IActionized, IStaticActionized>(function Actionify<TBase>(base:Constructor<TBase>):Constructor<TBase & IActionized>{
     class Actionized extends Referencify(AsyncWaitify( Decoratify(base as unknown as Constructor<Component>))) implements IActionized, IAsyncWaited {
         
         private static _actions:Map<number, Map<number, Function[]>>;
@@ -260,6 +259,10 @@ export default CCClassify<IActionized, IStaticActionized>(function Actionify<TBa
             return super['internalOnLoad']
         }
 
+        public get internalOnDestroy (): (() => void) | undefined {
+
+            return super['internalOnDestroy']
+        }
                 
         /**
          * 

@@ -18,11 +18,11 @@ export interface IStaticParasitified<TSuper=any> extends Constructor<IParasitifi
 }
 
 // -------------- Interfacify --------
-export interface IInterfacified extends Component {
+export interface IOneFlowified extends Component {
     
 }
 
-export interface IStaticInterfacified extends Constructor<IInterfacified> {
+export interface IStaticIOneFlowified extends Constructor<IOneFlowified> {
     
 }
 
