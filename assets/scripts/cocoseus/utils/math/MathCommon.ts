@@ -231,9 +231,6 @@ export class MathCommon extends Component {
      * Calculate the median of the given values. The values are sorted and the middle value is returned.
      * In case of an even number of values, the average of the two middle values is returned.
      *
-     * @function Phaser.Math.Median
-     * @since 3.54.0
-     *
      * @param {number[]} values - The values to average.
      *
      * @return {number} The median value.
@@ -271,9 +268,6 @@ export class MathCommon extends Component {
      * If `max` isn't given then it will return the percentage of `value` to `min`.
      *
      * You can optionally specify an `upperMax` value, which is a mid-way point in the range that represents 100%, after which the % starts to go down to zero again.
-     *
-     * @function Phaser.Math.Percent
-     * @since 3.0.0
      *
      * @param {number} value - The value to determine the percentage of.
      * @param {number} min - The minimum value.

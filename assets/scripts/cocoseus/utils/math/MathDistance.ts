@@ -2,7 +2,24 @@ import { _decorator, Component, IVec3Like } from 'cc';
 const { ccclass, property } = _decorator;
 
 @ccclass('MathDistance')
-export class MathDistance extends Component {
+export class MathDistance {
+
+    /**
+     * Calculate the distance between two sets of coordinates (points).
+     *
+     * @param {number} x1 - The x coordinate of the first point.
+     * @param {number} y1 - The y coordinate of the first point.
+     * @param {number} x2 - The x coordinate of the second point.
+     * @param {number} y2 - The y coordinate of the second point.
+     *
+     * @return {number} The distance between each point.
+     */
+    static distanceBetween(x1:number, y1:number, x2:number, y2:number):number
+    {
+        const dx = x1 - x2;
+        const dy = y1 - y2;
+        return Math.sqrt(dx * dx + dy * dy);
+    };
 
     /**
      * Calculate the Chebyshev distance between two sets of coordinates (points).

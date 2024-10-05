@@ -13,9 +13,9 @@ export class RandomDataGenerator {
      *
      * @return {number} A random float within the given range.
      */
-    // static between(min:number, max:number):number{
-    //     return Math.random() * (max - min) + min;
-    // }
+    static randomBetween(min:number, max:number):number{
+        return Math.random() * (max - min) + min;
+    }
     
     private c:number = 1;
     private s0:number = 0;
