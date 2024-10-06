@@ -153,8 +153,6 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
          * @returns 
          */
         async loadEachAsset(assetInfo:SimpleAssetInfo):Promise<Asset>{
-            // return await Support.asyncLoadAssetFromSimpleAssetInfo(assetInfo);
-
             if(!assetInfo) return null
             if(!assetInfo.bundle?.length) error('Asset no bundle !!');
             if(!EDITOR){
@@ -226,7 +224,6 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
                 const propertyStash:PropertyStash = injectorProperties[propertyName] ??= {};
                 js.mixin(propertyStash, properties[propertyName])
                 remakeProperty(PropertyLoadified, propertyName, injectorProperties);
-
             })            
         }
         base[CACHE_KEY] = undefined;

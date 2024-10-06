@@ -238,7 +238,7 @@ export class PrefabReferenceView extends Parasitify(Component) {
             // if(hadInjectorImplemented(this.host.constructor as Constructor, PropertyExportifyInjector)){
             //  Clear view.
             this.exportedProperties = [];
-            // const decoratify = Decoratify(this.host);  
+            // const decoratify = Decoratify(this.host);
             // CCEditor.getEditorPropertiesAtRuntime(this.host);
             // const loadedPropertyNames:string[] = Array.from(Decoratify(this.host).keys(PropertyLoadifyDecorator));   
             const loadedPropertyNames:string[] = CCEditor.getEditorPropertiesAtRuntime(this.host, this.propertiesFillter);
@@ -257,8 +257,7 @@ export class PrefabReferenceView extends Parasitify(Component) {
             this.exportedProperties.forEach((refView:ReferenceProperty)=>{
                 refView.updatePropertyEditorView();
             })
-                // this.saveAndRefresh_Editor();
-            // }
+            // 
         }
     }
 

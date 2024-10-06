@@ -45,8 +45,8 @@ export class MathAngle extends Component {
      * @param {number} radianAngle  The angle to convert, in radians.
      * @returns {number} The converted angle, in radians.
      */
-    static normalize(radianAngle:number){
-        radianAngle = radianAngle % (2 * Math.PI);
+    static normalize(radianAngle:number):number{
+        radianAngle = radianAngle % MATH_CONST.PI2;
 
         if (radianAngle >= 0)
         {
@@ -54,7 +54,7 @@ export class MathAngle extends Component {
         }
         else
         {
-            return radianAngle + 2 * Math.PI;
+            return radianAngle + MATH_CONST.PI2;
         }
     }
 

@@ -4,7 +4,6 @@ export const MATH_CONST = {
      * The value of PI * 2.
      *
      * @type {number}
-     * @since 3.0.0
      */
     PI2: Math.PI * 2,
 
@@ -16,14 +15,12 @@ export const MATH_CONST = {
      * If you need PI * 2, use the PI2 constant instead.
      *
      * @type {number}
-     * @since 3.0.0
      */
     TAU: Math.PI * 0.5,
 
     /**
      * An epsilon value (1.0e-6)
      * @type {number}
-     * @since 3.0.0
      */
     EPSILON: 1.0e-6,
 
@@ -31,7 +28,6 @@ export const MATH_CONST = {
      * For converting degrees to radians (PI / 180)
      *
      * @type {number}
-     * @since 3.0.0
      */
     DEG_TO_RAD: Math.PI / 180,
 
@@ -39,15 +35,13 @@ export const MATH_CONST = {
      * For converting radians to degrees (180 / PI)
      *
      * @type {number}
-     * @since 3.0.0
      */
     RAD_TO_DEG: 180 / Math.PI,
 
     /**
      * An instance of the Random Number Generator.
      * This is not set until the Game boots.
-     * @type {Phaser.Math.RandomDataGenerator}
-     * @since 3.0.0
+     * @type {RandomDataGenerator}
      */
     RND: null,
 
@@ -56,7 +50,6 @@ export const MATH_CONST = {
      * We use a const for backward compatibility with Internet Explorer.
      *
      * @type {number}
-     * @since 3.21.0
      */
     MIN_SAFE_INTEGER: Number.MIN_SAFE_INTEGER || -9007199254740991,
 
@@ -65,8 +58,60 @@ export const MATH_CONST = {
      * We use a const for backward compatibility with Internet Explorer.
      *
      * @type {number}
-     * @since 3.21.0
      */
     MAX_SAFE_INTEGER: Number.MAX_SAFE_INTEGER || 9007199254740991
+
+};
+
+export const GEOM_CONST = {
+
+    /**
+     * A Circle Geometry object type.
+     *
+     * @type {number}
+     */
+    CIRCLE: 0,
+
+    /**
+     * An Ellipse Geometry object type.
+     *
+     * @type {number}
+     */
+    ELLIPSE: 1,
+
+    /**
+     * A Line Geometry object type.
+     *
+     * @type {number}
+     */
+    LINE: 2,
+
+    /**
+     * A Point Geometry object type.
+     *
+     * @type {number}
+     */
+    POINT: 3,
+
+    /**
+     * A Polygon Geometry object type.
+     *
+     * @type {number}
+     */
+    POLYGON: 4,
+
+    /**
+     * A Rectangle Geometry object type.
+     *
+     * @type {number}
+     */
+    RECTANGLE: 5,
+
+    /**
+     * A Triangle Geometry object type.
+     *
+     * @type {number}
+     */
+    TRIANGLE: 6
 
 };
