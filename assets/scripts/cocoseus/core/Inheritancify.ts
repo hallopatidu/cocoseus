@@ -131,12 +131,12 @@ export function Inheritancify<TInjector, TStaticInjector>(injectorMethod:<TBase>
 // ----------------------------------- Class Plugin -----------------------------------
 
 /**
- * 
+ * Update and modify the class from blueprints.
  * @param injectorMethod 
  * @param injectorName 
  * @returns 
  */
-export function CCClassify<TInjector, TStaticInjector>(injectorMethod:<TBase>(...args:Constructor<TBase>[])=>Constructor<TBase & TInjector>, injectorName:string = injectorMethod.name ):(<TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>){
+export function CCClassify<TInjector, TStaticInjector>(injectorMethod:<TBase>(...args:(Constructor<TBase>|string|number)[])=>Constructor<TBase & TInjector>, injectorName:string = injectorMethod.name ):(<TBase>(base:validateTBase<TBase>, ...args:(string|number)[])=>ReturnInheritancified<TBase&TInjector, TStaticInjector>){
     return function<TBase>(base:validateTBase<TBase>):ReturnInheritancified<TBase&TInjector, TStaticInjector>{
         if(hadInjectorImplemented(base as Constructor, injectorName)) return base as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
         //         
@@ -144,7 +144,7 @@ export function CCClassify<TInjector, TStaticInjector>(injectorMethod:<TBase>(..
         if(!superClass) error('Please, declare the injector class and return it inside injector function !')
         // 
         superClass = CCEditor.extendClassCache(superClass);
-        extendCustomizedProperties(superClass as Constructor);
+        applyCustomizedProperties(superClass as Constructor);
         //  
         return superClass as unknown as ReturnInheritancified<TBase&TInjector, TStaticInjector>;
     } as <TBase>(base:validateTBase<TBase>)=>ReturnInheritancified<TBase&TInjector, TStaticInjector>
@@ -170,7 +170,7 @@ export function CCClassify<TInjector, TStaticInjector>(injectorMethod:<TBase>(..
          * Thuc thi cac ham duoc gan vao the __$extends
          * @param constructor 
          */
-        function extendCustomizedProperties(constructor:Constructor){
+        function applyCustomizedProperties(constructor:Constructor){
             const classStash:ClassStash = constructor[CACHE_KEY] || ((constructor[CACHE_KEY]) = {});
             const ccclassProto = CCEditor.getSubDict<ClassStash, keyof ClassStash>(classStash, 'proto');
             const properties:Record<string, PropertyStash> = CCEditor.getSubDict(ccclassProto, 'properties');
@@ -194,14 +194,14 @@ export function CCClassify<TInjector, TStaticInjector>(injectorMethod:<TBase>(..
  * @returns 
  */
 export function generateCustomPropertyDecorator(type:string, decoratorHandler:DecorateHandlerType):DecoratePropertyType{ 
-    return CCEditor.generateDecorator(type, function( 
+    return CCEditor.generatePropertyDecorator(type, function( 
         cache?:ClassStash, 
         propertyStash?:PropertyStash, 
         ctor?: new ()=>unknown, 
         propertyKey?:string|symbol,
     ){
         // 
-        propertyStash.__$extends = propertyStash.__$extends  || [];        
+        if(!propertyStash.__$extends) propertyStash.__$extends = [];
         propertyStash.__$extends.push(decoratorHandler);
         // 
     }) as DecoratePropertyType
@@ -221,11 +221,11 @@ export function remakePropertyDecorator(constructor:Constructor, decoratorName:s
     const properties:Record<string, PropertyStash> = CCEditor.getSubDict(ccclassProto, 'properties');     
     const propertyKeys:string[] = Object.keys(properties);
     propertyKeys.forEach((key:string|symbol)=>{     
-        const propertyStash:PropertyStash = properties[key.toString()];   
+        const propertyStash:PropertyStash = properties[key.toString()];
         if(!propertyStash.__$decorate) {propertyStash.__$decorate = 'property';}   
         if( propertyStash && propertyStash.__$decorate == decoratorName.toString()){
             // 
-            propertyStash.__$extends = propertyStash.__$extends  || [];
+            if(!propertyStash.__$extends) propertyStash.__$extends = [];
             propertyStash.__$extends.push(decoratorHandler);
             // 
         }

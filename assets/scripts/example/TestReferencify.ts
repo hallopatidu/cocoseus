@@ -4,7 +4,7 @@ import { cocoseus } from '../cocoseus/plugins';
 const { ccclass, property } = _decorator;
 
 @ccclass('TestReferencify')
-@cocoseus.propertyDynamicLoading
+@cocoseus.propertyDynamicLoading('https://127.0.0.1')
 export class TestReferencify extends Component {
 
     // @reference({type:Prefab})

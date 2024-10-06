@@ -5,7 +5,7 @@ import { ClassStash, IPropertyExportified, IStaticPropertyExportified, PropertyS
 const { ccclass, property } = _decorator;
 
 export const PropertyExportifyInjector:string = "PropertyExportify";
-export const PropertyExportifyDecorator:string = "@property.export";
+// export const PropertyExportifyDecorator:string = "@property.export";
 
 export default CCClassify<IPropertyExportified, IStaticPropertyExportified>(function PropertyExportify<TBase>(base:Constructor<TBase>):Constructor<TBase & IPropertyExportified>{
     class PropertyExportified extends Decoratify (base as unknown as Constructor<Component>) {}
@@ -22,9 +22,9 @@ export default CCClassify<IPropertyExportified, IStaticPropertyExportified>(func
 function exportifiedPropertyDecorator(classStash:ClassStash, propertyStash:PropertyStash, ctor:Constructor, propertyKey:string){
     const isTypeArray:boolean = propertyStash.type && Array.isArray(propertyStash.type);
     let classType:CCObject = isTypeArray ? propertyStash.type[0] : propertyStash.type;
-    const classTypeName:string = js.getClassName(classType);
-    const recordContent:string = propertyKey.toString() + (classTypeName ? "::" + classTypeName : "");
-    Decoratify({constructor:ctor}).record(recordContent, PropertyExportifyDecorator);
+    // const classTypeName:string = js.getClassName(classType);
+    // const recordContent:string = propertyKey.toString() + (classTypeName ? "::" + classTypeName : "");
+    // Decoratify({constructor:ctor}).record(recordContent, PropertyExportifyDecorator);
 }
 
 // function remakeProperty(constructor:Constructor, propertyName:string, properties:any){

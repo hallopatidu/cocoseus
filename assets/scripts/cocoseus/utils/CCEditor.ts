@@ -331,8 +331,8 @@ export class CCEditor {
      * @returns 
      */
     static makeSmartClassDecorator<TArg> (
-        decorate: <TFunction extends Function>(constructor: TFunction, arg?: TArg) => ReturnType<ClassDecorator>,
-    ): ClassDecorator & ((arg?: TArg) => ClassDecorator) {
+        decorate: <TFunction extends Function>(constructor: TFunction, ...arg: TArg[]) => ReturnType<ClassDecorator>,
+    ): ClassDecorator & ((...arg: TArg[]) => ClassDecorator) {
         return proxyFn;
         function proxyFn(...args: Parameters<ClassDecorator>): ReturnType<ClassDecorator>;
         function proxyFn(arg?: TArg): ClassDecorator;
@@ -349,11 +349,11 @@ export class CCEditor {
     }
 
     /**
-     * 
+     * Tạo ra một loại decorate tính năng tương tự @property 
      * @param decoratorHandler 
      * @returns 
      */
-    static generateDecorator(type:string, decoratorHandler:DecorateHandlerType):DecoratePropertyType{    
+    static generatePropertyDecorator(type:string, decoratorHandler:DecorateHandlerType):DecoratePropertyType{    
         // 
         const decorateFunc:Function = function (target?: Parameters<LegacyPropertyDecorator>[0] | PropertyType, 
             propertyKey?: Parameters<LegacyPropertyDecorator>[1],

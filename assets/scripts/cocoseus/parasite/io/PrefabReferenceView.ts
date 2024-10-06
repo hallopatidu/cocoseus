@@ -7,7 +7,7 @@ import { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PropertyLoadifyDecorator, P
 import { cocoseus } from '../../plugins';
 import { CCEditor } from '../../utils/CCEditor';
 import { hadInjectorImplemented } from '../../core/Inheritancify';
-import PropertyExportify, { PropertyExportifyDecorator, PropertyExportifyInjector } from '../../core/PropertyExportify';
+import { PropertyExportifyInjector } from '../../core/PropertyExportify';
 
 const { ccclass, property, executeInEditMode } = _decorator;
 

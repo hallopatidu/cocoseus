@@ -14,12 +14,14 @@ export const WRAPPER_PROPERTY_PREFIX:string = '__$';
 // const INDEX_PROPERTY_PREFIX:string = '__$id__';
 // const STRING_PROPERTY_PREFIX:string = '__$string__';
 // const PREFAB_DETAIL_PREFIX:string = '__$prefab__';
+const RemoteRouterReg:RegExp = /^(remote)/g
 
 export const PropertyLoadifyInjector:string = 'PropertyLoadify';
 export const PropertyLoadifyDecorator:string = '@property.load';
 
-export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function PropertyLoadify <TBase>(base:Constructor<TBase>):Constructor<TBase & IPropertyLoadified>{
+export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function PropertyLoadify <TBase>(base:Constructor<TBase>, baseUrl:string):Constructor<TBase & IPropertyLoadified>{
     // 
+    const BaseURL:string = (baseUrl && !RemoteRouterReg.test(baseUrl)) ? (baseUrl + '/remote/') : '';
     class PropertyLoadified extends AsyncProcessify(Decoratify (base as unknown as Constructor<Component>)) implements IPropertyLoadified {
 
         protected onLoad(): void {
@@ -156,15 +158,16 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
             if(!assetInfo) return null
             if(!assetInfo.bundle?.length) error('Asset no bundle !!');
             if(!EDITOR){
-                const bundleName:string = assetInfo.bundle;
+                const bundleName:string = assetInfo.bundle;                
                 let bundle:AssetManager.Bundle = assetManager.getBundle(bundleName);
                 if(!bundle){
                     bundle = await new Promise<AssetManager.Bundle>((resolve:Function)=>{
-                        assetManager.loadBundle(bundleName,(err:Error, downloadBundle:AssetManager.Bundle)=>{                   
+                        const bundleUrl:string = BaseURL + bundleName;                      
+                        assetManager.loadBundle(bundleUrl,(err:Error, downloadBundle:AssetManager.Bundle)=>{                   
                             if(!err){                               
                                 resolve(downloadBundle);
                             }else{
-                                DEV && error('Bundle Loading Error ' + err + ' bundle name: ' + bundleName);
+                                DEV && error('Bundle Loading Error ' + err + ' bundle name: ' + bundleUrl);
                                 resolve(null)
                             }                    
                         }) 
