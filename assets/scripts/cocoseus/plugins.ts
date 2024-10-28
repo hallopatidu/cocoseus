@@ -19,9 +19,10 @@ export namespace cocoseus {
         ActionSystem: ActionifyInjector,
     }
     
-    export const propertyDynamicLoading:  ((url?:string) => ClassDecorator) & ClassDecorator = CCEditor.makeSmartClassDecorator<string>((constructor, url?:string) => {
+    export const propertyDynamicLoading:  ((url?:string,version?:string) => ClassDecorator) & ClassDecorator = CCEditor.makeSmartClassDecorator<string>((constructor, url?:string, version?:string) => {
         url && console.log('url:: ' + url);
-        return PropertyLoadify(constructor,url);
+        version && console.log('version:: ' + version);
+        return PropertyLoadify(constructor,url, version);
     });
     
     // export const eventEmitter: (() => ClassDecorator) & ClassDecorator = CCEditor.makeSmartClassDecorator((constructor:any) => {

@@ -19,8 +19,14 @@ const RemoteRouterReg:RegExp = /^(remote)/g
 export const PropertyLoadifyInjector:string = 'PropertyLoadify';
 export const PropertyLoadifyDecorator:string = '@property.load';
 
-export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function PropertyLoadify <TBase>(base:Constructor<TBase>, baseUrl:string):Constructor<TBase & IPropertyLoadified>{
+export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function PropertyLoadify <TBase>(base:Constructor<TBase>, baseUrl:string, version:string):Constructor<TBase & IPropertyLoadified>{
     // 
+    Array.from(arguments).forEach((value:any)=>{
+        if(typeof value == 'string'){
+            console.log('params '+ value)
+        }
+    })
+    const Version:string = version?version:'';
     const BaseURL:string = (baseUrl && !RemoteRouterReg.test(baseUrl)) ? (baseUrl + '/remote/') : '';
     class PropertyLoadified extends AsyncProcessify(Decoratify (base as unknown as Constructor<Component>)) implements IPropertyLoadified {
 
@@ -156,15 +162,15 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
          */
         async loadEachAsset(assetInfo:SimpleAssetInfo):Promise<Asset>{
             if(!assetInfo) return null
-            if(!assetInfo.bundle?.length) error('Asset no bundle !!');
+            if(!assetInfo.bundle?.length) error('the asset has no bundle !!');
             if(!EDITOR){
                 const bundleName:string = assetInfo.bundle;                
-                let bundle:AssetManager.Bundle = assetManager.getBundle(bundleName);
+                const bundleUrl:string = BaseURL + bundleName;    
+                let bundle:AssetManager.Bundle = assetManager.getBundle(bundleUrl);
                 if(!bundle){
-                    bundle = await new Promise<AssetManager.Bundle>((resolve:Function)=>{
-                        const bundleUrl:string = BaseURL + bundleName;                      
-                        assetManager.loadBundle(bundleUrl,(err:Error, downloadBundle:AssetManager.Bundle)=>{                   
-                            if(!err){                               
+                    bundle = await new Promise<AssetManager.Bundle>((resolve:Function)=>{                
+                        assetManager.loadBundle(bundleUrl,{version:Version},(err:Error, downloadBundle:AssetManager.Bundle)=>{                   
+                            if(!err){
                                 resolve(downloadBundle);
                             }else{
                                 DEV && error('Bundle Loading Error ' + err + ' bundle name: ' + bundleUrl);
@@ -174,7 +180,7 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
                     })
                 }
                 if(!bundle){
-                    error('Bundle ' + bundleName + ' is not found !');
+                    error('Bundle ' + bundleUrl + ' is not found !');
                     return null
                 }
                 const assetPath:string = assetInfo.url;
@@ -195,7 +201,7 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
                     })
                 }
                 if(!remoteAsset) {
-                    error('Asset ' + assetPath + ' in bundle '+ bundleName + ' is not found !');
+                    error('Asset ' + assetPath + ' in bundle '+ bundleUrl + ' is not found !');
                     return null
                 }
         
@@ -226,7 +232,7 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
             keys.forEach((propertyName:string)=>{
                 const propertyStash:PropertyStash = injectorProperties[propertyName] ??= {};
                 js.mixin(propertyStash, properties[propertyName])
-                remakeProperty(PropertyLoadified, propertyName, injectorProperties);
+                remakeProperty(PropertyLoadified, propertyName, injectorProperties, {version:Version, url:BaseURL});
             })            
         }
         base[CACHE_KEY] = undefined;
@@ -237,6 +243,14 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
 
 
 // ----------
+/**
+ * Thêm /remote vao baseUrl không đúng chuẩn.
+ * @param baseUrl 
+ * @returns 
+ */
+function validateBaseUrl(baseUrl:string):string{
+    return (baseUrl && !RemoteRouterReg.test(baseUrl)) ? (baseUrl + '/remote/') : '';
+}
 
 /**
  * 
@@ -244,7 +258,7 @@ export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function
  * @param propertyName 
  * @param properties 
  */
-function remakeProperty(constructor:Constructor, propertyName:string, properties:any){
+function remakeProperty(constructor:Constructor, propertyName:string, properties:any, extraOptions?:any){
     const options:IPropertyOptions = properties[propertyName];
     // Do not support Class Array Type.
     const isTypeArray:boolean = options.type && Array.isArray(options.type);
@@ -266,16 +280,16 @@ function remakeProperty(constructor:Constructor, propertyName:string, properties
         // !records.has(recordContent) && records.add(recordContent);
         Decoratify({constructor}).record(recordContent, PropertyLoadifyDecorator);
         // 
-        defineSmartProperty(constructor, propertyName, options);        
+        defineSmartProperty(constructor, propertyName, extraOptions? Object.assign(options, extraOptions) : options);        
     }
     // 
 }
 
 
-function decorated(target:any):Set<string>{
-    const ctor:Constructor = target.prototype ? target : target.constructor;
-    return ctor[PropertyLoadifyDecorator] || (ctor[PropertyLoadifyDecorator] = new Set<string>())
-}
+// function decorated(target:any):Set<string>{
+//     const ctor:Constructor = target.prototype ? target : target.constructor;
+//     return ctor[PropertyLoadifyDecorator] || (ctor[PropertyLoadifyDecorator] = new Set<string>())
+// }
 
 
 /**
@@ -348,7 +362,9 @@ function defineSmartProperty(target:Record<string, any>, propertyName:string, op
                         bundleName !== AssetManager.BuiltinBundleName.START_SCENE   ){
                         // 
                         this[infoPropertyName] = assetInfo;
-                        const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
+                        // options['version'] ? options['version'] https://cdn.jsdelivr.net/gh/hallopatidu/reelgame-assets@refs/heads/main
+                        // const baseURL:string = validateBaseUrl(options['url']);
+                        const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']' + ' ['+ options['version'] +']' + '('+ options['url'] +')';
                         CCEditor.enumifyProperty(this, enumPropertyName, Support.convertToEnum(['REMOVE', assetPath]));
                         this[propertyName] = null;
                         this.onEditorAssetChanged(propertyName);

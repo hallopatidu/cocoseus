@@ -173,7 +173,7 @@
     "_priority": 0,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 431.5657620041754,
+    "_orthoHeight": 554.2091152815013,
     "_near": 0,
     "_far": 1000,
     "_color": {
@@ -329,10 +329,10 @@
     "__prefab": null,
     "abc": null,
     "__$info__abc": {
-      "bundle": "resources",
-      "url": "/prefab/TestLayout",
+      "bundle": "test",
+      "url": "/TestLayout",
       "type": "cc.Prefab",
-      "uuid": "a591f020-2e36-40a4-a13b-4a280f69581b",
+      "uuid": "73a72003-ad19-469d-9ab6-ddaa506b2c2b",
       "name": "TestLayout.prefab",
       "references": [
         {

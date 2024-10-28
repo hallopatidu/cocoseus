@@ -337,16 +337,36 @@ export class CCEditor {
         function proxyFn(...args: Parameters<ClassDecorator>): ReturnType<ClassDecorator>;
         function proxyFn(arg?: TArg): ClassDecorator;
         function proxyFn (target?: Parameters<ClassDecorator>[0] | TArg): ReturnType<ClassDecorator> {
+            
+            const args:string|number[] = Array.from(arguments)
             if (typeof target === 'function') {
                 // If no parameter specified
                 return decorate(target);
             } else {
-                return function <TFunction extends Function> (constructor: TFunction): void | Function {
-                    return decorate(constructor, target);
+                return function <TFunction extends Function> (constructor: TFunction): void | Function {                    
+                    // return decorate(constructor, target);
+                    return decorate.apply(this, [constructor, ...args])
                 };
             }
         }
     }
+    // static makeSmartClassDecorator<TArg> (
+    //     decorate: <TFunction extends Function>(constructor: TFunction, ...arg: TArg[]) => ReturnType<ClassDecorator>,
+    // ): ClassDecorator & ((...arg: TArg[]) => ClassDecorator) {
+    //     return proxyFn;
+    //     function proxyFn(...args: Parameters<ClassDecorator>): ReturnType<ClassDecorator>;
+    //     function proxyFn(arg?: TArg): ClassDecorator;
+    //     function proxyFn (target?: Parameters<ClassDecorator>[0] | TArg): ReturnType<ClassDecorator> {
+    //         if (typeof target === 'function') {
+    //             // If no parameter specified
+    //             return decorate(target);
+    //         } else {
+    //             return function <TFunction extends Function> (constructor: TFunction): void | Function {
+    //                 return decorate(constructor, target);
+    //             };
+    //         }
+    //     }
+    // }
 
     /**
      * Tạo ra một loại decorate tính năng tương tự @property 
