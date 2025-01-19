@@ -4,7 +4,7 @@ import { IParasitified, IStaticParasitified } from "../types/CoreType";
 import { Inheritancify, hadInjectorImplemented } from "./Inheritancify";
 const { property } = _decorator;
 
-export const ParasitifyName:string = 'Parasitify';
+export const ParasitifyInjector:string = 'Parasitify';
 export const OverrideMethodNameMap = Symbol();
 
 /**
@@ -16,7 +16,7 @@ export const OverrideMethodNameMap = Symbol();
  */
 export function override(target:any, propertyKey: string, descriptor: PropertyDescriptor){
     if(DEV){
-        if(!hadInjectorImplemented(target.constructor as Constructor, ParasitifyName)){
+        if(!hadInjectorImplemented(target.constructor as Constructor, ParasitifyInjector)){
             error('You need add the Parasitify Modifier for this class to use @override');
         }
     }
@@ -106,7 +106,7 @@ export default Inheritancify<IParasitified, IStaticParasitified>(function Parasi
         
         return Parasitified as unknown as Constructor<TBase & IParasitified<TSuper>>;
 
-}, ParasitifyName)
+}, ParasitifyInjector)
 
 // -------------------------
 
@@ -134,7 +134,7 @@ function excuteHierarchyOverridding(thisComp:Component){
         let investigateComp:Component = null;
         if(eligibleForInheritance){
             // const componentIsParasite:boolean = js.isChildClassOf(component.constructor, parasiteClass); 
-            const componentIsParasite:boolean = hadInjectorImplemented(component.constructor as Constructor, ParasitifyName);            
+            const componentIsParasite:boolean = hadInjectorImplemented(component.constructor as Constructor, ParasitifyInjector);            
             hostComp = componentIsParasite ? hostComp : component;                
             let enabledIndex:number = index;
             // Search enabled nextComp

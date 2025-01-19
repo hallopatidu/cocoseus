@@ -373,7 +373,7 @@ export class CCEditor {
      * @param decoratorHandler 
      * @returns 
      */
-    static generatePropertyDecorator(type:string, decoratorHandler:DecorateHandlerType):DecoratePropertyType{    
+    static generatePropertyDecorator(decoratorType:string, decoratorHandler:DecorateHandlerType):DecoratePropertyType{    
         // 
         const decorateFunc:Function = function (target?: Parameters<LegacyPropertyDecorator>[0] | PropertyType, 
             propertyKey?: Parameters<LegacyPropertyDecorator>[1],
@@ -395,7 +395,7 @@ export class CCEditor {
                     target,
                     propertyKey,
                 );
-                propertyStash.__$decorate = type;
+                propertyStash.__$decorate = decoratorType || 'property';
                 // 
                 decoratorHandler(
                     classStash,

@@ -4,16 +4,12 @@ import { EmbedAsset, IAsyncProcessified, IPropertyLoadified, IPropertyOptions, I
 import { CACHE_KEY, CCEditor } from "../utils/CCEditor";
 import { Support } from "../utils/Support";
 import { DEV, EDITOR } from "cc/env";
-// import Decoratify from "./Decoratify";
 import AsyncProcessify from "./AsyncProcessify";
 import Decoratify from "./Decoratify";
 
 export const ENUM_PROPERTY_PREFIX:string = '__$enum__';
 export const INFO_PROPERTY_PREFIX:string = '__$info__';
 export const WRAPPER_PROPERTY_PREFIX:string = '__$';
-// const INDEX_PROPERTY_PREFIX:string = '__$id__';
-// const STRING_PROPERTY_PREFIX:string = '__$string__';
-// const PREFAB_DETAIL_PREFIX:string = '__$prefab__';
 const RemoteRouterReg:RegExp = /^(remote)/g
 
 export const PropertyLoadifyInjector:string = 'PropertyLoadify';
@@ -293,7 +289,7 @@ function remakeProperty(constructor:Constructor, propertyName:string, properties
 
 
 /**
- * 
+ * Tạo các thuộc tính bổ trợ
  * @param target 
  * @param propertyName 
  * @param options 

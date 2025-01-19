@@ -7,7 +7,7 @@ import { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PropertyLoadifyDecorator, P
 import { cocoseus } from '../../plugins';
 import { CCEditor } from '../../utils/CCEditor';
 import { hadInjectorImplemented } from '../../core/Inheritancify';
-import { PropertyExportifyInjector } from '../../core/PropertyExportify';
+// import { PropertyExportifyInjector } from '../../core/PropertyExportify';
 
 const { ccclass, property, executeInEditMode } = _decorator;
 
@@ -141,8 +141,8 @@ class ReferenceProperty extends Eventify( CCObject) {
 
 
 /**
- * Một dạng Parasitify Component, có chức năng đọc các property dạng @reference của Component trước nó, tìm ra các tham chiếu tới một hoặc nhiều Prefab (dạng load động hoặc dạng nhúng)
- * Có thể thay đổi tham số truyền vào của các @reference property của các Component bên trong Prefab (ví dụ: thay spriteframe, asset, node ...).
+ * Một dạng Parasitify Component, có chức năng đọc các property dạng của Component trước nó, tìm ra các tham chiếu tới một hoặc nhiều Prefab (dạng load động hoặc dạng nhúng)
+ * Có thể thay đổi tham số truyền vào của các property của các Component bên trong Prefab (ví dụ: thay spriteframe, asset, node ...).
  * Thường được sử dụng để thay giao diện của các Prefab dùng chung.
  */
 @ccclass('PrefabReferenceView')
@@ -169,7 +169,7 @@ export class PrefabReferenceView extends Parasitify(Component) {
             let allPrefabComponents:Component[] = ((asset as Prefab).data as Node).getComponentsInChildren(Component);
             let waitLoadingPromise:Promise<void>[] = [];
             allPrefabComponents.forEach((comp:Component)=>{                
-                if(hadInjectorImplemented(comp.constructor as Constructor, PropertyExportifyInjector)){
+                // if(hadInjectorImplemented(comp.constructor as Constructor, PropertyExportifyInjector)){
                     const refInfos:ReferenceInfo[] = CCEditor.getChildReferenceInfo(comp, this.propertiesFillter);
                     refInfos.forEach((refInfo:ReferenceInfo)=>{
                         const refToken:number = ReferenceProperty.getTokenFrom(propertyName, refInfo);
@@ -198,7 +198,7 @@ export class PrefabReferenceView extends Parasitify(Component) {
                         // }
                     })   
                     // 
-                }
+                // }
                 // else{
                 //     warn('the component ' + comp.name + ' need use cocoseus.exportProperties to export properties !!')
                 // }      

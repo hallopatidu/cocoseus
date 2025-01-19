@@ -382,12 +382,8 @@
     "__$info__leftSF": null,
     "rightSF": null,
     "__$info__rightSF": null,
-    "rightSprite": {
-      "__id__": 5
-    },
-    "leftSprite": {
-      "__id__": 11
-    },
+    "rightSprite": null,
+    "leftSprite": null,
     "_id": ""
   },
   {

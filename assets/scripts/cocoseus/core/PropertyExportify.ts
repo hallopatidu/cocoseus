@@ -8,7 +8,12 @@ export const PropertyExportifyInjector:string = "PropertyExportify";
 // export const PropertyExportifyDecorator:string = "@property.export";
 
 export default CCClassify<IPropertyExportified, IStaticPropertyExportified>(function PropertyExportify<TBase>(base:Constructor<TBase>):Constructor<TBase & IPropertyExportified>{
-    class PropertyExportified extends Decoratify (base as unknown as Constructor<Component>) {}
+    class PropertyExportified extends Decoratify (base as unknown as Constructor<Component>) {
+        constructor(){
+            super()
+        }
+    }
+    
     remakePropertyDecorator(base, 'property', exportifiedPropertyDecorator);
     return PropertyExportified as unknown as Constructor<TBase & IPropertyExportified>;
 }, PropertyExportifyInjector)

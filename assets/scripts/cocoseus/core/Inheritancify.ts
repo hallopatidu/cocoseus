@@ -189,12 +189,15 @@ export function CCClassify<TInjector, TStaticInjector>(injectorMethod:<TBase>(..
         }
         
 /**
- * 
- * @param decoratorHandler 
+ * Hàm tạo decorator cho từng @property
+ * Tạo mới một decorator có type xác định. với một handler tùy biến.
+ * Mỗi khi property này được khai báo, handler sẽ được gọi.
+ * @param decoratorType              // default 'property' 
+ * @param decoratorHandler           // Hàm này chỉ được gọi khi class được khai báo.
  * @returns 
  */
-export function generateCustomPropertyDecorator(type:string, decoratorHandler:DecorateHandlerType):DecoratePropertyType{ 
-    return CCEditor.generatePropertyDecorator(type, function( 
+export function generateCustomPropertyDecorator(decoratorType:string, decoratorHandler:DecorateHandlerType):DecoratePropertyType{ 
+    return CCEditor.generatePropertyDecorator(decoratorType, function( 
         cache?:ClassStash, 
         propertyStash?:PropertyStash, 
         ctor?: new ()=>unknown, 
@@ -208,13 +211,13 @@ export function generateCustomPropertyDecorator(type:string, decoratorHandler:De
 }
 
 /**
- * 
- * Them function decoratorHandler(..) vao the __$extends cho moi property tuong ung co cung loai decorator name (__$decorate).
- * @param decoratorName 
+ * Hàm remake toàn bộ properties khi khai báo class.
+ * Thêm function decoratorHandler(..) vào thẻ __$extends cho mỗi property tương ứng có cùng loại decorator name (__$decorate).
+ * @param decoratorType 
  * @param decoratorHandler 
  * @returns 
  */
-export function remakePropertyDecorator(constructor:Constructor, decoratorName:string, decoratorHandler:DecorateHandlerType){    
+export function remakePropertyDecorator(constructor:Constructor, decoratorType:string, decoratorHandler:DecorateHandlerType){    
     if(!constructor) throw new Error('this function have to call with constructor.')
     const classStash:ClassStash = constructor[CACHE_KEY] || ((constructor[CACHE_KEY]) = {});
     const ccclassProto = CCEditor.getSubDict<ClassStash, keyof ClassStash>(classStash, 'proto');
@@ -223,7 +226,7 @@ export function remakePropertyDecorator(constructor:Constructor, decoratorName:s
     propertyKeys.forEach((key:string|symbol)=>{     
         const propertyStash:PropertyStash = properties[key.toString()];
         if(!propertyStash.__$decorate) {propertyStash.__$decorate = 'property';}   
-        if( propertyStash && propertyStash.__$decorate == decoratorName.toString()){
+        if( propertyStash && propertyStash.__$decorate == decoratorType.toString()){
             // 
             if(!propertyStash.__$extends) propertyStash.__$extends = [];
             propertyStash.__$extends.push(decoratorHandler);

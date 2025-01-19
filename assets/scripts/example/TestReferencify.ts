@@ -4,7 +4,8 @@ import { cocoseus } from '../cocoseus/plugins';
 const { ccclass, property } = _decorator;
 
 @ccclass('TestReferencify')
-@cocoseus.propertyDynamicLoading('https://cdn.jsdelivr.net/gh/hallopatidu/reelgame-assets@refs/heads/main','5471a')
+@cocoseus.propertyDynamicLoading  
+//@cocoseus.propertyDynamicLoading('https://cdn.jsdelivr.net/gh/hallopatidu/reelgame-assets@refs/heads/main','5471a')       // force to remote prefab.
 export class TestReferencify extends Component {
 
     // @reference({type:Prefab})

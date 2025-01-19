@@ -173,7 +173,7 @@
     "_priority": 0,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 554.2091152815013,
+    "_orthoHeight": 375.05676855895194,
     "_near": 0,
     "_far": 1000,
     "_color": {
@@ -329,10 +329,10 @@
     "__prefab": null,
     "abc": null,
     "__$info__abc": {
-      "bundle": "test",
-      "url": "/TestLayout",
+      "bundle": "resources",
+      "url": "/prefab/TestLayout",
       "type": "cc.Prefab",
-      "uuid": "73a72003-ad19-469d-9ab6-ddaa506b2c2b",
+      "uuid": "a591f020-2e36-40a4-a13b-4a280f69581b",
       "name": "TestLayout.prefab",
       "references": [
         {
@@ -379,14 +379,21 @@
       },
       "1217250915": {
         "bundle": "resources",
-        "url": "/images/sp/spriteFrame",
+        "url": "/images/fp/spriteFrame",
         "type": "cc.SpriteFrame",
-        "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@f9941",
+        "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@f9941",
         "name": "spriteFrame"
       }
     },
     "propertyAsset": {
       "value": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
         1217250915,
         645942295
       ]
@@ -402,9 +409,9 @@
     "value": null,
     "__$info__value": {
       "bundle": "resources",
-      "url": "/images/sp/spriteFrame",
+      "url": "/images/fp/spriteFrame",
       "type": "cc.SpriteFrame",
-      "uuid": "8a36a78a-79de-4652-88c9-dcc663e5d6b2@f9941",
+      "uuid": "0020d6b7-5b99-4124-875d-334f58dbf92c@f9941",
       "name": "spriteFrame"
     }
   },
