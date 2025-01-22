@@ -1,0 +1,45 @@
+{
+    "$schema": "./@types/schema/package/index.json",
+    "package_version": 2,
+    "name": "cocoseus_message",
+    "version": "1.0.0",
+    "author": "hallopatidu",
+    "editor": ">=3.8.4",
+    "scripts": {
+        "preinstall": "node ./scripts/preinstall.js",
+        "build": "tsc",
+        "watch": "tsc -w"
+    },
+    "description": "i18n:cocoseus_message.description",
+    "main": "./dist/main.js",
+    "devDependencies": {
+        "@cocos/creator-types": "^3.8.4",
+        "@types/node": "^18.17.1",
+        "typescript": "^4.3.4"
+    },
+    "contributions": {
+        "asset-db": {
+            "mount": {
+                "path": "./assets",
+                "readonly": true
+            }
+        },
+        "menu": [
+            {
+                "path": "i18n:cocoseus_message",
+                "label": "i18n:cocoseus_message.show_log",
+                "message": "show-log"
+            }
+        ],
+        "messages": {
+            "show-log": {
+                "methods": [
+                    "showLog"
+                ]
+            }
+        }
+    },
+    "dependencies": {
+        "json-to-ts": "^2.1.0"
+    }
+}

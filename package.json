@@ -3,5 +3,9 @@
   "uuid": "d311902c-d982-48e6-a661-b35396242b09",
   "creator": {
     "version": "3.8.3"
+  },
+  "devDependencies": {
+    "@cocos/creator-types": "^3.8.5",
+    "@types/node": "^22.10.7"
   }
 }

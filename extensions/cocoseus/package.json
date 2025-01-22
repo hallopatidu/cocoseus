@@ -35,6 +35,12 @@
         }
     },
     "contributions": {
+        "asset-db": {
+            "mount": {
+                "path": "./assets",
+                "readonly": true
+            }
+        },
         "menu": [
             {
                 "path": "i18n:menu.panel/cocoseus",
