@@ -35,7 +35,7 @@ export class TestReferencify extends Component {
         }else{
             const node:Node = instantiate(this.abc);
             node.setPosition(new Vec3);
-            this.node.addChild(node)
+            this.node.addChild(node);
         }
         
         if(!this.sp) error('sp unload asset !!')
