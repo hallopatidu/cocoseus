@@ -4,7 +4,7 @@
         "outDir": "./dist",
         "rootDir": "./source",
         "types": [
-            // "node",
+            "node",
             "@cocos/creator-types/editor",
         ]
     }

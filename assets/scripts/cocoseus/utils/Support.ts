@@ -39,9 +39,9 @@ export class Support extends Component {
     }
 
     /**
-     * 
+     * Biến một chuỗi bất kì thành chuỗi hashed
      * @param value 
-     * @param canBeNegative 
+     * @param canBeNegative Có thể nhận giá trị âm hay không.
      * @returns 
      */
     static getHashFromString(value: string, canBeNegative:boolean = false): string {       
