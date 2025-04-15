@@ -14,22 +14,14 @@
     "main": "./dist/main.js",
     "devDependencies": {
         "@cocos/creator-types": "^3.8.6",
-        "@types/node": "^18.17.1",
+        "@types/node": "^18.19.86",
         "typescript": "^5.8.2"
     },
     "contributions": {
-        "menu": [
-            {
-                "path": "i18n:cocoseus",
-                "label": "i18n:cocoseus.show_log",
-                "message": "show-log"
-            }
-        ],
-        "messages": {
-            "show-log": {
-                "methods": [
-                    "showLog"
-                ]
+        "asset-db": {
+            "mount": {
+                "path": "./core",
+                "readonly": true
             }
         }
     }

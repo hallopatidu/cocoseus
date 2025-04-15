@@ -1,7 +1,8 @@
 import { Component, Constructor, _decorator, log } from "cc";
-import { ClassStash, IDecoratified, IPropertyOptions, IStaticDecoratified, LegacyPropertyDecorator, PropertyStash, PropertyType } from "../types/CoreType";
+// import { ClassStash, IDecoratified, IPropertyOptions, IStaticDecoratified, LegacyPropertyDecorator, PropertyStash, PropertyType } from "../types/CoreType";
 import { Inheritancify } from "./Inheritancify";
-import { CACHE_KEY, CCEditor } from "../utils/CCEditor";
+import { IDecoratified, IStaticDecoratified } from "../types/CoreType";
+// import { CACHE_KEY, CCEditor } from "../utils/CCEditor";
 
 export const DecoratifyName:string = 'Decoratify';
 const DecoratedTag = '__$decorated';

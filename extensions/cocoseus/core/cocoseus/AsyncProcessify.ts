@@ -1,6 +1,6 @@
 import { _decorator, Constructor, js, log, warn } from 'cc';
-import { IAsyncProcessified } from '../types/CoreType';
 import { hadInjectorImplemented } from './Inheritancify';
+import { IAsyncProcessified } from '../types/CoreType';
 
 const { ccclass, property } = _decorator;
 const ModifierName:string = 'AsyncProcessified';

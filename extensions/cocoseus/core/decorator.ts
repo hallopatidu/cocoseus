@@ -1,9 +1,8 @@
 import { Constructor, Eventify, __private, _decorator, js } from "cc";
-import PropertyLoadify, { PropertyLoadifyInjector } from "./core/PropertyLoadify";
-import { CCEditor } from "./utils/CCEditor";
-// import Actionify, { ActionifyInjector } from "./core/Actionify";
-import PropertyExportify, { PropertyExportifyInjector } from "./core/PropertyExportify";
-import { ParasitifyInjector } from "./core/Parasitify";
+import { ParasitifyInjector } from "db://cocoseus/cocoseus/Parasitify";
+import PropertyExportify, { PropertyExportifyInjector } from "db://cocoseus/cocoseus/PropertyExportify";
+import PropertyLoadify, { PropertyLoadifyInjector } from "db://cocoseus/cocoseus/PropertyLoadify";
+import { CCEditor } from "db://cocoseus/utils/CCEditor";
 
 const { ccclass, property } = _decorator;
 

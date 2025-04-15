@@ -1,13 +1,12 @@
 import { __private, _decorator, Asset, CCClass, CCObject, Component, Constructor, Eventify, js, log, Node, Prefab, warn } from 'cc';
-import Parasitify, { override } from '../../core/Parasitify';
-import { EmbedAsset, PrefabInfo, ReferenceInfo, SimpleAssetInfo } from '../../types/CoreType';
+import { EmbedAsset, PrefabInfo, ReferenceInfo, SimpleAssetInfo } from '../../../../../extensions/cocoseus/core/types/CoreType';
 import { DEV, EDITOR } from 'cc/env';
-import { Support } from '../../utils/Support';
-import { ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PropertyLoadifyDecorator, PropertyLoadifyInjector, WRAPPER_PROPERTY_PREFIX } from '../../core/PropertyLoadify';
-import { cocoseus } from '../../plugins';
-import { CCEditor } from '../../utils/CCEditor';
-import { hadInjectorImplemented } from '../../core/Inheritancify';
-// import { PropertyExportifyInjector } from '../../core/PropertyExportify';
+import { cocoseus } from '../../../../../extensions/cocoseus/core/decorator';
+import { hadInjectorImplemented } from 'db://cocoseus/cocoseus/Inheritancify';
+import Parasitify, { override } from 'db://cocoseus/cocoseus/Parasitify';
+import { CCEditor } from 'db://cocoseus/utils/CCEditor';
+import { Support } from 'db://cocoseus/utils/Support';
+import { WRAPPER_PROPERTY_PREFIX, ENUM_PROPERTY_PREFIX, INFO_PROPERTY_PREFIX, PropertyLoadifyInjector } from 'db://cocoseus/cocoseus/PropertyLoadify';
 
 const { ccclass, property, executeInEditMode } = _decorator;
 

@@ -17,11 +17,11 @@ export const PropertyLoadifyDecorator:string = '@property.load';
 
 export default CCClassify<IPropertyLoadified, IStaticPropertyLoadified>(function PropertyLoadify <TBase>(base:Constructor<TBase>, baseUrl:string, version:string):Constructor<TBase & IPropertyLoadified>{
     // 
-    Array.from(arguments).forEach((value:any)=>{
-        if(typeof value == 'string'){
-            console.log('params '+ value)
-        }
-    })
+    // Array.from(arguments).forEach((value:any)=>{
+    //     if(typeof value == 'string'){
+    //         console.log('params '+ value)
+    //     }
+    // })
     const Version:string = version?version:'';
     const BaseURL:string = (baseUrl && !RemoteRouterReg.test(baseUrl)) ? (baseUrl + '/remote/') : '';
     class PropertyLoadified extends AsyncProcessify(Decoratify (base as unknown as Constructor<Component>)) implements IPropertyLoadified {

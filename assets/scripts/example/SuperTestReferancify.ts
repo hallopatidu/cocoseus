@@ -1,5 +1,5 @@
 import { _decorator, Component, instantiate, Node, Prefab, SpriteFrame, Vec3, warn } from 'cc';
-import { cocoseus } from '../cocoseus/plugins';
+import { cocoseus } from '../../../extensions/cocoseus/core/decorator';
 
 
 const { ccclass, property } = _decorator;

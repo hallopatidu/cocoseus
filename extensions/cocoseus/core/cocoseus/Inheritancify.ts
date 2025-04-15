@@ -1,6 +1,9 @@
 import { __private, _decorator, Component, Constructor, error, js, log, Node, warn } from 'cc';
-import { CACHE_KEY, CCEditor } from '../utils/CCEditor';
-import { ClassStash, DecorateHandlerType, DecoratePropertyType, IPropertyOptions, LegacyPropertyDecorator, PropertyStash, PropertyType } from '../types/CoreType';
+import { ClassStash, DecorateHandlerType, DecoratePropertyType, PropertyStash } from '../types/CoreType';
+import { CCEditor, CACHE_KEY } from '../utils/CCEditor';
+// import { CACHE_KEY, CCEditor } from '../utils/CCEditor';
+// import { ClassStash, DecorateHandlerType, DecoratePropertyType, IPropertyOptions, LegacyPropertyDecorator, PropertyStash, PropertyType } from '../types/CoreType';
+
 const {property} = _decorator
 
 export const InjectorTag = Symbol() //'$injector';

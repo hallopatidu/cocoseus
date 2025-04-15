@@ -1,7 +1,8 @@
 import { Component, Constructor, error, js, warn, _decorator } from "cc";
 import { DEV, EDITOR } from "cc/env";
-import { IParasitified, IStaticParasitified } from "../types/CoreType";
+// import { IParasitified, IStaticParasitified } from "../types/CoreType";
 import { Inheritancify, hadInjectorImplemented } from "./Inheritancify";
+import { IParasitified, IStaticParasitified } from "../types/CoreType";
 const { property } = _decorator;
 
 export const ParasitifyInjector:string = 'Parasitify';
