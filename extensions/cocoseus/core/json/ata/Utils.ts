@@ -53,13 +53,13 @@ export class Utils {
      * Create an empty sequence to contain query results
      * @returns {Array} - empty sequence
      */
-    static createSequence(): any[] {
-        const sequence: any[] = [];
-        (sequence as any).sequence = true;
+    static createSequence(sequence?: any[]): any[] {
+        const seq: any[] = sequence || [];
+        (seq as any).sequence = true;
         if (arguments.length === 1) {
-            sequence.push(arguments[0]);
+            seq.push(arguments[0]);
         }
-        return sequence;
+        return seq;
     }
 
     /**

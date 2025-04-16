@@ -796,7 +796,7 @@ export class Functions {
             return undefined;
         }
 
-        var defaults: Record<string, string> = {
+        const defaults: Record<string, string> = {
             "decimal-separator": ".",
             "grouping-separator": ",",
             "exponent-separator": "e",
@@ -835,7 +835,7 @@ export class Functions {
             };
         }
 
-        const splitParts = function (subpicture: string) {
+        function splitParts (subpicture: string) {
             const prefix = (function () {
                 var ch;
                 for (var ii = 0; ii < subpicture.length; ii++) {
@@ -885,7 +885,7 @@ export class Functions {
         };
 
         // validate the picture string, F&O 4.7.3
-        var validate = function (parts: ReturnType<typeof splitParts>) {
+        function validate (parts: ReturnType<typeof splitParts>) {
             var error;
             var ii;
             var subpicture = parts.subpicture;
@@ -959,10 +959,10 @@ export class Functions {
         };
 
         // analyse the picture string, F&O 4.7.4
-        const analyse = function (parts: ReturnType<typeof splitParts>) {
+        function analyse (parts: ReturnType<typeof splitParts>) {
             const getGroupingPositions = function (part: string, toLeft: boolean = false): number[] {
-                var positions: number[] = [];
-                var groupingPosition = part.indexOf(properties['grouping-separator']);
+                const positions: number[] = [];
+                let groupingPosition = part.indexOf(properties['grouping-separator']);
                 while (groupingPosition !== -1) {
                     var charsToTheRight = (toLeft ? part.substring(0, groupingPosition) : part.substring(groupingPosition)).split('').filter(function (char) {
                         return decimalDigitFamily.indexOf(char) !== -1 || char === properties.digit;
@@ -972,8 +972,10 @@ export class Functions {
                 }
                 return positions;
             };
-            var integerPartGroupingPositions = getGroupingPositions(parts.integerPart);
-            var regular = function (indexes: number[]) {
+            // 
+            const integerPartGroupingPositions = getGroupingPositions(parts.integerPart);
+            // 
+            function regular (indexes: number[]) {
                 // are the grouping positions regular? i.e. same interval between each of them
                 if (indexes.length === 0) {
                     return 0;
@@ -992,15 +994,13 @@ export class Functions {
                 return factor;
             };
 
-            var regularGrouping = regular(integerPartGroupingPositions);
-            var fractionalPartGroupingPositions = getGroupingPositions(parts.fractionalPart, true);
-
-            var minimumIntegerPartSize = parts.integerPart.split('').filter(function (char) {
+            const regularGrouping = regular(integerPartGroupingPositions);
+            const fractionalPartGroupingPositions = getGroupingPositions(parts.fractionalPart, true);
+            let minimumIntegerPartSize = parts.integerPart.split('').filter(function (char:string) {
                 return decimalDigitFamily.indexOf(char) !== -1;
             }).length;
-            var scalingFactor = minimumIntegerPartSize;
-
-            var fractionalPartArray = parts.fractionalPart.split('');
+            const scalingFactor = minimumIntegerPartSize;
+            const fractionalPartArray = parts.fractionalPart.split('');
             var minimumFactionalPartSize = fractionalPartArray.filter(function (char) {
                 return decimalDigitFamily.indexOf(char) !== -1;
             }).length;
@@ -1419,7 +1419,7 @@ export class Functions {
      * @param {*} arg - Arguments
      * @returns {boolean} Boolean
      */
-    static boolean(arg) {
+    static boolean(arg: any): boolean | undefined {
         // cast arg to its effective boolean value
         // boolean: unchanged
         // string: zero-length -> false; otherwise -> true
@@ -1434,14 +1434,12 @@ export class Functions {
             return undefined;
         }
 
-        var result = false;
+        let result = false;
         if (Array.isArray(arg)) {
             if (arg.length === 1) {
-                result = this.boolean(arg[0]);
+                result = this.boolean(arg[0])!;
             } else if (arg.length > 1) {
-                var trues = arg.filter(function (val) {
-                    return this.boolean(val);
-                });
+                const trues = arg.filter((val) => this.boolean(val)!);
                 result = trues.length > 0;
             }
         } else if (typeof arg === 'string') {
