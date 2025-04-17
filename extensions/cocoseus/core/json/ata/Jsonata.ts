@@ -1572,10 +1572,15 @@ function evaluateRegex(expr: { value: string; position?: number }, input?:any, e
      * @param {Object} environment - environment
      * @returns {*} Result of procedure
      */
-    async function applyInner(proc, args, input, environment) {
-        var result;
+    async function applyInner(
+        proc: any,
+        args: any[],
+        input: any,
+        environment: any
+    ): Promise<any> {
+        let result: any;
         try {
-            var validatedArgs = args;
+            let validatedArgs = args;
             if (proc) {
                 validatedArgs = validateArguments(proc.signature, args, input);
             }
@@ -1583,7 +1588,7 @@ function evaluateRegex(expr: { value: string; position?: number }, input?:any, e
             if (isLambda(proc)) {
                 result = await applyProcedure(proc, validatedArgs);
             } else if (proc && proc._jsonata_function === true) {
-                var focus = {
+                const focus = {
                     environment: environment,
                     input: input
                 };
@@ -1609,12 +1614,12 @@ function evaluateRegex(expr: { value: string; position?: number }, input?:any, e
             } else {
                 throw {
                     code: "T1006",
-                    stack: (new Error()).stack
+                    stack: new Error().stack
                 };
             }
-        } catch(err) {
-            if(proc) {
-                if (typeof err.token == 'undefined' && typeof proc.token !== 'undefined') {
+        } catch (err: any) {
+            if (proc) {
+                if (typeof err.token === 'undefined' && typeof proc.token !== 'undefined') {
                     err.token = proc.token;
                 }
                 err.position = proc.position || err.position;
@@ -1631,9 +1636,8 @@ function evaluateRegex(expr: { value: string; position?: number }, input?:any, e
      * @param {Object} environment - Environment
      * @returns {{lambda: boolean, input: *, environment: *, arguments: *, body: *}} Evaluated input data
      */
-    function evaluateLambda(expr, input, environment) {
+    function evaluateLambda(expr: any, input: any, environment: any): JsonataProcedure {
         // make a function (closure)
-        
 
         const procedure: JsonataProcedure = {
             _jsonata_lambda: true,
@@ -1643,10 +1647,10 @@ function evaluateRegex(expr: { value: string; position?: number }, input?:any, e
             signature: expr.signature,
             body: expr.body
         };
-        if(expr.thunk === true) {
+        if (expr.thunk === true) {
             procedure.thunk = true;
         }
-        procedure.apply = async function(self, args) {
+        procedure.apply = async function (self: any, args: any[]): Promise<any> {
             return await apply(procedure, args, input, !!self ? self.environment : environment);
         };
         return procedure;
@@ -1707,12 +1711,12 @@ function evaluateRegex(expr: { value: string; position?: number }, input?:any, e
      * @param {*} context - context value
      * @returns {Array} - validated arguments
      */
-    function validateArguments(signature, args, context) {
-        if(typeof signature === 'undefined') {
+    function validateArguments(signature: any, args: any[], context: any): any[] {
+        if (typeof signature === 'undefined') {
             // nothing to validate
             return args;
         }
-        var validatedArgs = signature.validate(args, context);
+        const validatedArgs: any[] = signature.validate(args, context);
         return validatedArgs;
     }
 
@@ -1722,10 +1726,10 @@ function evaluateRegex(expr: { value: string; position?: number }, input?:any, e
      * @param {Array} args - Arguments
      * @returns {*} Result of procedure
      */
-    async function applyProcedure(proc, args) {
-        var result;
-        var env = createFrame(proc.environment);
-        proc.arguments.forEach(function (param, index) {
+    async function applyProcedure(proc: JsonataProcedure, args: any[]): Promise<any> {
+        let result: any;
+        const env = createFrame(proc.environment);
+        proc.arguments.forEach((param: any, index: number) => {
             env.bind(param.value, args[index]);
         });
         if (typeof proc.body === 'function') {
@@ -1743,23 +1747,24 @@ function evaluateRegex(expr: { value: string; position?: number }, input?:any, e
      * @param {Array} args - Arguments
      * @returns {{lambda: boolean, input: *, environment: {bind, lookup}, arguments: Array, body: *}} Result of partially applied procedure
      */
-    function partialApplyProcedure(proc, args) {
+    function partialApplyProcedure(proc: JsonataProcedure, args: any[]): JsonataProcedure {
         // create a closure, bind the supplied parameters and return a function that takes the remaining (?) parameters
-        var env = createFrame(proc.environment);
-        var unboundArgs = [];
-        proc.arguments.forEach(function (param, index) {
-            var arg = args[index];
+        const env = createFrame(proc.environment);
+        const unboundArgs: any[] = [];
+        proc.arguments.forEach((param: any, index: number) => {
+            const arg = args[index];
             if (arg && arg.type === 'operator' && arg.value === '?') {
                 unboundArgs.push(param);
             } else {
                 env.bind(param.value, arg);
             }
         });
-        var procedure = {
+        const procedure: JsonataProcedure = {
             _jsonata_lambda: true,
             input: proc.input,
             environment: env,
             arguments: unboundArgs,
+            signature: proc.signature,
             body: proc.body
         };
         return procedure;
@@ -1771,7 +1776,7 @@ function evaluateRegex(expr: { value: string; position?: number }, input?:any, e
      * @param {Array} args - Arguments
      * @returns {{lambda: boolean, input: *, environment: {bind, lookup}, arguments: Array, body: *}} Result of partially applying native function
      */
-    function partialApplyNativeFunction(native, args) {
+    function partialApplyNativeFunction(native: Function, args: any[]): JsonataProcedure {
         // create a lambda function that wraps and invokes the native function
         // get the list of declared arguments from the native function
         // this has to be picked out from the toString() value
@@ -1794,7 +1799,7 @@ function evaluateRegex(expr: { value: string; position?: number }, input?:any, e
      * @param {Object} env - Environment
      * @returns {*} Result of applying native function
      */
-    async function applyNativeFunction(proc, env) {
+    async function applyNativeFunction(proc: Function, env: any): Promise<any> {
         var sigArgs = getNativeFunctionArguments(proc);
         // generate the array of arguments for invoking the function - look them up in the environment
         var args = sigArgs.map(function (sigArg) {
