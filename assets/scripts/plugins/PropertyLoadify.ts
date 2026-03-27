@@ -1,0 +1,448 @@
+import { Asset, assetManager, AssetManager, CCObject, Component, Constructor, Enum, error, js, Node, Prefab, warn } from "cc";
+
+import { cocoseus_types } from "../definition/cocoseus.types";
+import AsyncProcessify, { IAsyncProcessified } from "./AsyncProcessify";
+import { cocoseus_classify } from "../definition/cocoseus.classify";
+import { cocoseus_cceditor } from "../definition/cocoseus.cceditor";
+import { DEV, EDITOR } from "cc/env";
+import { cocoseus_utils } from "../definition/cocoseus.utils";
+
+export const ENUM_PROPERTY_PREFIX:string = '__$enum__';
+export const INFO_PROPERTY_PREFIX:string = '__$info__';
+export const WRAPPER_PROPERTY_PREFIX:string = '__$';
+
+export const PropertyLoadifyDecorator:string = '@property.load';
+export const PropertyLoadifiedClassName:string = 'PropertyLoadifiedClass';
+
+type SimpleAssetInfo = cocoseus_types.SimpleAssetInfo;
+type PropertyStash = cocoseus_types.PropertyStash;
+type IPropertyOptions = cocoseus_types.IPropertyOptions;
+
+const { CCClassify } = cocoseus_classify;
+const DecoratedTag = '__$loaded';
+const RemoteRouterReg:RegExp = /^(remote)/g;
+const CCEditor = cocoseus_cceditor;
+const {CACHE_KEY} = cocoseus_types
+// 
+export type EmbedAsset = Asset|Node|Component;
+export type PrefabInfo = cocoseus_types.SimpleAssetInfo & {
+    references?:ReferenceInfo[]
+}
+export type ReferenceInfo = {
+    root?:string,
+    node?:string,
+    property?:string,
+    comp:string,
+    id:number,    
+}
+// 
+export interface IPropertyLoadified extends Component{
+    analysisAsset<T=EmbedAsset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>;
+    onLoadedAsset(propertyName:string, asset:SimpleAssetInfo):void;
+    onEditorAssetChanged(propertyName:string):void;
+}
+
+
+export default CCClassify<IPropertyLoadified>(function PropertyLoadify <TBase>(base:Constructor<TBase>, baseUrl:string, version:string):Constructor<TBase & IPropertyLoadified>{
+    // 
+    const Version:string = version?version:'';
+    const BaseURL:string = (baseUrl && !RemoteRouterReg.test(baseUrl)) ? (baseUrl + '/remote/') : '';
+    class PropertyLoadified extends AsyncProcessify(base as unknown as Constructor<Component> ) implements IPropertyLoadified {
+
+        private _className:string
+
+        protected onLoad(): void {
+            console.log('loading completed !!')
+            this._className = js.getClassName(this);
+            if(super.onLoad){
+                this.asyncLoadingAssets().then(super.onLoad.bind(this))
+            }
+        }
+
+        /**
+         * Called when the particular asset is loaded.
+         * @param propertyName 
+         * @param asset 
+         */
+        async onLoadedAsset(propertyName:string, asset:Asset){            
+            if(super['onLoadedAsset']) await super['onLoadedAsset'](propertyName);
+        }
+
+        /**
+         * Run on Editor. When the particular asset is changed.
+         * @param propertyName 
+         */
+        async onEditorAssetChanged(propertyName:string){
+            if(super['onEditorAssetChanged']) await super['onEditorAssetChanged'](propertyName);
+        }
+
+        /**
+         * Phân tích asset khi là Prefab. Lưu thêm thông tin về các ReferenceInfo. Phục vụ viec skinable and rechange properties.
+         * @param propertyName 
+         * @param asset 
+         * @returns 
+         */
+        async analysisAsset<T= Asset>(propertyName:string, asset:T):Promise<SimpleAssetInfo>{
+            let simpleAssetInfo:SimpleAssetInfo = await cocoseus_cceditor.getSimpleAssetInfo(asset as Asset);
+            if(asset && js.isChildClassOf(asset.constructor, Prefab)){
+                const prefabInfo:PrefabInfo = simpleAssetInfo;                
+                let allPrefabComponents:Component[] = ((asset as Prefab).data as Node).getComponentsInChildren(Component);
+                allPrefabComponents.forEach((comp:Component)=>{
+                    if(!prefabInfo.references) prefabInfo.references = [];
+                    const refInfos:ReferenceInfo[] = this.getChildReferenceInfo(comp);
+                    prefabInfo.references = prefabInfo.references.concat(refInfos);
+                })
+            }
+            return simpleAssetInfo;
+        }
+
+
+                /**
+                 * 
+                 * @param fromComponent 
+                 * @returns 
+                 */
+                private getChildReferenceInfo(fromComponent:Component):ReferenceInfo[]{   
+                    const refInfos:ReferenceInfo[] = [];         
+                    if(cocoseus_classify.hadInjectorImplemented(fromComponent.constructor as Constructor, PropertyLoadifiedClassName)){
+                        const classType:string = js.getClassName(fromComponent);
+                        const localNodePath:string = fromComponent?.node?.getPathInHierarchy();
+                        const loadedPropertyNames:string[] = keys(js.getClassByName(classType), PropertyLoadifyDecorator);
+                        // const loadedPropertyNames:string[] = Array.from(decorated(fromComponent).keys());
+                        loadedPropertyNames.forEach((recoredPropertyName:string)=>{                                                          
+                            if(recoredPropertyName){
+                                const tempRefInfo:ReferenceInfo = Object.create(null);
+                                tempRefInfo.comp = classType;
+                                tempRefInfo.node = localNodePath;
+                                tempRefInfo.property = recoredPropertyName;
+                                refInfos.push(tempRefInfo);
+                            }
+                        })
+                        return refInfos;
+                    }
+                    return refInfos
+                }
+
+        /**
+         * 
+         */
+        protected async asyncLoadingAssets(){
+            const ctor:Constructor = js.getClassByName(this._className);
+            const thisAsyncLoading:IAsyncProcessified = this as unknown as IAsyncProcessified;
+            const propertyRecord:string[] = keys(ctor, PropertyLoadifyDecorator);
+            // const propertyRecord:string[] = Array.from(decorated(thisAsyncLoading).keys());
+            if(thisAsyncLoading.isProgressing()) { await thisAsyncLoading.wait()}
+            else if(!thisAsyncLoading.isProgressing() && propertyRecord && propertyRecord.length){                
+                thisAsyncLoading.begin(-1);                
+                // 
+                const promises:Promise<any>[] = []
+                propertyRecord.forEach((recordContent:string)=>{
+                    const propArr:string[] = recordContent?.split("::");
+                    if(propArr && propArr.length){                    
+                        const propertyName:string = propArr[0];
+                        const classTypeName:string = propArr[1];
+                        const classType:any = js.getClassByName(classTypeName);
+                        const assetInfo:SimpleAssetInfo = thisAsyncLoading[INFO_PROPERTY_PREFIX + propertyName];
+                        if(propertyName && classType && assetInfo){                            
+                            promises.push(new Promise(async (resolve:Function)=>{
+                                // const asset:Asset = await loadAsset(assetInfo, classType);
+                                const asset:Asset = await this.loadEachAsset(assetInfo);
+                                thisAsyncLoading[propertyName] = asset;
+                                resolve(asset);
+                            }) )
+
+                        }else{
+                            // DEV && error('Unload ' + propertyName)
+                        }
+                    }
+                });
+                await Promise.all(promises);
+                // 
+                thisAsyncLoading.end(-1);
+            }
+            // 
+            const promises:Promise<any>[] = [];
+            const loadedPropertyRecord:string[] = keys(ctor, PropertyLoadifyDecorator);
+            // const loadedPropertyRecord:string[] = Array.from(decorated(thisAsyncLoading).keys());
+            loadedPropertyRecord.forEach((recordContent:string)=>{
+                const propArr:string[] = recordContent?.split("::");
+                if(propArr && propArr.length){                    
+                    const propertyName:string = propArr[0];                    
+                    if(!!Object.prototype.hasOwnProperty.call(thisAsyncLoading, propertyName)){ 
+                        promises.push(this.onLoadedAsset(propertyName, thisAsyncLoading[propertyName]));
+                    }
+                }
+            })
+            await Promise.all(promises);
+            // 
+        }
+
+        /**
+         * 
+         * @param assetInfo 
+         * @param classType 
+         * @returns 
+         */
+        async loadEachAsset(assetInfo:SimpleAssetInfo):Promise<Asset>{
+            if(!assetInfo) return null
+            if(!assetInfo.bundle?.length) error('the asset has no bundle !!');
+            if(!EDITOR){
+                const bundleName:string = assetInfo.bundle;                
+                const bundleUrl:string = BaseURL + bundleName;    
+                let bundle:AssetManager.Bundle = assetManager.getBundle(bundleUrl);
+                if(!bundle){
+                    bundle = await new Promise<AssetManager.Bundle>((resolve:Function)=>{                
+                        assetManager.loadBundle(bundleUrl,{version:Version},(err:Error, downloadBundle:AssetManager.Bundle)=>{                   
+                            if(!err){
+                                resolve(downloadBundle);
+                            }else{
+                                DEV && error('Bundle Loading Error ' + err + ' bundle name: ' + bundleUrl);
+                                resolve(null)
+                            }                    
+                        }) 
+                    })
+                }
+                if(!bundle){
+                    error('Bundle ' + bundleUrl + ' is not found !');
+                    return null
+                }
+                const assetPath:string = assetInfo.url;
+                const classType:Constructor<any> = js.getClassByName(assetInfo.type);
+                let remoteAsset:Asset = bundle.get(assetPath, classType);
+                if(!remoteAsset){
+                    remoteAsset = await new Promise((resolve:Function)=>{
+                        bundle.load(assetPath, classType, (err:Error, prefab:Asset ) =>{                
+                            if(!err){                                               
+                                // this.instantiateLoadedPrefab(prefab);
+                                resolve(prefab)
+                            }else{
+                                DEV && error('Asset Loading Error: ' + assetPath + ' with bundle: ' + bundle.name + ' -node ' + this?.node?.getPathInHierarchy() )       
+                                resolve(null);
+                            }     
+                            
+                        })
+                    })
+                }
+                if(!remoteAsset) {
+                    error('Asset ' + assetPath + ' in bundle '+ bundleUrl + ' is not found !');
+                    return null
+                }
+        
+                // DEV && warn('---- load success:: ' + assetInfo.name);
+                return remoteAsset
+            }else{
+        
+            }
+            return
+        }
+
+
+    }
+
+    // Apply to all @property decorator.
+    const cache = base[CACHE_KEY];    
+    if (cache) {
+        const decoratedProto = cache.proto;
+        if (decoratedProto) {
+            const properties:Record<string, any> = decoratedProto.properties;
+            // 
+            PropertyLoadified[CACHE_KEY] = js.createMap();
+            const classStash:unknown = PropertyLoadified[CACHE_KEY] || ((PropertyLoadified[CACHE_KEY]) ??= {});
+            const ccclassProto:unknown = classStash['proto'] || ((classStash['proto'])??={});
+            const injectorProperties:unknown = ccclassProto['properties'] || ((ccclassProto['properties'])??={});
+            // 
+            const keys:string[] = Object.keys(properties);
+            keys.forEach((propertyName:string)=>{
+                const propertyStash:PropertyStash = injectorProperties[propertyName] ??= {};
+                js.mixin(propertyStash, properties[propertyName])
+                remakeProperty(PropertyLoadified, propertyName, injectorProperties, {version:Version, url:BaseURL});
+            })            
+        }
+        base[CACHE_KEY] = undefined;
+    }
+
+    return PropertyLoadified as unknown as Constructor<TBase & IPropertyLoadified>;
+}, PropertyLoadifiedClassName)
+
+
+/**
+ * Thêm /remote vao baseUrl không đúng chuẩn.
+ * @param baseUrl 
+ * @returns 
+ */
+function validateBaseUrl(baseUrl:string):string{
+    return (baseUrl && !RemoteRouterReg.test(baseUrl)) ? (baseUrl + '/remote/') : '';
+}
+
+function record(ctor:Constructor, key:string, tag:string = DecoratedTag):boolean{
+    const customTag:string = tag !== DecoratedTag ? '__$'+tag: DecoratedTag;
+    if(!ctor[customTag]) ctor[customTag] = new Set<string>();
+    if((ctor[customTag] as Set<string>).has(key)) return false;
+    (ctor[customTag] as Set<string>).add(key);
+    return true
+}
+
+function remove(ctor:Constructor, key:string, tag:string = DecoratedTag){
+    const customTag:string = tag !== DecoratedTag ? '__$'+tag: DecoratedTag;
+    if(ctor[customTag] && (ctor[customTag] as Set<string>).has(key)) (ctor[customTag] as Set<string>).delete(key);
+    else return false;
+    return true
+}
+
+function keys(ctor:Constructor, tag:string = DecoratedTag):string[]{
+    const customeTag:string = tag !== DecoratedTag ? '__$'+tag: DecoratedTag;
+    if(!ctor[customeTag]) ctor[customeTag] = new Set<string>();
+    return Array.from(ctor[customeTag])
+}
+
+/**
+ * 
+ * @param constructor 
+ * @param propertyName 
+ * @param properties 
+ */
+function remakeProperty(constructor:Constructor, propertyName:string, properties:any, extraOptions?:any){
+    const options:IPropertyOptions = properties[propertyName];
+    // Do not support Class Array Type.
+    const isTypeArray:boolean = options.type && Array.isArray(options.type);
+    let classType:CCObject = options.type;
+    if(isTypeArray){
+        DEV && warn('Now, we do not support array of type at ' + propertyName)
+        return;
+    }else{
+
+    }
+    
+    // 
+    const isAsset:boolean = js.isChildClassOf(options.type, Asset);
+    if(isAsset){
+        // Tag these propeties would be loading at the runtime.
+        const classTypeName:string = js.getClassName(classType);
+        const recordContent:string = propertyName + (classTypeName ? "::" + classTypeName : "");
+        // const records:Set<string> = decorated(constructor)
+        // !records.has(recordContent) && records.add(recordContent);
+        record(constructor, recordContent, PropertyLoadifyDecorator);
+        // 
+        defineSmartProperty(constructor, propertyName, extraOptions? Object.assign(options, extraOptions) : options);        
+    }
+    // 
+}
+
+
+// function decorated(target:any):Set<string>{
+//     const ctor:Constructor = target.prototype ? target : target.constructor;
+//     return ctor[PropertyLoadifyDecorator] || (ctor[PropertyLoadifyDecorator] = new Set<string>())
+// }
+
+
+/**
+ * Tạo các thuộc tính bổ trợ
+ * @param target 
+ * @param propertyName 
+ * @param options 
+ * @param descriptorOrInitializer 
+ */
+function defineSmartProperty(target:Record<string, any>, propertyName:string, options:IPropertyOptions, descriptorOrInitializer?:  PropertyDescriptor){
+    const enumPropertyName:any = ENUM_PROPERTY_PREFIX + propertyName;
+    const wrapperPropertyName:any = WRAPPER_PROPERTY_PREFIX + propertyName;    
+    const infoPropertyName:any = INFO_PROPERTY_PREFIX + propertyName;
+    // 
+    descriptorOrInitializer ??= js.getPropertyDescriptor(target.prototype, propertyName)
+    // Record info -------------
+    const infoPropertyDescriptor:PropertyDescriptor = {value:null, writable:true};
+    const infoOption:IPropertyOptions = {
+        // type:options.type,
+        serializable:true, 
+        visible:false
+    };
+    CCEditor.createEditorClassProperty(target, infoPropertyName, infoOption, infoPropertyDescriptor);
+    // -------------------------- End info
+    
+    // Define Enum ------------------------------
+    const enumPropetyDescriptor:PropertyDescriptor = {
+        get():number{
+            return !!this[infoPropertyName] ? 1:0;
+        },
+        set(val:number){
+            if(val == 0){
+                this[wrapperPropertyName] = null;
+                this[infoPropertyName] = null;
+                this[propertyName] = null;
+                EDITOR && this.onEditorAssetChanged(propertyName);
+            }
+        }
+    }
+    //
+    const enumOption:IPropertyOptions = {
+        type:Enum({NONE:0}),
+        displayName:cocoseus_utils.strings.upperFirstCharacter(propertyName),
+        visible(){
+            return !!this[infoPropertyName]
+        }
+    }
+    CCEditor.createEditorClassProperty(target, enumPropertyName, enumOption, enumPropetyDescriptor);
+    // ------------------------------ end Define Enum
+    
+    // Define Wrapper ------------------------------
+    const wrapperDescriptor:PropertyDescriptor = {
+        get():EmbedAsset{                
+            if(this[infoPropertyName]){
+                const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']';
+                CCEditor.enumifyProperty(this, enumPropertyName, cocoseus_cceditor.convertToEnum(['REMOVE', assetPath]));
+            }            
+            return this[propertyName];
+        },
+        set:async function(asset:EmbedAsset){
+            if(EDITOR){
+                const assetInfo:SimpleAssetInfo = await this.analysisAsset(propertyName, asset);
+                // const assetInfo:SimpleAssetInfo = await CCEditor.getSimpleAssetInfo(asset as Asset);
+                if(!!assetInfo){
+                    const bundleName:string = assetInfo.bundle;
+                    //       
+                    if( !!bundleName &&
+                        bundleName !== AssetManager.BuiltinBundleName.INTERNAL &&
+                        bundleName !== AssetManager.BuiltinBundleName.MAIN  &&
+                        bundleName !== AssetManager.BuiltinBundleName.START_SCENE   ){
+                        // 
+                        this[infoPropertyName] = assetInfo;
+                        // options['version'] ? options['version'] https://cdn.jsdelivr.net/gh/hallopatidu/reelgame-assets@refs/heads/main
+                        // const baseURL:string = validateBaseUrl(options['url']);
+                        const assetPath:string = this[infoPropertyName]?.url + ' [' + this[infoPropertyName]?.bundle + ']' + ' ['+ options['version'] +']' + '('+ options['url'] +')';
+                        CCEditor.enumifyProperty(this, enumPropertyName, cocoseus_cceditor.convertToEnum(['REMOVE', assetPath]));
+                        this[propertyName] = null;
+                        this.onEditorAssetChanged(propertyName);
+                        return false
+                        // 
+                    }else{
+                        this[infoPropertyName] = null;
+                    }
+                }
+                
+            }
+            // 
+            this[propertyName] = asset;
+            EDITOR && this.onEditorAssetChanged(propertyName);
+        },
+        configurable: true,
+        enumerable: false        
+    } as PropertyDescriptor;
+
+    const wrapperOption:IPropertyOptions = Object.assign({}, options, {
+        type:options.type,
+        displayName:cocoseus_utils.strings.upperFirstCharacter(propertyName),
+        visible(){
+            return !this[infoPropertyName];
+        }
+    }) as IPropertyOptions;
+    CCEditor.createEditorClassProperty(target, wrapperPropertyName, wrapperOption, wrapperDescriptor);
+    
+    // ------------------------------------- end Define Wrapper
+    
+    // Current property ---------------
+    if(!!options){
+        (options as IPropertyOptions).visible = false;
+        (options as IPropertyOptions).serializable = true;    
+    }
+    // CCEditor.createEditorClassProperty(target, propertyName, options, descriptorOrInitializer);
+    
+}
