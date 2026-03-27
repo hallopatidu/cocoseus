@@ -1,12 +1,9 @@
 import { _decorator, Animation, AnimationClip, sp, CCBoolean, error, assetManager, log, TweenSystem } from 'cc';
 import { EDITOR } from 'cc/env';
-// import { AssetInfo } from '@cocos/creator-types/editor/packages/asset-db/@types/public';
-// import { SpineState } from 'db://cocoseus/scripts/widgets/spines/SpineState';
-// import { EditorMode, SpineStateOption, SpSkeletonType } from 'db://cocoseus/scripts/widgets/spines/SpineType';
+import { AssetInfo } from '@cocos/creator-types/editor/packages/asset-db/@types/public';
+import { SpineState } from 'db://cocoseus/scripts/widgets/spines/SpineState';
+import { EditorMode, SpineStateOption, SpSkeletonType } from 'db://cocoseus/scripts/widgets/spines/SpineType';
 import { cocoseus } from '../../definition/cocoseus';
-import { EditorMode, SpineStateOption, SpSkeletonType } from '../../widgets/spines/SpineType';
-import { SpineState } from '../../widgets/spines/SpineState';
-import { AssetInfo } from '../../@cocos/creator-types/editor/packages/asset-db/@types/public';
 const { ccclass, property, executeInEditMode, menu } = _decorator;
 const { strings } = cocoseus.utils
 
