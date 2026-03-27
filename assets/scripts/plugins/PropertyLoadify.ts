@@ -1,10 +1,12 @@
 import { Asset, assetManager, AssetManager, CCObject, Component, Constructor, Enum, error, js, Node, Prefab, warn } from "cc";
-
+import { cocoseus } from "../definition/cocoseus";
 import { cocoseus_types } from "../definition/cocoseus.types";
 import AsyncProcessify, { IAsyncProcessified } from "./AsyncProcessify";
 import { cocoseus_classify } from "../definition/cocoseus.classify";
 import { cocoseus_cceditor } from "../definition/cocoseus.cceditor";
 import { DEV, EDITOR } from "cc/env";
+import { CACHE_KEY } from "db://cocoeywa/scripts/definition/cocoeywa.constants";
+import { IPropertyOptions, PropertyStash } from "db://cocoeywa/scripts/definition/cocoeywa.types";
 import { cocoseus_utils } from "../definition/cocoseus.utils";
 
 export const ENUM_PROPERTY_PREFIX:string = '__$enum__';
@@ -15,14 +17,12 @@ export const PropertyLoadifyDecorator:string = '@property.load';
 export const PropertyLoadifiedClassName:string = 'PropertyLoadifiedClass';
 
 type SimpleAssetInfo = cocoseus_types.SimpleAssetInfo;
-type PropertyStash = cocoseus_types.PropertyStash;
-type IPropertyOptions = cocoseus_types.IPropertyOptions;
 
 const { CCClassify } = cocoseus_classify;
 const DecoratedTag = '__$loaded';
 const RemoteRouterReg:RegExp = /^(remote)/g;
 const CCEditor = cocoseus_cceditor;
-const {CACHE_KEY} = cocoseus_types
+
 // 
 export type EmbedAsset = Asset|Node|Component;
 export type PrefabInfo = cocoseus_types.SimpleAssetInfo & {

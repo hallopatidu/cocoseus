@@ -2,8 +2,6 @@ import { Asset, Component, Constructor, Prefab, ValueType, __private, sp } from 
 
 
 export namespace cocoseus_types {
-
-
     // TYPE
     export type EmbedAsset = Asset|Node|Component
 
@@ -230,7 +228,6 @@ export namespace cocoseus_types {
         };
         errorProps?: Record<PropertyKey, true>;
     }
-
     export type PropertyStash = IExposedAttributes & {
         default?: unknown,
         get?: () => unknown,
@@ -240,7 +237,6 @@ export namespace cocoseus_types {
         __$extends?:DecorateHandlerType[],
         __$decorate:string
     }
-    
     export type IPropertyOptions = __private._cocos_core_data_decorators_property__IPropertyOptions | __private._cocos_core_data_utils_attribute_defines__IExposedAttributes;
     export type PropertyType = __private._cocos_core_data_decorators_property__PropertyType;
     export type LegacyPropertyDecorator = __private._cocos_core_data_decorators_utils__LegacyPropertyDecorator;
