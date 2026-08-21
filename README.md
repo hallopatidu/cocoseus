@@ -44,3 +44,12 @@ graph TD
     C --> E["definition/cocoseus.cceditor<br/>CCClass metadata"]
     E --> TY["definition/cocoseus.types"]
     E
+```
+## The Problem to Solve
+In Cocos Creator, a Component is registered via @ccclass. The engine stores property metadata in a static cache on the constructor under the key '__ccclassCache__'. If you create an intermediate class using a standard mixin:
+``` TypeScript
+class MyComp extends SomeMixin(Component) { ... }
+```
+the @property declarations inside the mixin will reside in the intermediate class's cache, preventing the Inspector from seeing them on the final class. 
+**CCClassify** was built specifically to patch this issue.
+
